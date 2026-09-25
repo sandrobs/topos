@@ -9,6 +9,8 @@ import {
 import { PaginaLogin, PainelAtendimentos } from "./Interno";
 import { LogoIgreja } from "./LogoIgreja";
 import { PaginaQrCode } from "./QrCode";
+import { FormularioPublicoMembros } from "./CadastroMembro";
+import { PaginaQrCodeMembros } from "./QrCodeMembros";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 
 type EstadoFormulario = {
@@ -47,6 +49,14 @@ export function App() {
   const partesQrCode = caminho.split("/").filter(Boolean);
   if (partesQrCode[0] === "qrcode" && partesQrCode[1]) {
     return <PaginaQrCode igrejaId={partesQrCode[1]} />;
+  }
+
+  if (partesQrCode[0] === "qrcode-membros" && partesQrCode[1]) {
+    return <PaginaQrCodeMembros igrejaId={partesQrCode[1]} />;
+  }
+
+  if (partesQrCode[0] === "membros" && partesQrCode[1] === "cadastro" && partesQrCode[2]) {
+    return <FormularioPublicoMembros identificador={partesQrCode[2]} />;
   }
 
   if (!identificador) {

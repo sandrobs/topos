@@ -3,7 +3,7 @@
 }
 
 {$DOMINIO_VISITA} {
-    @formulario path /visita/* /api/publico/igrejas/* /assets/* /logo-igreja.jpg
+    @formulario path /visita/* /membros/cadastro/* /api/publico/igrejas/* /api/publico/membros/* /assets/* /logo-igreja.jpg
 
     handle @formulario {
         reverse_proxy aplicacao:8080

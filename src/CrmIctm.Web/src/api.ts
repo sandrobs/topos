@@ -29,6 +29,7 @@ export class ErroDaApi extends Error {
     mensagem: string,
     public readonly erros: ErrosValidacao = {},
     public readonly status = 0,
+    public readonly duplicados: Array<{ id: string; nome: string; sobrenome: string; situacao: string }> = [],
   ) {
     super(mensagem);
   }
@@ -94,6 +95,7 @@ export type IgrejaInterna = {
   estado: string;
   ativa: boolean;
   identificadorPublico: string;
+  identificadorPublicoMembros: string;
   criadaEm: string;
   atualizadaEm: string;
 };
@@ -218,13 +220,16 @@ async function requisicao<T>(url: string, opcoes?: RequestInit): Promise<T> {
 
   const conteudo = (await resposta.json().catch(() => ({}))) as {
     detail?: string;
+    mensagem?: string;
     errors?: ErrosValidacao;
+    duplicados?: Array<{ id: string; nome: string; sobrenome: string; situacao: string }>;
   };
   if (!resposta.ok) {
     throw new ErroDaApi(
-      conteudo.detail ?? "Não foi possível concluir a operação.",
+      conteudo.detail ?? conteudo.mensagem ?? "Não foi possível concluir a operação.",
       conteudo.errors,
       resposta.status,
+      conteudo.duplicados,
     );
   }
 
@@ -376,4 +381,135 @@ export function atualizarDadosComplementares(
     "PUT",
     dados,
   );
+}
+
+export type DadosMembro = {
+  nome: string;
+  sobrenome: string;
+  whatsapp: string | null;
+  email: string | null;
+  dataNascimento: string | null;
+  logradouro: string | null;
+  numero: string | null;
+  bairro: string | null;
+  complemento: string | null;
+  cep: string | null;
+  cidade: string | null;
+  estado: string | null;
+  situacaoBatismo: "NAO_INFORMADO" | "BATIZADO" | "NAO_BATIZADO";
+  dataBatismo: string | null;
+  ehMenor: boolean;
+  nomeResponsavelLegal: string | null;
+  whatsappResponsavelLegal: string | null;
+  vinculoResponsavelLegal: string | null;
+};
+
+export type MembroResumo = {
+  id: string; nome: string; sobrenome: string; whatsapp: string | null;
+  ehMenor: boolean; situacao: "ATIVO" | "INATIVO"; atualizadoEm: string;
+};
+
+export type SolicitacaoMembroResumo = {
+  id: string; nome: string; sobrenome: string; whatsapp: string | null;
+  estado: "PENDENTE" | "APROVADA" | "RECUSADA"; criadaEm: string;
+};
+
+export type HistoricoMembro = {
+  acao: string; descricao: string | null; criadoEm: string; nomeAutor: string;
+};
+
+export type MembroDetalhe = {
+  id: string; igrejaId: string; dados: DadosMembro; situacao: "ATIVO" | "INATIVO";
+  origem: string; dataIngresso: string | null; observacaoPastoral: string | null;
+  motivoInativacao: string | null; criadoEm: string; atualizadoEm: string;
+  historico: HistoricoMembro[];
+};
+
+export type SolicitacaoMembroDetalhe = {
+  id: string; igrejaId: string; dados: DadosMembro;
+  estado: "PENDENTE" | "APROVADA" | "RECUSADA";
+  avisoPrivacidadeVersao: string; criadaEm: string; atualizadaEm: string;
+  decididaEm: string | null; motivoRecusa: string | null; membroId: string | null;
+  historico: HistoricoMembro[];
+};
+
+export type Pagina<T> = { itens: T[]; total: number; pagina: number; tamanhoPagina: number };
+
+export function obterFormularioMembro(identificador: string): Promise<IgrejaPublica> {
+  return requisicao<IgrejaPublica>(`/api/publico/membros/${encodeURIComponent(identificador)}`);
+}
+
+export function enviarSolicitacaoMembro(identificador: string, dados: DadosMembro,
+  versao: string, declaracaoMaioridade: boolean): Promise<{ mensagem: string }> {
+  return requisicao<{ mensagem: string }>(
+    `/api/publico/membros/${encodeURIComponent(identificador)}/solicitacoes`,
+    { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dados, declaracaoMaioridade,
+        avisoPrivacidadeReconhecido: true, avisoPrivacidadeVersao: versao }) },
+  );
+}
+
+export function obterResumoMembros(igrejaId: string): Promise<{
+  ativos: number; inativos: number; pendentes: number;
+}> {
+  return requisicao(`/api/membros/resumo?igrejaId=${encodeURIComponent(igrejaId)}`);
+}
+
+export function listarMembros(igrejaId: string, pagina: number, termo: string,
+  situacao: string): Promise<Pagina<MembroResumo>> {
+  const parametros = new URLSearchParams({ igrejaId, pagina: String(pagina) });
+  if (termo) parametros.set("termo", termo);
+  if (situacao) parametros.set("situacao", situacao);
+  return requisicao(`/api/membros?${parametros}`);
+}
+
+export function listarSolicitacoesMembros(igrejaId: string, pagina: number):
+  Promise<Pagina<SolicitacaoMembroResumo>> {
+  return requisicao(`/api/membros/solicitacoes?igrejaId=${encodeURIComponent(igrejaId)}&pagina=${pagina}`);
+}
+
+export function obterMembro(igrejaId: string, id: string): Promise<MembroDetalhe> {
+  return requisicao(`/api/membros/${id}?igrejaId=${encodeURIComponent(igrejaId)}`);
+}
+
+export function obterSolicitacaoMembro(igrejaId: string, id: string):
+  Promise<SolicitacaoMembroDetalhe> {
+  return requisicao(`/api/membros/solicitacoes/${id}?igrejaId=${encodeURIComponent(igrejaId)}`);
+}
+
+export type SalvarMembro = { dados: DadosMembro; dataIngresso: string | null;
+  observacaoPastoral: string | null; confirmarNovoApesarDuplicidade: boolean };
+
+export function criarMembro(igrejaId: string, dados: SalvarMembro): Promise<{ id: string }> {
+  return mutacao(`/api/membros?igrejaId=${encodeURIComponent(igrejaId)}`, "POST", dados);
+}
+
+export function editarMembro(igrejaId: string, id: string, dados: SalvarMembro): Promise<void> {
+  return mutacao(`/api/membros/${id}?igrejaId=${encodeURIComponent(igrejaId)}`, "PUT", dados);
+}
+
+export function alterarSituacaoMembro(igrejaId: string, id: string,
+  ativo: boolean, motivo: string): Promise<void> {
+  return mutacao(`/api/membros/${id}/situacao?igrejaId=${encodeURIComponent(igrejaId)}`,
+    "PUT", { ativo, motivo });
+}
+
+export function corrigirSolicitacaoMembro(igrejaId: string, id: string,
+  dados: DadosMembro): Promise<void> {
+  return mutacao(`/api/membros/solicitacoes/${id}?igrejaId=${encodeURIComponent(igrejaId)}`,
+    "PUT", { dados });
+}
+
+export function aprovarSolicitacaoMembro(igrejaId: string, id: string,
+  membroExistenteId: string | null, confirmarNovoApesarDuplicidade: boolean,
+  dataIngresso: string | null, observacaoPastoral: string | null): Promise<{ membroId: string }> {
+  return mutacao(`/api/membros/solicitacoes/${id}/aprovar?igrejaId=${encodeURIComponent(igrejaId)}`,
+    "POST", { membroExistenteId, confirmarNovoApesarDuplicidade,
+      dataIngresso, observacaoPastoral });
+}
+
+export function recusarSolicitacaoMembro(igrejaId: string, id: string,
+  motivo: string): Promise<void> {
+  return mutacao(`/api/membros/solicitacoes/${id}/recusar?igrejaId=${encodeURIComponent(igrejaId)}`,
+    "POST", { motivo });
 }

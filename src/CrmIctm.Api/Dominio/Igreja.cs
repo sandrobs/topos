@@ -20,6 +20,7 @@ public sealed class Igreja
     public string Estado { get; private set; } = string.Empty;
     public bool Ativa { get; private set; }
     public string IdentificadorPublico { get; private set; } = string.Empty;
+    public string IdentificadorPublicoMembros { get; private set; } = string.Empty;
     public DateTimeOffset CriadaEm { get; private set; }
     public DateTimeOffset AtualizadaEm { get; private set; }
 
@@ -49,6 +50,7 @@ public sealed class Igreja
             Estado = estado.Trim().ToUpperInvariant(),
             Ativa = true,
             IdentificadorPublico = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(18)),
+            IdentificadorPublicoMembros = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(18)),
             CriadaEm = agora,
             AtualizadaEm = agora
         };

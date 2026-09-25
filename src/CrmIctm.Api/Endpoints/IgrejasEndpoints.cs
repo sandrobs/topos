@@ -60,6 +60,7 @@ public static class IgrejasEndpoints
                 x.Estado,
                 x.Ativa,
                 x.IdentificadorPublico,
+                x.IdentificadorPublicoMembros,
                 x.CriadaEm,
                 x.AtualizadaEm
             })

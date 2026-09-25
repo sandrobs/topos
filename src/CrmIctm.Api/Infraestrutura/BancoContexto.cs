@@ -14,6 +14,9 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
     public DbSet<HistoricoAtendimento> HistoricosAtendimento => Set<HistoricoAtendimento>();
     public DbSet<RegistroAuditoriaAdministrativa> RegistrosAuditoriaAdministrativa =>
         Set<RegistroAuditoriaAdministrativa>();
+    public DbSet<Membro> Membros => Set<Membro>();
+    public DbSet<SolicitacaoMembro> SolicitacoesMembros => Set<SolicitacaoMembro>();
+    public DbSet<HistoricoMembro> HistoricosMembros => Set<HistoricoMembro>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -26,6 +29,7 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
         ConfigurarObservacao(builder);
         ConfigurarHistorico(builder);
         ConfigurarAuditoriaAdministrativa(builder);
+        ConfigurarMembros(builder);
     }
 
     private static void ConfigurarIgreja(ModelBuilder builder)
@@ -43,6 +47,8 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
         igreja.Property(x => x.Estado).HasMaxLength(2).IsFixedLength().IsRequired();
         igreja.Property(x => x.IdentificadorPublico).HasMaxLength(50).IsRequired();
         igreja.HasIndex(x => x.IdentificadorPublico).IsUnique();
+        igreja.Property(x => x.IdentificadorPublicoMembros).HasMaxLength(50).IsRequired();
+        igreja.HasIndex(x => x.IdentificadorPublicoMembros).IsUnique();
     }
 
     private static void ConfigurarUsuario(ModelBuilder builder)
@@ -142,5 +148,65 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
             .WithMany()
             .HasForeignKey(x => x.AutorId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigurarMembros(ModelBuilder builder)
+    {
+        var membro = builder.Entity<Membro>();
+        membro.ToTable("membros");
+        membro.HasKey(x => x.Id);
+        membro.Property(x => x.Situacao).HasMaxLength(20).IsRequired();
+        membro.Property(x => x.Origem).HasMaxLength(30).IsRequired();
+        membro.Property(x => x.ObservacaoPastoral).HasMaxLength(2_000);
+        membro.Property(x => x.MotivoInativacao).HasMaxLength(500);
+        membro.HasIndex(x => new { x.IgrejaId, x.Situacao });
+        membro.HasOne(x => x.Igreja).WithMany().HasForeignKey(x => x.IgrejaId)
+            .OnDelete(DeleteBehavior.Restrict);
+        membro.OwnsOne(x => x.Dados, ConfigurarDadosMembro);
+
+        var solicitacao = builder.Entity<SolicitacaoMembro>();
+        solicitacao.ToTable("solicitacoes_membros");
+        solicitacao.HasKey(x => x.Id);
+        solicitacao.Property(x => x.Estado).HasMaxLength(20).IsRequired().IsConcurrencyToken();
+        solicitacao.Property(x => x.AtualizadaEm).IsConcurrencyToken();
+        solicitacao.Property(x => x.AvisoPrivacidadeVersao).HasMaxLength(50).IsRequired();
+        solicitacao.Property(x => x.MotivoRecusa).HasMaxLength(500);
+        solicitacao.HasIndex(x => new { x.IgrejaId, x.Estado, x.CriadaEm });
+        solicitacao.HasOne(x => x.Igreja).WithMany().HasForeignKey(x => x.IgrejaId)
+            .OnDelete(DeleteBehavior.Restrict);
+        solicitacao.HasOne(x => x.DecididaPor).WithMany().HasForeignKey(x => x.DecididaPorId)
+            .OnDelete(DeleteBehavior.Restrict);
+        solicitacao.OwnsOne(x => x.Dados, ConfigurarDadosMembro);
+
+        var historico = builder.Entity<HistoricoMembro>();
+        historico.ToTable("historicos_membros");
+        historico.HasKey(x => x.Id);
+        historico.Property(x => x.Acao).HasMaxLength(40).IsRequired();
+        historico.Property(x => x.Descricao).HasMaxLength(500);
+        historico.HasIndex(x => new { x.IgrejaId, x.MembroId, x.CriadoEm });
+        historico.HasIndex(x => new { x.IgrejaId, x.SolicitacaoId, x.CriadoEm });
+        historico.HasOne(x => x.Autor).WithMany().HasForeignKey(x => x.AutorId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    private static void ConfigurarDadosMembro<TOwner>(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.OwnedNavigationBuilder<TOwner, DadosCadastraisMembro> dados)
+        where TOwner : class
+    {
+        dados.Property(x => x.Nome).HasMaxLength(100).IsRequired();
+        dados.Property(x => x.Sobrenome).HasMaxLength(100).IsRequired();
+        dados.Property(x => x.Whatsapp).HasMaxLength(14);
+        dados.Property(x => x.Email).HasMaxLength(254);
+        dados.Property(x => x.Logradouro).HasMaxLength(150);
+        dados.Property(x => x.Numero).HasMaxLength(20);
+        dados.Property(x => x.Bairro).HasMaxLength(100);
+        dados.Property(x => x.Complemento).HasMaxLength(100);
+        dados.Property(x => x.Cep).HasMaxLength(8);
+        dados.Property(x => x.Cidade).HasMaxLength(100);
+        dados.Property(x => x.Estado).HasMaxLength(2);
+        dados.Property(x => x.SituacaoBatismo).HasMaxLength(20).IsRequired();
+        dados.Property(x => x.NomeResponsavelLegal).HasMaxLength(150);
+        dados.Property(x => x.WhatsappResponsavelLegal).HasMaxLength(14);
+        dados.Property(x => x.VinculoResponsavelLegal).HasMaxLength(60);
     }
 }

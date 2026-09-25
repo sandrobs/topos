@@ -29,6 +29,7 @@ import {
   type UsuarioInterno,
 } from "./api";
 import { GestaoIgrejas, GestaoUsuarios } from "./Administracao";
+import { GestaoMembros } from "./GestaoMembros";
 import {
   obterIgrejaSelecionadaDaSessao,
   obterIgrejaSelecionadaDoEndereco,
@@ -101,7 +102,7 @@ export function PaginaLogin() {
         <section className="mensagem login">
           <div className="cabecalho-login">
             <LogoIgreja />
-            <div><small>Área da equipe</small><strong>Gestão de visitantes</strong></div>
+            <div><small>Área da equipe</small><strong>Gestão da igreja</strong></div>
           </div>
           <h1>Que bom ter você de volta</h1>
           <p>Entre com a conta fornecida pela sua igreja.</p>
@@ -202,7 +203,7 @@ export function PainelAtendimentos() {
   const [movendoAtendimentoId, setMovendoAtendimentoId] = useState<string | null>(null);
   const [conclusaoPendente, setConclusaoPendente] = useState<AtendimentoResumo | null>(null);
   const [resultadoConclusao, setResultadoConclusao] = useState<ResultadoAtendimento | "">("");
-  const [secao, setSecao] = useState<"ATENDIMENTOS" | "IGREJAS" | "USUARIOS">("ATENDIMENTOS");
+  const [secao, setSecao] = useState<"ATENDIMENTOS" | "MEMBROS" | "IGREJAS" | "USUARIOS">("ATENDIMENTOS");
   const igrejaIdAtual = useRef("");
 
   const carregarAtendimentos = useCallback(async (idIgreja: string, termo = "") => {
@@ -416,10 +417,10 @@ export function PainelAtendimentos() {
       <header className="topo-painel">
         <div className="identidade-painel">
           <LogoIgreja />
-          <div><strong>Gestão de visitantes</strong><small>Olá, {sessao?.nome}</small></div>
+          <div><strong>Gestão da igreja</strong><small>Olá, {sessao?.nome}</small></div>
         </div>
         <div className="acoes-topo">
-          {secao === "ATENDIMENTOS" && sessao?.perfil === "ADMINISTRADOR" && (
+          {(secao === "ATENDIMENTOS" || secao === "MEMBROS") && sessao?.perfil === "ADMINISTRADOR" && (
             <SeletorIgreja
               igrejas={igrejas}
               igrejaId={igrejaId}
@@ -448,6 +449,10 @@ export function PainelAtendimentos() {
 
       <nav className="navegacao-interna" aria-label="Seções do sistema">
         <button type="button" className={secao === "ATENDIMENTOS" ? "ativo" : ""} onClick={() => setSecao("ATENDIMENTOS")}>Atendimentos</button>
+        {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
+          <button type="button" className={secao === "MEMBROS" ? "ativo" : ""}
+            onClick={() => { setSecao("MEMBROS"); setDetalhe(null); }}>Membros</button>
+        )}
         {sessao?.perfil === "ADMINISTRADOR" && (
           <button type="button" className={secao === "IGREJAS" ? "ativo" : ""} onClick={() => { setSecao("IGREJAS"); setDetalhe(null); }}>Igrejas</button>
         )}
@@ -555,12 +560,17 @@ export function PainelAtendimentos() {
         <GestaoIgrejas igrejas={igrejas} aoAtualizar={atualizarIgrejas} />
       )}
 
+      {secao === "MEMBROS" && sessao && (sessao.perfil === "ADMINISTRADOR" || sessao.perfil === "PASTOR") &&
+        igrejas.find((item) => item.id === igrejaId) && (
+        <GestaoMembros key={igrejaId} igreja={igrejas.find((item) => item.id === igrejaId)!} />
+      )}
+
       {secao === "USUARIOS" && sessao && (sessao.perfil === "ADMINISTRADOR" || sessao.perfil === "PASTOR") && (
         <GestaoUsuarios sessao={sessao} igrejas={igrejas} />
       )}
 
       <footer className="rodape-painel">
-        <span>IEC · Gestão de visitantes</span>
+        <span>IEC · Gestão da igreja</span>
         <span>Ambiente interno e protegido</span>
       </footer>
     </main>
