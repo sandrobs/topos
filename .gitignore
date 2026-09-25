@@ -1,0 +1,15 @@
+.tools/
+.dotnet-home/
+.vs/
+.vscode/
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+.env
+.env.*
+!.env.example
+!deploy/.env.production.example
+*.user
+*.suo
+*.log

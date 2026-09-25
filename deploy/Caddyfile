@@ -1,0 +1,15 @@
+{$DOMINIO_GESTAO} {
+    reverse_proxy aplicacao:8080
+}
+
+{$DOMINIO_VISITA} {
+    @formulario path /visita/* /api/publico/igrejas/* /assets/* /logo-igreja.jpg
+
+    handle @formulario {
+        reverse_proxy aplicacao:8080
+    }
+
+    handle {
+        respond "Página não encontrada" 404
+    }
+}

@@ -1,0 +1,53 @@
+services:
+  banco:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-crm_ictm}
+      POSTGRES_USER: ${POSTGRES_USER:-crm_ictm}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - dados-postgres:/var/lib/postgresql
+
+  aplicacao:
+    image: ${IMAGEM_APLICACAO:-crm-ictm:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__Banco: Host=banco;Port=5432;Database=${POSTGRES_DB:-crm_ictm};Username=${POSTGRES_USER:-crm_ictm};Password=${POSTGRES_PASSWORD}
+      Banco__AplicarMigracoesAoIniciar: "true"
+      Seguranca__DiretorioChaves: /app/chaves
+      Aplicacao__UrlPublica: ${URL_PUBLICA:-}
+      DadosIniciais__Igreja__Nome: ${IGREJA_NOME:-}
+      DadosIniciais__Igreja__Logradouro: ${IGREJA_LOGRADOURO:-}
+      DadosIniciais__Igreja__Numero: ${IGREJA_NUMERO:-}
+      DadosIniciais__Igreja__Bairro: ${IGREJA_BAIRRO:-}
+      DadosIniciais__Igreja__Complemento: ${IGREJA_COMPLEMENTO:-}
+      DadosIniciais__Igreja__Cep: ${IGREJA_CEP:-}
+      DadosIniciais__Igreja__Cidade: ${IGREJA_CIDADE:-}
+      DadosIniciais__Igreja__Estado: ${IGREJA_ESTADO:-}
+      DadosIniciais__Administrador__Nome: ${ADMIN_NOME:-}
+      DadosIniciais__Administrador__Email: ${ADMIN_EMAIL:-}
+      DadosIniciais__Administrador__Senha: ${ADMIN_SENHA:-}
+      AvisoPrivacidade__Versao: ${AVISO_PRIVACIDADE_VERSAO:-}
+      AvisoPrivacidade__Texto: ${AVISO_PRIVACIDADE_TEXTO:-}
+    ports:
+      # A aplicação não publica a porta na internet. Em produção, o proxy
+      # Caddy utiliza a rede interna do Compose e expõe somente 80/443.
+      - "127.0.0.1:${PORTA_HTTP:-8080}:8080"
+    volumes:
+      - chaves-aplicacao:/app/chaves
+    restart: unless-stopped
+
+volumes:
+  dados-postgres:
+  chaves-aplicacao:

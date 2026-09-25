@@ -1,0 +1,20 @@
+services:
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      - aplicacao
+    environment:
+      DOMINIO_GESTAO: ${DOMINIO_GESTAO:?Defina DOMINIO_GESTAO}
+      DOMINIO_VISITA: ${DOMINIO_VISITA:?Defina DOMINIO_VISITA}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - dados-caddy:/data
+      - configuracao-caddy:/config
+    restart: unless-stopped
+
+volumes:
+  dados-caddy:
+  configuracao-caddy:

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="src/CrmIctm.Api/CrmIctm.Api.csproj" />
+  <Project Path="tests/CrmIctm.Api.Tests/CrmIctm.Api.Tests.csproj" />
+</Solution>
+

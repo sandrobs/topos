@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
+
+WORKDIR /app
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+
+COPY publish/ ./
+COPY dist/ ./wwwroot/
+
+USER root
+RUN mkdir -p /app/chaves \
+    && chown -R $APP_UID:$APP_UID /app/chaves \
+    && chmod -R a+rX /app/wwwroot
+USER $APP_UID
+
+ENTRYPOINT ["dotnet", "CrmIctm.Api.dll"]

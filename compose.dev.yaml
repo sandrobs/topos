@@ -1,0 +1,4 @@
+services:
+  banco:
+    ports:
+      - "${PORTA_POSTGRES:-5432}:5432"
