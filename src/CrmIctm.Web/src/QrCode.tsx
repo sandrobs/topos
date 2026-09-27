@@ -62,12 +62,16 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
         </header>
 
         <section className="imagem-cartaz">
-          <img src="/imagem-nave-igreja.png" alt="Nave da igreja durante um momento de louvor" />
-          <div className="chamada-imagem">
-            <span>Você é nosso convidado</span>
-            <strong>Ainda há lugar.</strong>
-            <cite>Lucas 14:22</cite>
-          </div>
+          <img
+            src="/imagem-nave-igreja.png"
+            alt="Altar e cruz da igreja de Três de Maio durante um momento de louvor"
+          />
+        </section>
+
+        <section className="chamada-cartaz" aria-label="Convite e referência bíblica">
+          <span>Você é nosso convidado</span>
+          <strong>Ainda há lugar.</strong>
+          <cite>Lucas 14:22</cite>
         </section>
 
         <section className="conteudo-cartaz">
@@ -99,9 +103,8 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
         </section>
 
         <footer className="rodape-cartaz">
-          <div className="selo-cartaz" aria-hidden="true">✓</div>
           <p><strong>Ficamos felizes com a sua visita.</strong><span>Esperamos falar com você em breve.</span></p>
-          <span className="nome-rodape-cartaz"><strong>{igreja.nome}</strong><small>{formatarEndereco(igreja)}</small></span>
+          <span className="endereco-rodape-cartaz">{formatarEndereco(igreja)}</span>
         </footer>
       </article>
     </main>

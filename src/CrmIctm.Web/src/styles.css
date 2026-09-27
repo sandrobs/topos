@@ -2256,11 +2256,12 @@ button[type="submit"]:disabled {
 }
 
 .cartaz-a4 {
+  --azul-cartaz: #080c5c;
   width: 210mm;
   height: 297mm;
   margin: 0 auto;
   display: grid;
-  grid-template-rows: 34mm 82mm 1fr 22mm;
+  grid-template-rows: 34mm 57mm 38.4mm minmax(0, 1fr) 22mm;
   overflow: hidden;
   color: var(--texto);
   background: var(--branco);
@@ -2276,27 +2277,14 @@ button[type="submit"]:disabled {
   gap: 5mm;
   overflow: hidden;
   color: var(--branco);
-  background: linear-gradient(125deg, #08143b, #122b6b);
-}
-
-.cabecalho-cartaz::after {
-  position: absolute;
-  z-index: -1;
-  top: -34mm;
-  right: -18mm;
-  width: 72mm;
-  height: 72mm;
-  content: "";
-  background: linear-gradient(145deg, rgba(247, 217, 141, 0.34), rgba(217, 168, 70, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 50%;
+  background: var(--azul-cartaz);
 }
 
 .logo-cartaz {
   width: 20mm;
   height: 20mm;
   padding: 1mm;
-  box-shadow: 0 3mm 6mm rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .cabecalho-cartaz div {
@@ -2333,18 +2321,10 @@ button[type="submit"]:disabled {
 }
 
 .imagem-cartaz {
-  position: relative;
+  min-height: 0;
+  aspect-ratio: 210 / 57;
   overflow: hidden;
-  background: var(--azul-950);
-}
-
-.imagem-cartaz::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(90deg, rgba(5, 13, 40, 0.88), rgba(5, 13, 40, 0.28) 62%, rgba(5, 13, 40, 0.12)),
-    linear-gradient(0deg, rgba(5, 13, 40, 0.38), transparent 60%);
+  background: var(--branco);
 }
 
 .imagem-cartaz > img {
@@ -2352,60 +2332,59 @@ button[type="submit"]:disabled {
   height: 100%;
   display: block;
   object-fit: cover;
-  object-position: center 54%;
+  object-position: center 25%;
 }
 
-.chamada-imagem {
-  position: absolute;
-  z-index: 1;
-  left: 15mm;
-  bottom: 10mm;
-  width: 108mm;
-  color: var(--branco);
+.chamada-cartaz {
+  min-width: 0;
+  padding: 4.6mm 15mm 3.2mm;
+  color: var(--azul-cartaz);
+  background: var(--branco);
+  border-bottom: 1px solid var(--borda);
 }
 
-.chamada-imagem span,
-.chamada-imagem strong,
-.chamada-imagem cite {
+.chamada-cartaz span,
+.chamada-cartaz strong,
+.chamada-cartaz cite {
   display: block;
 }
 
-.chamada-imagem span {
-  margin-bottom: 4.5mm;
-  color: #f2cf7c;
+.chamada-cartaz span {
+  margin-bottom: 2.3mm;
+  color: #626879;
   font-size: 3.5mm;
+  line-height: 1.2;
   font-weight: 850;
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
-.chamada-imagem strong {
+.chamada-cartaz strong {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 13mm;
+  font-size: 13.5mm;
   font-weight: 700;
-  line-height: 1.02;
+  line-height: 1.08;
   letter-spacing: -0.025em;
-  text-shadow: 0 2mm 5mm rgba(0, 0, 0, 0.34);
 }
 
-.chamada-imagem cite {
-  margin-top: 3mm;
-  color: #f2cf7c;
+.chamada-cartaz cite {
+  margin-top: 2.3mm;
+  color: #876221;
   font-size: 5mm;
+  line-height: 1.2;
   font-style: normal;
   font-weight: 850;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  text-shadow: 0 1mm 3mm rgba(0, 0, 0, 0.36);
 }
 
-.chamada-imagem cite::before {
+.chamada-cartaz cite::before {
   width: 12mm;
   height: 0.6mm;
   margin: 0 3mm 1.3mm 0;
   display: inline-block;
   content: "";
-  background: #f2cf7c;
+  background: currentColor;
   border-radius: 999px;
 }
 
@@ -2415,14 +2394,12 @@ button[type="submit"]:disabled {
   grid-template-columns: minmax(0, 1fr) 70mm;
   align-items: center;
   gap: 11mm;
-  background:
-    radial-gradient(circle at 100% 100%, rgba(46, 95, 202, 0.07), transparent 35%),
-    var(--branco);
+  background: var(--branco);
 }
 
 .rotulo-cartaz {
   margin: 0 0 2mm;
-  color: var(--azul-600);
+  color: var(--azul-cartaz);
   font-size: 3.2mm;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -2469,7 +2446,7 @@ button[type="submit"]:disabled {
   display: grid;
   place-items: center;
   color: var(--branco);
-  background: var(--azul-600);
+  background: var(--azul-cartaz);
   border-radius: 50%;
   font-size: 3mm;
   font-weight: 850;
@@ -2479,9 +2456,8 @@ button[type="submit"]:disabled {
   padding: 5mm;
   color: var(--branco);
   text-align: center;
-  background: linear-gradient(145deg, var(--azul-950), var(--azul-700));
+  background: var(--azul-cartaz);
   border-radius: 6mm;
-  box-shadow: 0 4mm 9mm rgba(9, 22, 63, 0.18);
 }
 
 .moldura-qr-code {
@@ -2518,20 +2494,7 @@ button[type="submit"]:disabled {
   align-items: center;
   gap: 3mm;
   color: var(--branco);
-  background: var(--azul-950);
-}
-
-.selo-cartaz {
-  flex: 0 0 auto;
-  width: 10mm;
-  height: 10mm;
-  display: grid;
-  place-items: center;
-  color: var(--azul-950);
-  background: #f2cf7c;
-  border-radius: 50%;
-  font-size: 4mm;
-  font-weight: 900;
+  background: var(--azul-cartaz);
 }
 
 .rodape-cartaz p {
@@ -2553,26 +2516,13 @@ button[type="submit"]:disabled {
   font-size: 2.8mm;
 }
 
-.nome-rodape-cartaz {
-  max-width: 63mm;
+.endereco-rodape-cartaz {
+  max-width: 88mm;
   margin-left: auto;
   color: #f2cf7c;
-  font-size: 3.1mm;
-  font-weight: 750;
+  font-size: 2.8mm;
+  line-height: 1.4;
   text-align: right;
-}
-
-.nome-rodape-cartaz strong,
-.nome-rodape-cartaz small {
-  display: block;
-}
-
-.nome-rodape-cartaz small {
-  margin-top: 1.2mm;
-  color: rgba(255, 255, 255, 0.62);
-  font-size: 2.25mm;
-  font-weight: 500;
-  line-height: 1.35;
 }
 
 @media screen and (max-width: 850px) {
@@ -2593,7 +2543,7 @@ button[type="submit"]:disabled {
   .cartaz-a4 {
     width: 100%;
     height: auto;
-    grid-template-rows: auto 260px auto auto;
+    grid-template-rows: repeat(5, auto);
   }
 
   .cabecalho-cartaz {
@@ -2619,28 +2569,25 @@ button[type="submit"]:disabled {
     font-size: 0.72rem;
   }
 
-  .chamada-imagem {
-    left: 24px;
-    right: 24px;
-    bottom: 18px;
-    width: auto;
+  .chamada-cartaz {
+    padding: 20px 24px 18px;
   }
 
-  .chamada-imagem span {
-    margin-bottom: 16px;
+  .chamada-cartaz span {
+    margin-bottom: 10px;
     font-size: 0.7rem;
   }
 
-  .chamada-imagem strong {
-    font-size: 3rem;
+  .chamada-cartaz strong {
+    font-size: clamp(2rem, 8vw, 3rem);
   }
 
-  .chamada-imagem cite {
+  .chamada-cartaz cite {
     margin-top: 10px;
     font-size: 1rem;
   }
 
-  .chamada-imagem cite::before {
+  .chamada-cartaz cite::before {
     width: 38px;
     height: 2px;
     margin: 0 10px 4px 0;
@@ -2697,12 +2644,9 @@ button[type="submit"]:disabled {
 
   .rodape-cartaz {
     padding: 18px 20px;
-  }
-
-  .selo-cartaz {
-    width: 38px;
-    height: 38px;
-    font-size: 0.9rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
   .rodape-cartaz p strong {
@@ -2710,12 +2654,14 @@ button[type="submit"]:disabled {
   }
 
   .rodape-cartaz p span,
-  .nome-rodape-cartaz {
-    font-size: 0.67rem;
+  .endereco-rodape-cartaz {
+    font-size: 0.72rem;
   }
 
-  .nome-rodape-cartaz {
-    display: none;
+  .endereco-rodape-cartaz {
+    max-width: none;
+    margin-left: 0;
+    text-align: left;
   }
 }
 
@@ -2766,7 +2712,7 @@ button[type="submit"]:disabled {
     height: 297mm;
     margin: 0;
     flex: 0 0 auto;
-    grid-template-rows: 34mm 82mm 1fr 22mm;
+    grid-template-rows: 34mm 57mm 38.4mm minmax(0, 1fr) 22mm;
     overflow: hidden;
     box-shadow: none;
     zoom: 1;
@@ -2809,33 +2755,6 @@ button[type="submit"]:disabled {
 
   .cabecalho-cartaz small {
     font-size: 3.2mm;
-  }
-
-  .chamada-imagem {
-    right: auto;
-    left: 15mm;
-    bottom: 10mm;
-    width: 108mm;
-  }
-
-  .chamada-imagem span {
-    margin-bottom: 4.5mm;
-    font-size: 3.5mm;
-  }
-
-  .chamada-imagem strong {
-    font-size: 13mm;
-  }
-
-  .chamada-imagem cite {
-    margin-top: 3mm;
-    font-size: 5mm;
-  }
-
-  .chamada-imagem cite::before {
-    width: 12mm;
-    height: 0.6mm;
-    margin: 0 3mm 1.3mm 0;
   }
 
   .conteudo-cartaz {
@@ -2895,12 +2814,6 @@ button[type="submit"]:disabled {
     padding: 5mm 15mm;
   }
 
-  .selo-cartaz {
-    width: 10mm;
-    height: 10mm;
-    font-size: 4mm;
-  }
-
   .rodape-cartaz p strong {
     font-size: 3.5mm;
   }
@@ -2909,8 +2822,8 @@ button[type="submit"]:disabled {
     font-size: 2.8mm;
   }
 
-  .nome-rodape-cartaz {
+  .endereco-rodape-cartaz {
     display: block;
-    font-size: 3.1mm;
+    font-size: 2.8mm;
   }
 }
