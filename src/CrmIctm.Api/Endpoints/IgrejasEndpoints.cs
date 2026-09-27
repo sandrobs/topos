@@ -18,6 +18,8 @@ public static class IgrejasEndpoints
 
         grupo.MapGet("", ListarAsync);
         grupo.MapGet("/{id:guid}/qrcode", ObterQrCodeAsync);
+        grupo.MapGet("/{id:guid}/convite.pdf", ObterConvitePdfAsync)
+            .RequireRateLimiting("convite-pdf");
         grupo.MapPost("", CriarAsync)
             .WithMetadata(new RequireAntiforgeryTokenAttribute());
         grupo.MapPut("/{id:guid}", EditarAsync)
@@ -242,19 +244,49 @@ public static class IgrejasEndpoints
             return Results.NotFound();
         }
 
-        var origem = configuracao["Aplicacao:UrlPublica"]?.TrimEnd('/');
-        if (string.IsNullOrWhiteSpace(origem))
-        {
-            origem = $"{requisicao.Scheme}://{requisicao.Host}";
-        }
-
-        var url = $"{origem}/visita/{igreja.IdentificadorPublico}";
+        var url = ObterEnderecoFormulario(igreja, requisicao, configuracao);
         using var dadosQrCode = QRCodeGenerator.GenerateQrCode(url, QRCodeGenerator.ECCLevel.Q);
         var svg = new SvgQRCode(dadosQrCode).GetGraphic(8);
         resposta.Headers.ContentDisposition = $"inline; filename=qr-code-{igreja.Id:N}.svg";
         resposta.Headers.CacheControl = "no-store, no-cache, must-revalidate";
         resposta.Headers.Pragma = "no-cache";
         return Results.Content(svg, "image/svg+xml", System.Text.Encoding.UTF8);
+    }
+
+    private static async Task<IResult> ObterConvitePdfAsync(
+        Guid id,
+        HttpRequest requisicao,
+        HttpResponse resposta,
+        IConfiguration configuracao,
+        BancoContexto banco,
+        UsuarioAtual usuarioAtual,
+        GeradorConviteVisitantesPdf gerador,
+        CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioAtual.ObterAsync(cancellationToken);
+        if (usuario is null) return Results.Unauthorized();
+
+        var consulta = banco.Igrejas.AsNoTracking().Where(x => x.Id == id && x.Ativa);
+        if (usuario.Perfil != PerfilUsuario.Administrador)
+        {
+            consulta = consulta.Where(x => x.Id == usuario.IgrejaId);
+        }
+        var igreja = await consulta.SingleOrDefaultAsync(cancellationToken);
+        if (igreja is null) return Results.NotFound();
+
+        var pdf = gerador.Gerar(igreja, ObterEnderecoFormulario(igreja, requisicao, configuracao));
+        resposta.Headers.ContentDisposition = $"inline; filename=convite-visitantes-{igreja.Id:N}.pdf";
+        resposta.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        resposta.Headers.Pragma = "no-cache";
+        resposta.Headers.XContentTypeOptions = "nosniff";
+        return Results.File(pdf, "application/pdf");
+    }
+
+    private static string ObterEnderecoFormulario(Igreja igreja, HttpRequest requisicao, IConfiguration configuracao)
+    {
+        var origem = configuracao["Aplicacao:UrlPublica"]?.TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(origem)) origem = $"{requisicao.Scheme}://{requisicao.Host}";
+        return $"{origem}/visita/{igreja.IdentificadorPublico}";
     }
 
     private static Dictionary<string, string[]> Validar(SalvarIgrejaRequisicao requisicao)

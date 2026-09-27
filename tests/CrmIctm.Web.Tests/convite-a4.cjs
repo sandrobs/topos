@@ -18,7 +18,7 @@ const telas = [
   { nome: 'computador', viewport: { width: 1440, height: 1200 } },
   { nome: 'celular', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
   { nome: 'tablet', viewport: { width: 834, height: 1194 }, isMobile: true, hasTouch: true },
-  // Exercita o tratamento já existente de iPad, mas não substitui Safari real.
+  // O PDF do backend ignora o dispositivo; esta simulação não substitui Safari real.
   { nome: 'ipad-emulado', viewport: { width: 834, height: 1194 }, isMobile: true,
     hasTouch: true, userAgent: 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1' },
 ];
@@ -39,6 +39,9 @@ async function verificarLayout(pagina, impressao) {
     const foto = document.querySelector('.imagem-cartaz');
     const chamada = document.querySelector('.chamada-cartaz');
     const titulo = chamada.querySelector('strong');
+    const rodape = document.querySelector('.rodape-cartaz');
+    const endereco = rodape.querySelector('.endereco-rodape-cartaz').getBoundingClientRect();
+    const cep = rodape.querySelector('.cep-cartaz');
     const limites = cartaz.getBoundingClientRect();
     const regioes = [...cartaz.children].map(elemento => {
       const retangulo = elemento.getBoundingClientRect();
@@ -58,6 +61,8 @@ async function verificarLayout(pagina, impressao) {
       imagensCompletas: [...cartaz.querySelectorAll('img')].every(img => img.complete && img.naturalWidth > 0),
       nomeCompleto: (() => { const nome = document.querySelector('.cabecalho-cartaz strong');
         return nome.scrollWidth <= nome.clientWidth + 1; })(),
+      enderecoAbaixoDaMensagem: endereco.top >= rodape.querySelector('p').getBoundingClientRect().bottom - 1,
+      cepSemQuebra: getComputedStyle(cep).whiteSpace === 'nowrap',
       conteudoDentroDaFolha: regioes.every(regiao => regiao.topo >= limites.top - 1
         && regiao.fim <= limites.bottom + 1 && regiao.esquerda >= limites.left - 1
         && regiao.direita <= limites.right + 1),
@@ -73,6 +78,8 @@ async function verificarLayout(pagina, impressao) {
   assert.ok(medidas.fundos.every(cor => cor === 'rgb(8, 12, 92)'));
   assert.ok(medidas.imagensCompletas);
   assert.ok(medidas.nomeCompleto, 'O nome da igreja não pode ser cortado.');
+  assert.ok(medidas.enderecoAbaixoDaMensagem, 'O endereço completo deve ocupar um bloco abaixo da mensagem.');
+  assert.ok(medidas.cepSemQuebra, 'O CEP não pode ser dividido.');
   assert.ok(medidas.conteudoDentroDaFolha, 'As seções devem caber na folha.');
   assert.ok(medidas.semSobreposicao, 'As seções não podem se sobrepor.');
   if (!impressao) assert.ok(medidas.semRolagemHorizontal);
@@ -103,7 +110,8 @@ async function executar() {
             if (resposta.status() >= 400) falhasRecursos.push(`${resposta.status()} ${resposta.url()}`);
           });
           await pagina.goto(`/qrcode/${igreja.id}`);
-          await pagina.getByRole('button', { name: 'Imprimir em A4' }).waitFor();
+          const abrirPdf = pagina.getByRole('link', { name: 'Abrir PDF A4' });
+          await abrirPdf.waitFor();
           await pagina.waitForFunction(() => [...document.querySelectorAll('.cartaz-a4 img')]
             .every(img => img.complete && img.naturalWidth > 0));
           await verificarLayout(pagina, false);
@@ -111,9 +119,24 @@ async function executar() {
           await pagina.locator('.cartaz-a4').screenshot({ path: path.join(pastaSaida, `${prefixo}-tela.png`) });
           await pagina.emulateMedia({ media: 'print' });
           await verificarLayout(pagina, true);
-          await pagina.pdf({ path: path.join(pastaSaida, `${prefixo}.pdf`),
-            preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false });
           await pagina.emulateMedia({ media: 'screen' });
+          assert.equal(await abrirPdf.getAttribute('href'), `/api/igrejas/${igreja.id}/convite.pdf`);
+          assert.equal(await abrirPdf.getAttribute('target'), '_blank');
+          const arquivoPdf = await contexto.request.get(await abrirPdf.getAttribute('href'));
+          assert.equal(arquivoPdf.status(), 200);
+          assert.equal(arquivoPdf.headers()['content-type'], 'application/pdf');
+          assert.ok(arquivoPdf.headers()['content-disposition'].startsWith('inline;'));
+          const bytesPdf = await arquivoPdf.body();
+          assert.equal(bytesPdf.subarray(0, 5).toString(), '%PDF-');
+          fs.writeFileSync(path.join(pastaSaida, `${prefixo}.pdf`), bytesPdf);
+          const [abaPdf, respostaDoClique] = await Promise.all([
+            contexto.waitForEvent('page'),
+            contexto.waitForEvent('response', resposta => resposta.url().endsWith(`/api/igrejas/${igreja.id}/convite.pdf`)),
+            abrirPdf.click(),
+          ]);
+          assert.equal(respostaDoClique.status(), 200, 'O clique deve abrir o PDF autenticado em outra aba.');
+          assert.equal(respostaDoClique.headers()['content-type'], 'application/pdf');
+          await abaPdf.close();
           const voltar = pagina.getByRole('link', { name: 'Voltar ao painel', exact: false });
           assert.ok((await voltar.getAttribute('href')).includes(`igrejaId=${igreja.id}`));
           await voltar.click();
@@ -121,7 +144,7 @@ async function executar() {
           assert.equal(new URL(pagina.url()).searchParams.get('igrejaId'), igreja.id);
           const formulario = await contexto.request.get(`/api/publico/igrejas/${igreja.identificadorPublico}`);
           assert.equal(formulario.status(), 200, 'O formulário de visitantes deve continuar acessível.');
-          console.log(`${nome}: convite, impressão e retorno à igreja validados.`);
+          console.log(`${nome}: prévia, PDF do backend e retorno à igreja validados.`);
           await pagina.close();
         }
       } finally { await contexto.close(); }

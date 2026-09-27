@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+FontesConvitePdf.Configurar();
 
 // O HTTPS termina no Caddy da VPS. A API fica acessível somente na rede
 // interna do Compose e em 127.0.0.1 no host; os cabeçalhos encaminhados
@@ -130,10 +131,20 @@ builder.Services.AddRateLimiter(opcoes =>
                 Window = TimeSpan.FromMinutes(5),
                 QueueLimit = 0
             }));
+    opcoes.AddPolicy("convite-pdf", contexto =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            contexto.Connection.RemoteIpAddress?.ToString() ?? "desconhecido",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
 });
 
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.AddScoped<UsuarioAtual>();
+builder.Services.AddSingleton<GeradorConviteVisitantesPdf>();
 
 var app = builder.Build();
 

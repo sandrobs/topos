@@ -12,5 +12,13 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="QRCoder" />
+    <PackageReference Include="PDFsharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Recursos/Convite/*" LogicalName="Convite.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="../CrmIctm.Web/public/logo-igreja.jpg" LogicalName="Convite.logo-igreja.jpg" />
+    <EmbeddedResource Include="../CrmIctm.Web/public/imagem-nave-igreja.png" LogicalName="Convite.imagem-nave-igreja.png" />
+    <Content Include="Recursos/Convite/LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { ErroDaApi, listarIgrejas, type IgrejaInterna } from "./api";
 import { enderecoPainelDaIgreja, salvarIgrejaSelecionada } from "./contextoIgreja";
 import { LogoIgreja } from "./LogoIgreja";
-import { formatarEndereco } from "./formatadores";
+import { formatarCep, formatarEndereco } from "./formatadores";
 
 export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
   const [igreja, setIgreja] = useState<IgrejaInterna | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-  const dispositivoIpad = ehIpad();
 
   useEffect(() => {
     const carregar = async () => {
@@ -45,11 +44,17 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
   }
 
   return (
-    <main className={`pagina-cartaz${dispositivoIpad ? " pagina-cartaz-ipad" : ""}`}>
+    <main className="pagina-cartaz">
       <nav className="acoes-cartaz" aria-label="Ações do cartaz">
         <a href={enderecoPainelDaIgreja(igreja.id)}>← Voltar ao painel</a>
-        <button type="button" onClick={() => window.print()}>Imprimir em A4</button>
+        <a
+          className="botao-pdf-cartaz"
+          href={`/api/igrejas/${igreja.id}/convite.pdf`}
+          target="_blank"
+          rel="noopener"
+        >Abrir PDF A4</a>
       </nav>
+      <p className="orientacao-pdf-cartaz">Para imprimir ou salvar, abra o PDF A4. Ele é gerado no servidor e não depende do tamanho da tela.</p>
 
       <article className="cartaz-a4" aria-label={`Convite de boas-vindas da ${igreja.nome}`}>
         <header className="cabecalho-cartaz">
@@ -104,16 +109,14 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
 
         <footer className="rodape-cartaz">
           <p><strong>Ficamos felizes com a sua visita.</strong><span>Esperamos falar com você em breve.</span></p>
-          <span className="endereco-rodape-cartaz">{formatarEndereco(igreja)}</span>
+          <span className="endereco-rodape-cartaz">
+            {formatarEndereco(igreja).split(" · CEP ")[0]}
+            {igreja.cep && <> · <span className="cep-cartaz">CEP {formatarCep(igreja.cep)}</span></>}
+          </span>
         </footer>
       </article>
     </main>
   );
-}
-
-function ehIpad() {
-  return /iPad/i.test(navigator.userAgent)
-    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
 function EstadoCartaz({ titulo, texto }: { titulo: string; texto?: string }) {
