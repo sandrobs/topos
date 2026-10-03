@@ -11,12 +11,106 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using PdfSharp.Pdf.IO;
 
 namespace CrmIctm.Api.Tests.Integracao;
 
 public sealed class GestaoAdministrativaTests
 {
     private const string SenhaAdministrador = "Administrador!2026";
+
+    [Fact]
+    public async Task ConvitePdfDeveSerA4DeUmaPaginaComDestinoPermanente()
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var (administrador, igreja) = await CriarAdministradorEIgrejaAsync(aplicacao.Services);
+        var cliente = CriarCliente(aplicacao);
+        var anonimo = await cliente.GetAsync($"/api/igrejas/{igreja.Id}/convite.pdf");
+        Assert.Equal(HttpStatusCode.Unauthorized, anonimo.StatusCode);
+        await EntrarAsync(cliente, administrador.Email!, SenhaAdministrador);
+
+        var resposta = await cliente.GetAsync($"/api/igrejas/{igreja.Id}/convite.pdf");
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        Assert.Equal("application/pdf", resposta.Content.Headers.ContentType!.MediaType);
+        Assert.Equal("inline", resposta.Content.Headers.ContentDisposition!.DispositionType);
+        Assert.True(resposta.Headers.CacheControl!.NoStore);
+        using var memoria = new MemoryStream(await resposta.Content.ReadAsByteArrayAsync());
+        using var documento = PdfReader.Open(memoria, PdfDocumentOpenMode.Import);
+        Assert.Equal(1, documento.PageCount);
+        var pagina = documento.Pages[0];
+        Assert.Equal(210, pagina.Width.Millimeter, 2);
+        Assert.Equal(297, pagina.Height.Millimeter, 2);
+        var anotacao = Assert.Single(pagina.Annotations.Cast<PdfSharp.Pdf.Annotations.PdfAnnotation>());
+        Assert.Equal($"https://localhost/visita/{igreja.IdentificadorPublico}",
+            anotacao.Elements.GetDictionary("/A")!.Elements.GetString("/URI"));
+    }
+
+    [Theory]
+    [InlineData(PerfilUsuario.Pastor)]
+    [InlineData(PerfilUsuario.Equipe)]
+    public async Task ConvitePdfDeveRespeitarIgrejaDoUsuario(PerfilUsuario perfil)
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var igreja = CriarIgreja("Igreja autorizada");
+        var outraIgreja = CriarIgreja("Outra igreja");
+        await using (var escopo = aplicacao.Services.CreateAsyncScope())
+        {
+            var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+            banco.Igrejas.AddRange(igreja, outraIgreja);
+            await banco.SaveChangesAsync();
+        }
+        await CriarUsuarioAsync(aplicacao.Services, "Usuário do convite", "convite@teste.local",
+            "Convite!2026Aa", perfil, igreja.Id, deveTrocarSenha: false);
+        var cliente = CriarCliente(aplicacao);
+        await EntrarAsync(cliente, "convite@teste.local", "Convite!2026Aa");
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await cliente.GetAsync($"/api/igrejas/{outraIgreja.Id}/convite.pdf")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK,
+            (await cliente.GetAsync($"/api/igrejas/{igreja.Id}/convite.pdf")).StatusCode);
+    }
+
+    [Fact]
+    public async Task ConvitePdfNaoDeveAceitarIgrejaInativaOuInexistente()
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var (administrador, igreja) = await CriarAdministradorEIgrejaAsync(aplicacao.Services);
+        await using (var escopo = aplicacao.Services.CreateAsyncScope())
+        {
+            var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+            var registro = await banco.Igrejas.SingleAsync(x => x.Id == igreja.Id);
+            registro.AlterarSituacao(false, DateTimeOffset.UtcNow);
+            await banco.SaveChangesAsync();
+        }
+        var cliente = CriarCliente(aplicacao);
+        await EntrarAsync(cliente, administrador.Email!, SenhaAdministrador);
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await cliente.GetAsync($"/api/igrejas/{igreja.Id}/convite.pdf")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound,
+            (await cliente.GetAsync($"/api/igrejas/{Guid.NewGuid()}/convite.pdf")).StatusCode);
+    }
+
+    [Fact]
+    public async Task ConvitePdfDeveAcomodarNomeEEnderecoLongosSemCriarOutraPagina()
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var (administrador, igreja) = await CriarAdministradorEIgrejaAsync(aplicacao.Services);
+        await using (var escopo = aplicacao.Services.CreateAsyncScope())
+        {
+            var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+            var registro = await banco.Igrejas.SingleAsync(x => x.Id == igreja.Id);
+            registro.AtualizarDados(new string('M', 150), new string('M', 150), new string('M', 20),
+                new string('M', 100), new string('M', 100), "98910000", new string('M', 100), "RS",
+                DateTimeOffset.UtcNow);
+            await banco.SaveChangesAsync();
+        }
+        var cliente = CriarCliente(aplicacao);
+        await EntrarAsync(cliente, administrador.Email!, SenhaAdministrador);
+        var resposta = await cliente.GetAsync($"/api/igrejas/{igreja.Id}/convite.pdf");
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        using var memoria = new MemoryStream(await resposta.Content.ReadAsByteArrayAsync());
+        using var documento = PdfReader.Open(memoria, PdfDocumentOpenMode.Import);
+        Assert.Equal(1, documento.PageCount);
+    }
 
     [Fact]
     public async Task AdministradorDeveCriarIgrejaComEnderecoEAuditoria()

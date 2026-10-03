@@ -11,6 +11,7 @@ COPY NuGet.Config Directory.Build.props Directory.Packages.props .editorconfig .
 COPY src/CrmIctm.Api/CrmIctm.Api.csproj src/CrmIctm.Api/
 RUN dotnet restore src/CrmIctm.Api/CrmIctm.Api.csproj --configfile NuGet.Config
 COPY src/CrmIctm.Api/ src/CrmIctm.Api/
+COPY src/CrmIctm.Web/public/logo-igreja.jpg src/CrmIctm.Web/public/imagem-nave-igreja.png src/CrmIctm.Web/public/
 RUN dotnet publish src/CrmIctm.Api/CrmIctm.Api.csproj \
     --configuration Release \
     --no-restore \
