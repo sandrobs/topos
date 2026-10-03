@@ -203,7 +203,15 @@ export function PainelAtendimentos() {
   const [movendoAtendimentoId, setMovendoAtendimentoId] = useState<string | null>(null);
   const [conclusaoPendente, setConclusaoPendente] = useState<AtendimentoResumo | null>(null);
   const [resultadoConclusao, setResultadoConclusao] = useState<ResultadoAtendimento | "">("");
-  const [secao, setSecao] = useState<"ATENDIMENTOS" | "MEMBROS" | "IGREJAS" | "USUARIOS">("ATENDIMENTOS");
+  const [secao, setSecao] = useState<"ATENDIMENTOS" | "MEMBROS" | "IGREJAS" | "USUARIOS">(
+    () => new URLSearchParams(window.location.search).get("secao") === "MEMBROS" ? "MEMBROS" : "ATENDIMENTOS");
+
+  useEffect(() => {
+    const endereco = new URL(window.location.href);
+    if (secao === "MEMBROS") endereco.searchParams.set("secao", "MEMBROS");
+    else endereco.searchParams.delete("secao");
+    window.history.replaceState(window.history.state, "", endereco);
+  }, [secao]);
   const igrejaIdAtual = useRef("");
 
   const carregarAtendimentos = useCallback(async (idIgreja: string, termo = "") => {
@@ -222,6 +230,7 @@ export function PainelAtendimentos() {
       try {
         const sessaoAtual = await obterSessao();
         setSessao(sessaoAtual);
+        if (sessaoAtual.perfil === "EQUIPE") setSecao("ATENDIMENTOS");
         if (sessaoAtual.deveTrocarSenha) {
           return;
         }

@@ -6,7 +6,8 @@ public sealed record DadosMembroRequisicao(
     string? Bairro, string? Complemento, string? Cep, string? Cidade,
     string? Estado, string? SituacaoBatismo, DateOnly? DataBatismo,
     bool EhMenor = false, string? NomeResponsavelLegal = null,
-    string? WhatsappResponsavelLegal = null, string? VinculoResponsavelLegal = null);
+    string? WhatsappResponsavelLegal = null, string? VinculoResponsavelLegal = null,
+    string? Funcao = null);
 
 public sealed record EnviarSolicitacaoMembroRequisicao(
     DadosMembroRequisicao? Dados, bool DeclaracaoMaioridade,

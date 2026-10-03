@@ -157,6 +157,7 @@ public sealed class CadastroMembrosTests
         Assert.Equal(HttpStatusCode.BadRequest, semResponsavel.StatusCode);
         var comResponsavel = await EnviarComCsrfAsync(pastor, HttpMethod.Post, endereco,
             new { dados = new { nome = "Criança", sobrenome = "Teste", ehMenor = true,
+                funcao = "MEMBRO",
                 nomeResponsavelLegal = "Responsável Teste",
                 whatsappResponsavelLegal = "(11) 98765-4321",
                 vinculoResponsavelLegal = "Mãe" } });
@@ -211,9 +212,59 @@ public sealed class CadastroMembrosTests
         Assert.Equal(existente, (await banco.SolicitacoesMembros.SingleAsync()).MembroId);
     }
 
-    private static object DadosAdulto(DateOnly? nascimento = null) => new
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PdfDeMembrosPreservaAutorizacaoParaOsDoisFormatos(bool quatro)
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var igrejaA = await CriarIgrejaAsync(aplicacao.Services, "Igreja A");
+        var igrejaB = await CriarIgrejaAsync(aplicacao.Services, "Igreja B");
+        await CriarUsuarioAsync(aplicacao.Services, "Pastor", "pastor@teste.local", PerfilUsuario.Pastor, igrejaA.Id);
+        await CriarUsuarioAsync(aplicacao.Services, "Equipe", "equipe@teste.local", PerfilUsuario.Equipe, igrejaA.Id);
+        var url = $"/api/membros/convite.pdf?igrejaId={igrejaA.Id}&quatroPorFolha={quatro}";
+        var publico = CriarCliente(aplicacao);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await publico.GetAsync(url)).StatusCode);
+        var equipe = CriarCliente(aplicacao);
+        await EntrarAsync(equipe, "equipe@teste.local");
+        Assert.Equal(HttpStatusCode.Forbidden, (await equipe.GetAsync(url)).StatusCode);
+        var pastor = CriarCliente(aplicacao);
+        await EntrarAsync(pastor, "pastor@teste.local");
+        Assert.Equal(HttpStatusCode.Forbidden, (await pastor.GetAsync(url.Replace(igrejaA.Id.ToString(), igrejaB.Id.ToString()))).StatusCode);
+        var pdf = await pastor.GetAsync(url);
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+        Assert.Equal("application/pdf", pdf.Content.Headers.ContentType!.MediaType);
+        Assert.True(pdf.Headers.CacheControl!.NoStore);
+        igrejaA.AlterarSituacao(false, DateTimeOffset.UtcNow);
+        await using var escopo = aplicacao.Services.CreateAsyncScope();
+        var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+        var inativa = await banco.Igrejas.FindAsync(igrejaA.Id);
+        inativa!.AlterarSituacao(false, DateTimeOffset.UtcNow);
+        await banco.SaveChangesAsync();
+        Assert.NotEqual(HttpStatusCode.OK, (await pastor.GetAsync(url)).StatusCode);
+    }
+
+    [Fact]
+    public async Task FuncaoReligiosaNaoCriaUsuarioNemAtivaMembroAutomaticamente()
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var igreja = await CriarIgrejaAsync(aplicacao.Services);
+        var publico = CriarCliente(aplicacao);
+        var resposta = await publico.PostAsJsonAsync($"/api/publico/membros/{igreja.IdentificadorPublicoMembros}/solicitacoes",
+            new { dados = DadosAdulto(funcao: "PASTOR"), declaracaoMaioridade = true,
+                avisoPrivacidadeReconhecido = true, avisoPrivacidadeVersao = "membros-teste-1" });
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+        await using var escopo = aplicacao.Services.CreateAsyncScope();
+        var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+        Assert.Equal("PASTOR", (await banco.SolicitacoesMembros.SingleAsync()).Dados.Funcao);
+        Assert.Empty(await banco.Membros.ToListAsync());
+        Assert.Empty(await banco.Users.ToListAsync());
+    }
+
+    private static object DadosAdulto(DateOnly? nascimento = null, string funcao = "MEMBRO") => new
     {
         nome = "Maria", sobrenome = "da Silva", whatsapp = "(11) 98765-4321",
+        funcao,
         email = "maria@teste.local", dataNascimento = nascimento,
         situacaoBatismo = "NAO_INFORMADO", ehMenor = false
     };
@@ -282,12 +333,11 @@ public sealed class CadastroMembrosTests
         {
             builder.UseEnvironment("Testing");
             builder.ConfigureLogging(logging => logging.ClearProviders());
-            if (_configurarAviso)
-                builder.ConfigureAppConfiguration((_, configuracao) =>
+            builder.ConfigureAppConfiguration((_, configuracao) =>
                     configuracao.AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        ["AvisoPrivacidadeMembros:Versao"] = "membros-teste-1",
-                        ["AvisoPrivacidadeMembros:Texto"] = "Aviso somente para testes."
+                        ["AvisoPrivacidadeMembros:Versao"] = _configurarAviso ? "membros-teste-1" : "",
+                        ["AvisoPrivacidadeMembros:Texto"] = _configurarAviso ? "Aviso somente para testes." : ""
                     }));
             builder.ConfigureServices(services =>
             {

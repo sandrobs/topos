@@ -27,6 +27,7 @@ public static class MembrosEndpoints
         interno.MapGet("/solicitacoes", ListarSolicitacoesAsync);
         interno.MapGet("/solicitacoes/{id:guid}", ObterSolicitacaoAsync);
         interno.MapGet("/qrcode", ObterQrCodeAsync);
+        interno.MapGet("/convite.pdf", ObterConvitePdfAsync).RequireRateLimiting("convite-pdf");
         interno.MapGet("/{id:guid}", ObterMembroAsync);
         interno.MapPost("", CriarAsync).WithMetadata(new RequireAntiforgeryTokenAttribute());
         interno.MapPut("/{id:guid}", EditarAsync).WithMetadata(new RequireAntiforgeryTokenAttribute());
@@ -365,6 +366,25 @@ public static class MembrosEndpoints
         using var qr = QRCodeGenerator.GenerateQrCode(url, QRCodeGenerator.ECCLevel.Q);
         resposta.Headers.CacheControl = "no-store";
         return Results.Content(new SvgQRCode(qr).GetGraphic(8), "image/svg+xml");
+    }
+
+    private static async Task<IResult> ObterConvitePdfAsync(
+        Guid? igrejaId, bool? quatroPorFolha, HttpRequest requisicao, HttpResponse resposta,
+        IConfiguration configuracao, BancoContexto banco, UsuarioAtual usuarioAtual,
+        GeradorConvitesPdf gerador, CancellationToken cancelamento)
+    {
+        var (id, erro) = await IgrejaAutorizadaAsync(igrejaId, banco, usuarioAtual, cancelamento);
+        if (erro is not null) return erro;
+        var igreja = await banco.Igrejas.AsNoTracking().SingleAsync(x => x.Id == id, cancelamento);
+        if (!igreja.Ativa) return Results.NotFound();
+        var origem = configuracao["Aplicacao:UrlPublica"]?.TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(origem)) origem = $"{requisicao.Scheme}://{requisicao.Host}";
+        var url = $"{origem}/membros/cadastro/{igreja.IdentificadorPublicoMembros}";
+        var pdf = gerador.Gerar(igreja, url, paraMembros: true, quatroPorFolha: quatroPorFolha == true);
+        resposta.Headers.ContentDisposition = $"inline; filename=convite-membros-{(quatroPorFolha == true ? "4-por-a4-" : "")}{id:N}.pdf";
+        resposta.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        resposta.Headers.XContentTypeOptions = "nosniff";
+        return Results.File(pdf, "application/pdf");
     }
 
     private static async Task<(Guid Id, IResult? Erro)> IgrejaAutorizadaAsync(

@@ -384,6 +384,7 @@ export function atualizarDadosComplementares(
 }
 
 export type DadosMembro = {
+  funcao: "MEMBRO" | "DIACONO" | "PRESBITERO" | "PASTOR";
   nome: string;
   sobrenome: string;
   whatsapp: string | null;

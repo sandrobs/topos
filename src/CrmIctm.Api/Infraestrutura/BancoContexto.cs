@@ -195,6 +195,7 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
     {
         dados.Property(x => x.Nome).HasMaxLength(100).IsRequired();
         dados.Property(x => x.Sobrenome).HasMaxLength(100).IsRequired();
+        dados.Property(x => x.Funcao).HasMaxLength(20).HasDefaultValue("MEMBRO").IsRequired();
         dados.Property(x => x.Whatsapp).HasMaxLength(14);
         dados.Property(x => x.Email).HasMaxLength(254);
         dados.Property(x => x.Logradouro).HasMaxLength(150);

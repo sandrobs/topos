@@ -18,6 +18,8 @@ public static class ValidacaoDadosMembro
 
         Texto(erros, "nome", dados.Nome, 100, true);
         Texto(erros, "sobrenome", dados.Sobrenome, 100, true);
+        if (!FuncoesMembro.EhValida(dados.Funcao))
+            erros["funcao"] = ["Selecione sua função na igreja."];
         Texto(erros, "logradouro", dados.Logradouro, 150);
         Texto(erros, "numero", dados.Numero, 20);
         Texto(erros, "bairro", dados.Bairro, 100);
@@ -82,7 +84,8 @@ public static class ValidacaoDadosMembro
                 new string(dados.Cep.Where(char.IsAsciiDigit).ToArray()),
             dados.Cidade, dados.Estado, dados.SituacaoBatismo ?? "NAO_INFORMADO",
             dados.DataBatismo, dados.EhMenor, dados.NomeResponsavelLegal,
-            NormalizarTelefone(dados.WhatsappResponsavelLegal), dados.VinculoResponsavelLegal);
+            NormalizarTelefone(dados.WhatsappResponsavelLegal), dados.VinculoResponsavelLegal,
+            dados.Funcao!);
     }
 
     private static void Texto(Dictionary<string, string[]> erros, string campo,

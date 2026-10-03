@@ -8,7 +8,7 @@ import {
   type MembroDetalhe, type MembroResumo, type Pagina,
   type SolicitacaoMembroDetalhe, type SolicitacaoMembroResumo,
 } from "./api";
-import { CamposMembro, dadosMembroVazios } from "./CadastroMembro";
+import { CamposMembro, dadosMembroVazios, funcoesMembro } from "./CadastroMembro";
 import { formatarTelefoneBrasileiro } from "./formatadores";
 
 const paginaVazia = <T,>(): Pagina<T> => ({ itens: [], total: 0, pagina: 1, tamanhoPagina: 20 });
@@ -37,6 +37,13 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
   const [erro, setErro] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
   const [duplicados, setDuplicados] = useState<ErroDaApi["duplicados"]>([]);
+
+  function voltarParaLista() {
+    setMembro(null); setSolicitacao(null); setNovo(false); setEditando(false);
+    setErro(""); setErros({}); setDuplicados([]); setConfirmandoInativacao(false);
+    // Pesquisa, situação, aba e página são preservadas.
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(".lista-membros button")?.focus());
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -251,7 +258,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
         <article className="cartao-gestao-membro">
           <div className="topo-cartao-membro"><div><p className="rotulo-painel">Membro {membro.situacao.toLowerCase()}</p>
             <h2>{membro.dados.nome} {membro.dados.sobrenome}</h2></div>
-            <button type="button" className="botao-secundario" onClick={() => setMembro(null)}>Fechar</button></div>
+            <button type="button" className="botao-secundario voltar-lista-membros" onClick={voltarParaLista}>← Voltar à lista</button></div>
           <ResumoDados dados={membro.dados} />
           <p><strong>Origem:</strong> {membro.origem === "FORMULARIO" ? "Formulário" : "Inclusão interna"}</p>
           {membro.dataIngresso && <p><strong>Ingresso:</strong> {membro.dataIngresso}</p>}
@@ -282,7 +289,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
         <article className="cartao-gestao-membro">
           <div className="topo-cartao-membro"><div><p className="rotulo-painel">Solicitação pendente</p>
             <h2>{solicitacao.dados.nome} {solicitacao.dados.sobrenome}</h2></div>
-            <button type="button" className="botao-secundario" onClick={() => setSolicitacao(null)}>Fechar</button></div>
+            <button type="button" className="botao-secundario voltar-lista-membros" onClick={voltarParaLista}>← Voltar à lista</button></div>
           <ResumoDados dados={solicitacao.dados} />
           <p><small>Enviada em {new Date(solicitacao.criadaEm).toLocaleDateString("pt-BR")} · Aviso {solicitacao.avisoPrivacidadeVersao}</small></p>
           <Historico itens={solicitacao.historico} />
@@ -359,6 +366,7 @@ function ResumoDados({ dados }: { dados: DadosMembro }) {
   const endereco = [dados.logradouro, dados.numero, dados.bairro,
     dados.complemento, dados.cep, dados.cidade, dados.estado].filter(Boolean).join(", ");
   return <dl className="resumo-dados-membro">
+    <div><dt>Função na igreja</dt><dd>{funcoesMembro.find((item) => item.codigo === dados.funcao)?.nome ?? "Membro"}</dd></div>
     <div><dt>WhatsApp</dt><dd>{dados.whatsapp ? formatarTelefoneBrasileiro(dados.whatsapp) : "Não informado"}</dd></div>
     <div><dt>E-mail</dt><dd>{dados.email || "Não informado"}</dd></div>
     <div><dt>Nascimento</dt><dd>{dados.dataNascimento || "Não informado"}</dd></div>

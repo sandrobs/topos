@@ -47,6 +47,6 @@ export function salvarIgrejaSelecionada(
   }
 }
 
-export function enderecoPainelDaIgreja(igrejaId: string) {
-  return `/painel?igrejaId=${encodeURIComponent(igrejaId)}`;
+export function enderecoPainelDaIgreja(igrejaId: string, secao: "ATENDIMENTOS" | "MEMBROS" = "ATENDIMENTOS") {
+  return `/painel?igrejaId=${encodeURIComponent(igrejaId)}${secao === "MEMBROS" ? "&secao=MEMBROS" : ""}`;
 }

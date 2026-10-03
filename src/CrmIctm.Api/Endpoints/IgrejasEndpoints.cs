@@ -256,12 +256,13 @@ public static class IgrejasEndpoints
 
     private static async Task<IResult> ObterConvitePdfAsync(
         Guid id,
+        bool? quatroPorFolha,
         HttpRequest requisicao,
         HttpResponse resposta,
         IConfiguration configuracao,
         BancoContexto banco,
         UsuarioAtual usuarioAtual,
-        GeradorConviteVisitantesPdf gerador,
+        GeradorConvitesPdf gerador,
         CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
@@ -275,8 +276,8 @@ public static class IgrejasEndpoints
         var igreja = await consulta.SingleOrDefaultAsync(cancellationToken);
         if (igreja is null) return Results.NotFound();
 
-        var pdf = gerador.Gerar(igreja, ObterEnderecoFormulario(igreja, requisicao, configuracao));
-        resposta.Headers.ContentDisposition = $"inline; filename=convite-visitantes-{igreja.Id:N}.pdf";
+        var pdf = gerador.Gerar(igreja, ObterEnderecoFormulario(igreja, requisicao, configuracao), quatroPorFolha: quatroPorFolha == true);
+        resposta.Headers.ContentDisposition = $"inline; filename=convite-visitantes-{(quatroPorFolha == true ? "4-por-a4-" : "")}{igreja.Id:N}.pdf";
         resposta.Headers.CacheControl = "no-store, no-cache, must-revalidate";
         resposta.Headers.Pragma = "no-cache";
         resposta.Headers.XContentTypeOptions = "nosniff";

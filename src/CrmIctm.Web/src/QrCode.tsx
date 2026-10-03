@@ -4,10 +4,11 @@ import { enderecoPainelDaIgreja, salvarIgrejaSelecionada } from "./contextoIgrej
 import { LogoIgreja } from "./LogoIgreja";
 import { formatarCep, formatarEndereco } from "./formatadores";
 
-export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
+export function PaginaQrCode({ igrejaId, paraMembros = false }: { igrejaId: string; paraMembros?: boolean }) {
   const [igreja, setIgreja] = useState<IgrejaInterna | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const enderecoRetorno = enderecoPainelDaIgreja(igrejaId, paraMembros ? "MEMBROS" : "ATENDIMENTOS");
 
   useEffect(() => {
     const carregar = async () => {
@@ -36,31 +37,36 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
   }, [igrejaId]);
 
   if (carregando) {
-    return <EstadoCartaz titulo="Preparando o convite…" />;
+    return <EstadoCartaz titulo="Preparando o convite…" enderecoRetorno={enderecoRetorno} />;
   }
 
   if (!igreja) {
-    return <EstadoCartaz titulo="Cartaz indisponível" texto={erro} />;
+    return <EstadoCartaz titulo="Cartaz indisponível" texto={erro} enderecoRetorno={enderecoRetorno} />;
   }
+
+  const enderecoPdf = paraMembros ? `/api/membros/convite.pdf?igrejaId=${igreja.id}` : `/api/igrejas/${igreja.id}/convite.pdf`;
+  const enderecoQr = paraMembros ? `/api/membros/qrcode?igrejaId=${igreja.id}` : `/api/igrejas/${igreja.id}/qrcode`;
 
   return (
     <main className="pagina-cartaz">
       <nav className="acoes-cartaz" aria-label="Ações do cartaz">
-        <a href={enderecoPainelDaIgreja(igreja.id)}>← Voltar ao painel</a>
+        <a href={enderecoRetorno}>← Voltar ao painel</a>
         <a
           className="botao-pdf-cartaz"
-          href={`/api/igrejas/${igreja.id}/convite.pdf`}
+          href={enderecoPdf}
           target="_blank"
           rel="noopener"
         >Abrir PDF A4</a>
+        <a className="botao-pdf-cartaz" href={`${enderecoPdf}${paraMembros ? "&" : "?"}quatroPorFolha=true`}
+          target="_blank" rel="noopener">4 convites por A4</a>
       </nav>
       <p className="orientacao-pdf-cartaz">Para imprimir ou salvar, abra o PDF A4. Ele é gerado no servidor e não depende do tamanho da tela.</p>
 
-      <article className="cartaz-a4" aria-label={`Convite de boas-vindas da ${igreja.nome}`}>
+      <article className={`cartaz-a4${paraMembros ? " convite-membros" : ""}`} aria-label={`Convite ${paraMembros ? "de cadastro de membros" : "de boas-vindas"} da ${igreja.nome}`}>
         <header className="cabecalho-cartaz">
           <LogoIgreja className="logo-cartaz" />
           <div>
-            <span>Seja bem-vindo à</span>
+            <span>{paraMembros ? "Cadastro de membros" : "Seja bem-vindo à"}</span>
             <strong>{igreja.nome}</strong>
             <small>{igreja.cidade} · {igreja.estado}</small>
           </div>
@@ -74,18 +80,18 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
         </section>
 
         <section className="chamada-cartaz" aria-label="Convite e referência bíblica">
-          <span>Você é nosso convidado</span>
+          <span>{paraMembros ? "Nossa comunidade, nossos laços" : "Você é nosso convidado"}</span>
           <strong>Ainda há lugar.</strong>
           <cite>Lucas 14:22</cite>
         </section>
 
         <section className="conteudo-cartaz">
           <div className="texto-cartaz">
-            <p className="rotulo-cartaz">Vamos manter contato?</p>
-            <h1>Queremos continuar essa conversa.</h1>
+            <p className="rotulo-cartaz">{paraMembros ? "Cadastro de membros" : "Vamos manter contato?"}</p>
+            <h1>{paraMembros ? "Uma família no amor de Deus" : "Queremos continuar essa conversa."}</h1>
             <p className="descricao-cartaz">
-              Escaneie o QR Code e deixe seu nome e WhatsApp. Nossa equipe entrará em contato
-              para acolher você, apresentar melhor a igreja ou conversar e orar.
+              {paraMembros ? "Escaneie o QR Code e informe seus dados para o cadastro de membros da igreja. Seu envio será analisado pela equipe pastoral." :
+                "Escaneie o QR Code e deixe seu nome e WhatsApp. Nossa equipe entrará em contato para acolher você, apresentar melhor a igreja ou conversar e orar."}
             </p>
 
             <ol className="passos-cartaz">
@@ -98,17 +104,18 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
           <div className="area-qr-code">
             <div className="moldura-qr-code">
               <img
-                src={`/api/igrejas/${igreja.id}/qrcode`}
-                alt="QR Code para acessar o formulário de visitantes"
+                src={enderecoQr}
+                alt={`QR Code para acessar o formulário de ${paraMembros ? "membros" : "visitantes"}`}
               />
             </div>
             <strong>Escaneie aqui</strong>
-            <small>É rápido e seguro</small>
+            <small>{paraMembros ? "Exclusivo para membros" : "É rápido e seguro"}</small>
           </div>
         </section>
 
         <footer className="rodape-cartaz">
-          <p><strong>Ficamos felizes com a sua visita.</strong><span>Esperamos falar com você em breve.</span></p>
+          <p><strong>{paraMembros ? "Uma família no amor de Deus" : "Ficamos felizes com a sua visita."}</strong>
+            <span>{paraMembros ? "Romanos 12:4-5" : "Esperamos falar com você em breve."}</span></p>
           <span className="endereco-rodape-cartaz">
             {formatarEndereco(igreja).split(" · CEP ")[0]}
             {igreja.cep && <> · <span className="cep-cartaz">CEP {formatarCep(igreja.cep)}</span></>}
@@ -119,14 +126,14 @@ export function PaginaQrCode({ igrejaId }: { igrejaId: string }) {
   );
 }
 
-function EstadoCartaz({ titulo, texto }: { titulo: string; texto?: string }) {
+function EstadoCartaz({ titulo, texto, enderecoRetorno }: { titulo: string; texto?: string; enderecoRetorno: string }) {
   return (
     <main className="pagina-mensagem">
       <section className="mensagem">
         <LogoIgreja />
         <h1>{titulo}</h1>
         {texto && <p>{texto}</p>}
-        <a className="link-acao" href="/painel">Voltar ao painel</a>
+        <a className="link-acao" href={enderecoRetorno}>Voltar ao painel</a>
       </section>
     </main>
   );

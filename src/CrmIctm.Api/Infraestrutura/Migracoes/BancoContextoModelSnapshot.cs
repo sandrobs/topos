@@ -743,6 +743,13 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                                 .HasMaxLength(2)
                                 .HasColumnType("character varying(2)");
 
+                            b1.Property<string>("Funcao")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasDefaultValue("MEMBRO");
+
                             b1.Property<string>("Logradouro")
                                 .HasMaxLength(150)
                                 .HasColumnType("character varying(150)");
@@ -876,6 +883,13 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                             b1.Property<string>("Estado")
                                 .HasMaxLength(2)
                                 .HasColumnType("character varying(2)");
+
+                            b1.Property<string>("Funcao")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasDefaultValue("MEMBRO");
 
                             b1.Property<string>("Logradouro")
                                 .HasMaxLength(150)

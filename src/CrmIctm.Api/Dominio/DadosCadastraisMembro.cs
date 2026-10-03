@@ -7,6 +7,7 @@ public sealed class DadosCadastraisMembro
 
     public string Nome { get; private set; } = string.Empty;
     public string Sobrenome { get; private set; } = string.Empty;
+    public string Funcao { get; private set; } = "MEMBRO";
     public string? Whatsapp { get; private set; }
     public string? Email { get; private set; }
     public DateOnly? DataNascimento { get; private set; }
@@ -30,12 +31,16 @@ public sealed class DadosCadastraisMembro
         string? bairro, string? complemento, string? cep, string? cidade,
         string? estado, string situacaoBatismo, DateOnly? dataBatismo,
         bool ehMenor = false, string? nomeResponsavelLegal = null,
-        string? whatsappResponsavelLegal = null, string? vinculoResponsavelLegal = null)
+        string? whatsappResponsavelLegal = null, string? vinculoResponsavelLegal = null,
+        string funcao = "MEMBRO")
     {
+        if (!FuncoesMembro.EhValida(funcao))
+            throw new ArgumentException("Informe uma função válida na igreja.", nameof(funcao));
         return new DadosCadastraisMembro
         {
             Nome = nome.Trim(),
             Sobrenome = sobrenome.Trim(),
+            Funcao = funcao,
             Whatsapp = Limpar(whatsapp),
             Email = Limpar(email),
             DataNascimento = dataNascimento,
@@ -59,7 +64,7 @@ public sealed class DadosCadastraisMembro
         Nome, Sobrenome, Whatsapp, Email, DataNascimento, Logradouro,
         Numero, Bairro, Complemento, Cep, Cidade, Estado, SituacaoBatismo,
         DataBatismo, EhMenor, NomeResponsavelLegal, WhatsappResponsavelLegal,
-        VinculoResponsavelLegal);
+        VinculoResponsavelLegal, Funcao);
 
     private static string? Limpar(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();

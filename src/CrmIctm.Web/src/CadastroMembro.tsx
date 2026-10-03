@@ -1,9 +1,10 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ErroDaApi, enviarSolicitacaoMembro, obterFormularioMembro,
   type DadosMembro, type ErrosValidacao, type IgrejaPublica,
 } from "./api";
-import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
+import { formatarCep, formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
+import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
 import { LogoIgreja } from "./LogoIgreja";
 
 const unidadesFederativas = [
@@ -12,12 +13,18 @@ const unidadesFederativas = [
 ];
 
 export const dadosMembroVazios: DadosMembro = {
+  funcao: "MEMBRO",
   nome: "", sobrenome: "", whatsapp: "", email: "", dataNascimento: null,
   logradouro: "", numero: "", bairro: "", complemento: "", cep: "",
   cidade: "", estado: "", situacaoBatismo: "NAO_INFORMADO", dataBatismo: null,
   ehMenor: false, nomeResponsavelLegal: "", whatsappResponsavelLegal: "",
   vinculoResponsavelLegal: "",
 };
+
+export const funcoesMembro = [
+  { codigo: "MEMBRO", nome: "Membro" }, { codigo: "DIACONO", nome: "Diácono" },
+  { codigo: "PRESBITERO", nome: "Presbítero" }, { codigo: "PASTOR", nome: "Pastor" },
+] as const;
 
 type CamposProps = {
   dados: DadosMembro;
@@ -34,16 +41,29 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
   function campo(id: keyof DadosMembro, titulo: string, tipo = "text",
     obrigatorio = false, dica?: string) {
     const valor = dados[id];
+    const preenchimentoAutomatico: Partial<Record<keyof DadosMembro, string>> = {
+      nome: "given-name", sobrenome: "family-name", whatsapp: "tel", email: "email",
+      dataNascimento: "bday", logradouro: "address-line1", complemento: "address-line2",
+      cep: "postal-code", cidade: "address-level2", estado: "address-level1",
+    };
+    const limites: Partial<Record<keyof DadosMembro, number>> = {
+      nome: 100, sobrenome: 100, whatsapp: 16, email: 254, logradouro: 150,
+      numero: 20, bairro: 100, complemento: 100, cep: 9, cidade: 100,
+      nomeResponsavelLegal: 150, whatsappResponsavelLegal: 16, vinculoResponsavelLegal: 60,
+    };
     return (
       <label className="campo-membro" key={id}>
         <span>{titulo}{obrigatorio && <em> *</em>}</span>
         <input
+          id={`membro-${id}`} name={id} autoComplete={preenchimentoAutomatico[id]}
+          maxLength={limites[id]} inputMode={id === "cep" ? "numeric" : tipo === "tel" ? "tel" : undefined}
           type={tipo} value={typeof valor === "string" ? valor : ""}
           required={obrigatorio} placeholder={dica}
           aria-invalid={Boolean(erros[id]?.[0])}
           onChange={(evento) => atualizar(id, (
             id === "whatsapp" || id === "whatsappResponsavelLegal"
               ? formatarTelefoneBrasileiro(evento.target.value)
+              : id === "cep" ? formatarCep(evento.target.value)
               : tipo === "date" ? evento.target.value || null : evento.target.value
           ) as DadosMembro[typeof id])}
         />
@@ -68,6 +88,20 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
         {campo("email", "E-mail", "email")}
         {campo("dataNascimento", "Data de nascimento", "date")}
       </div>
+
+      <fieldset className="grupo-campos-membro">
+        <legend>Função na igreja <em>*</em></legend>
+        <div className="opcoes-membro">
+          {funcoesMembro.map((funcao) => <label key={funcao.codigo}
+            className={`opcao-membro${dados.funcao === funcao.codigo ? " selecionada" : ""}`}>
+            <input className="controle-escondido" type="radio" name="funcao" required
+              value={funcao.codigo} checked={dados.funcao === funcao.codigo}
+              onChange={() => atualizar("funcao", funcao.codigo)} />
+            <span className="marcador-opcao-membro" aria-hidden="true">✓</span>{funcao.nome}
+          </label>)}
+        </div>
+        {erros.funcao?.[0] && <small className="erro-campo">{erros.funcao[0]}</small>}
+      </fieldset>
 
       {interno && dados.ehMenor && (
         <fieldset className="grupo-campos-membro">
@@ -103,16 +137,19 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
       <fieldset className="grupo-campos-membro">
         <legend>Batismo <small>(opcional)</small></legend>
         <div className="grade-campos-membro">
-          <label className="campo-membro"><span>Situação</span>
-            <select value={dados.situacaoBatismo}
-              onChange={(evento) => alterar({ ...dados,
-                situacaoBatismo: evento.target.value as DadosMembro["situacaoBatismo"],
-                dataBatismo: evento.target.value === "BATIZADO" ? dados.dataBatismo : null })}>
-              <option value="NAO_INFORMADO">Não informado</option>
-              <option value="BATIZADO">Batizado</option>
-              <option value="NAO_BATIZADO">Não batizado</option>
-            </select>
-          </label>
+          <div className="opcoes-membro opcoes-batismo">
+            {([{ codigo: "NAO_INFORMADO", nome: "Informarei depois" },
+              { codigo: "BATIZADO", nome: "Sou batizado(a)" },
+              { codigo: "NAO_BATIZADO", nome: "Ainda não sou batizado(a)" }] as const)
+              .map((opcao) => <label key={opcao.codigo}
+                className={`opcao-membro${dados.situacaoBatismo === opcao.codigo ? " selecionada" : ""}`}>
+                <input className="controle-escondido" type="radio" name="situacaoBatismo"
+                  checked={dados.situacaoBatismo === opcao.codigo}
+                  onChange={() => alterar({ ...dados, situacaoBatismo: opcao.codigo,
+                    dataBatismo: opcao.codigo === "BATIZADO" ? dados.dataBatismo : null })} />
+                <span className="marcador-opcao-membro" aria-hidden="true">✓</span>{opcao.nome}
+              </label>)}
+          </div>
           {dados.situacaoBatismo === "BATIZADO" && campo("dataBatismo", "Data do batismo", "date")}
         </div>
       </fieldset>
@@ -123,7 +160,6 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
 export function FormularioPublicoMembros({ identificador }: { identificador: string }) {
   const [igreja, setIgreja] = useState<IgrejaPublica | null>(null);
   const [dados, setDados] = useState<DadosMembro>({ ...dadosMembroVazios });
-  const [maioridade, setMaioridade] = useState(false);
   const [ciencia, setCiencia] = useState(false);
   const [abrirAviso, setAbrirAviso] = useState(false);
   const [carregando, setCarregando] = useState(true);
@@ -131,6 +167,14 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
+  const formularioRef = useRef<HTMLFormElement>(null);
+  const confirmacaoRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => { if (enviado) confirmacaoRef.current?.focus(); }, [enviado]);
+  useEffect(() => {
+    if (Object.keys(erros).length) requestAnimationFrame(() =>
+      formularioRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+  }, [erros]);
 
   useEffect(() => {
     void obterFormularioMembro(identificador)
@@ -141,8 +185,8 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (!igreja?.avisoPrivacidade) return;
-    if (!maioridade || !ciencia) {
+    if (enviando || !igreja?.avisoPrivacidade) return;
+    if (!ciencia) {
       setErro("Confirme a maioridade e a ciência do aviso de privacidade.");
       return;
     }
@@ -151,7 +195,7 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
     setErros({});
     try {
       await enviarSolicitacaoMembro(identificador, dados,
-        igreja.avisoPrivacidade.versao, maioridade);
+        igreja.avisoPrivacidade.versao, ciencia);
       setEnviado(true);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível enviar o cadastro.");
@@ -176,48 +220,48 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
             <div className="alerta" role="alert">{erro}</div>
           ) : enviado ? (
             <div className="confirmacao-membro">
-              <span aria-hidden="true">✓</span><h1>Cadastro recebido</h1>
+              <span aria-hidden="true">✓</span><h1 ref={confirmacaoRef} tabIndex={-1}>Cadastro recebido</h1>
               <p>Obrigado! A equipe da igreja analisará as informações. O envio ainda não confirma o cadastro como membro.</p>
             </div>
           ) : (
             <>
               <header className="cabecalho-formulario">
-                <p className="rotulo">Nossa comunidade</p>
-                <h1>Atualize seus dados com a igreja</h1>
-                <p className="localidade">Preencha apenas as informações que souber. Campos com * são obrigatórios.</p>
+                <p className="rotulo">Cadastro de membros</p>
+                <h1>Uma família no amor de Deus</h1>
+                <p className="localidade">Vamos manter nossos laços. Informe seus dados para que a igreja possa acompanhar você.</p>
               </header>
+              <div className="introducao"><strong className="introducao-destaque">É simples e leva poucos minutos.</strong>
+                <p>Campos com * são obrigatórios. Endereço e informações de batismo são opcionais.</p></div>
               {!igreja.avisoPrivacidade && <div className="alerta" role="alert">
                 O cadastro ainda não está disponível. Procure a equipe da igreja.
               </div>}
               {erro && igreja.avisoPrivacidade && <div className="alerta" role="alert">{erro}</div>}
-              <form className="formulario-membro" onSubmit={enviar}>
+              <form ref={formularioRef} className="formulario-membro" onSubmit={enviar} aria-busy={enviando}>
                 <CamposMembro dados={dados} alterar={setDados} erros={erros} />
                 {igreja.avisoPrivacidade && (
-                  <div className="aviso-membro">
+                  <div className="aviso-privacidade">
+                    <div className="resumo-privacidade"><p>Seus dados serão usados para cadastro, contato e acompanhamento pela igreja.</p>
                     <button type="button" className="abrir-aviso-privacidade"
-                      onClick={() => setAbrirAviso(true)}>Leia o aviso de privacidade →</button>
-                    <label><input type="checkbox" checked={maioridade}
-                      onChange={(evento) => setMaioridade(evento.target.checked)} />
-                      Confirmo que sou maior de 18 anos.</label>
-                    <label><input type="checkbox" checked={ciencia}
+                      aria-haspopup="dialog" aria-expanded={abrirAviso} aria-controls="dialogo-aviso-privacidade"
+                      onClick={() => setAbrirAviso(true)}>Segurança e privacidade →</button></div>
+                    <label className={`confirmacao-privacidade${ciencia ? " selecionada" : ""}`}>
+                      <input className="controle-escondido" type="checkbox" required checked={ciencia}
                       onChange={(evento) => setCiencia(evento.target.checked)} />
-                      Li o aviso de privacidade e estou ciente do uso dos meus dados para cadastro e gestão de membros desta igreja.</label>
+                      <span className="caixa-confirmacao" aria-hidden="true">✓</span><span>
+                        Sou maior de 18 anos e autorizo esta igreja a usar os dados informados, incluindo informações religiosas,
+                        para cadastro e acompanhamento de membros e contato pelo WhatsApp. Li o Aviso de Privacidade.
+                      </span></label>
+                    {(erros.avisoPrivacidade || erros.declaracaoMaioridade) && <small className="erro-campo">
+                      {erros.avisoPrivacidade?.[0] || erros.declaracaoMaioridade?.[0]}</small>}
                   </div>
                 )}
                 <button type="submit" disabled={enviando || !igreja.avisoPrivacidade}>
                   {enviando ? "Enviando…" : "Enviar cadastro para análise"}
                 </button>
               </form>
-              {abrirAviso && igreja.avisoPrivacidade && (
-                <div className="sobreposicao sobreposicao-dialogo" role="presentation"
-                  onMouseDown={(evento) => evento.target === evento.currentTarget && setAbrirAviso(false)}>
-                  <section className="dialogo-conclusao aviso-membro-dialogo" role="dialog"
-                    aria-modal="true" aria-label="Aviso de privacidade de membros">
-                    <h2>Privacidade dos membros</h2>
-                    <p>{igreja.avisoPrivacidade.texto}</p>
-                    <button type="button" onClick={() => setAbrirAviso(false)}>Entendi</button>
-                  </section>
-                </div>
+              {igreja.avisoPrivacidade && (
+                <DialogoAvisoPrivacidade aberto={abrirAviso} nomeIgreja={igreja.nome}
+                  texto={igreja.avisoPrivacidade.texto} aoFechar={() => setAbrirAviso(false)} />
               )}
             </>
           )}

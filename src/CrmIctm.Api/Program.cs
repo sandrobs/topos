@@ -146,7 +146,7 @@ builder.Services.AddRateLimiter(opcoes =>
 
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.AddScoped<UsuarioAtual>();
-builder.Services.AddSingleton<GeradorConviteVisitantesPdf>();
+builder.Services.AddSingleton<GeradorConvitesPdf>();
 
 var app = builder.Build();
 

@@ -22,7 +22,7 @@
 }
 
 /* Cadastro e gestão de membros (V2) */
-.pagina-formulario-membros .estrutura-formulario { width: min(100%, 850px); }
+.pagina-formulario-membros .estrutura-formulario { width: min(100%, 720px); }
 .pagina-formulario-membros .cabecalho-formulario h1 { max-width: 620px; }
 .formulario-membro { display: grid; gap: 24px; }
 .campos-membro { display: grid; gap: 22px; }
@@ -2984,4 +2984,48 @@ button[type="submit"]:disabled {
 
 @media print {
   .cartaz-a4.cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
+}
+
+/* Ajustes V2: mesma linguagem visual do acolhimento, sem afetar visitantes. */
+.pagina-formulario-membros .identidade-publica { flex: 1; }
+.pagina-formulario-membros .identidade-publica strong { white-space: normal; overflow-wrap: anywhere; }
+.pagina-formulario-membros .cartao-formulario { min-width: 0; }
+.formulario-membro .campos-membro, .formulario-membro fieldset,
+.formulario-membro .grade-campos-membro { min-width: 0; max-width: 100%; }
+.campo-membro input, .campo-membro select { min-width: 0; max-width: 100%; min-height: 50px; font-size: 1rem; }
+.campo-membro input:focus, .campo-membro select:focus { border-color: var(--azul-600); outline: 0; box-shadow: 0 0 0 4px #2e5fca1a; }
+.grupo-campos-membro { margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
+.grupo-campos-membro legend em { color: var(--vermelho); font-style: normal; }
+.opcoes-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.opcao-membro { position: relative; display: flex; align-items: center; gap: 10px; min-height: 52px;
+  min-width: 0; padding: 12px; color: var(--texto); background: #fff; border: 1px solid #cbd2df;
+  border-radius: 12px; cursor: pointer; font-size: .94rem; line-height: 1.35; overflow-wrap: anywhere; }
+.opcao-membro.selecionada { color: var(--azul-900); border-color: var(--azul-600); background: var(--azul-100); font-weight: 750; }
+.opcao-membro:focus-within { outline: 3px solid #2e5fca66; outline-offset: 2px; }
+.marcador-opcao-membro { display: grid; place-items: center; flex: 0 0 20px; height: 20px;
+  border: 1px solid #abb6ca; border-radius: 50%; color: transparent; }
+.selecionada .marcador-opcao-membro { color: #fff; background: var(--azul-600); border-color: var(--azul-600); }
+.opcoes-batismo { grid-column: 1 / -1; grid-template-columns: 1fr; }
+.formulario-membro > button { display: flex; justify-content: center; gap: 16px; width: 100%; min-height: 54px; }
+.formulario-membro .aviso-privacidade { min-width: 0; }
+.topo-cartao-membro { flex-wrap: wrap; }
+.topo-cartao-membro > div { min-width: 0; }
+.topo-cartao-membro h2 { overflow-wrap: anywhere; }
+.gestao-membros .botao-secundario { color: var(--azul-900); background: #fff;
+  border-color: #cdd5e3; font-weight: 720; }
+.gestao-membros .botao-secundario:hover { background: var(--azul-100); }
+.voltar-lista-membros { flex-shrink: 0; min-height: 44px; }
+.convite-membros .texto-cartaz h1 { font-size: 8.6mm; }
+@media (max-width: 700px) {
+  .pagina-formulario-membros .topo-publico { align-items: flex-start; }
+  .grupo-campos-membro { padding: 15px; }
+  .grade-campos-membro { grid-template-columns: minmax(0,1fr); }
+  .formulario-membro .confirmacao-privacidade { padding: 16px; }
+}
+@media (max-width: 400px) {
+  .opcoes-membro { grid-template-columns: minmax(0,1fr); }
+  .pagina-formulario-membros .cartao-formulario { padding: 22px 18px; }
+}
+@media (max-width: 900px) {
+  .convite-membros .texto-cartaz h1 { font-size: clamp(1.6rem,4vw,2.8rem); }
 }
