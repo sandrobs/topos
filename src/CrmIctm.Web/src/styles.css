@@ -19,6 +19,8 @@
   --verde: #227a50;
   --vermelho: #a4262c;
   --sombra-cartao: 0 22px 60px rgba(9, 22, 63, 0.13);
+  /* Indicador de foco: opaco para atender ao contraste 3:1 da WCAG 2.2 (1.4.11). */
+  --foco: var(--azul-600);
 }
 
 /* Cadastro e gestão de membros (V2) */
@@ -178,7 +180,7 @@ a:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 input:focus-visible {
-  outline: 3px solid rgba(46, 95, 202, 0.3);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -383,7 +385,6 @@ fieldset legend,
 .bloco-detalhe textarea:focus {
   border-color: var(--azul-600);
   box-shadow: 0 0 0 4px rgba(46, 95, 202, 0.1);
-  outline: 0;
 }
 
 .campo input[aria-invalid="true"] {
@@ -447,7 +448,7 @@ fieldset {
 }
 
 .opcao-marcavel:has(input:focus-visible) {
-  outline: 3px solid rgba(46, 95, 202, 0.28);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -508,7 +509,8 @@ fieldset {
   color: transparent;
   background: var(--branco);
   border: 1.5px solid #b8c0cf;
-  border-radius: 999px;
+  /* Quadrado arredondado: a opção é de múltipla escolha, não exclusiva. */
+  border-radius: 7px;
   font-size: 0.76rem;
   font-weight: 900;
 }
@@ -567,7 +569,7 @@ fieldset {
   padding: 12px;
   display: grid;
   grid-template-columns: 24px 1fr;
-  align-items: center;
+  align-items: start;
   gap: 10px;
   color: #39445a;
   background: var(--branco);
@@ -579,7 +581,7 @@ fieldset {
 }
 
 .confirmacao-privacidade:has(input:focus-visible) {
-  outline: 3px solid rgba(46, 95, 202, 0.28);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -770,8 +772,8 @@ button[type="submit"]:disabled {
 .endereco-rodape-publico {
   margin-top: 5px;
   display: block;
-  color: #8490a2;
-  font-size: 0.7rem;
+  color: var(--texto-suave);
+  font-size: 0.76rem;
 }
 
 .icone-seguranca {
@@ -1275,7 +1277,6 @@ button[type="submit"]:disabled {
 .barra-pesquisa input:focus {
   border-color: var(--azul-600);
   box-shadow: 0 0 0 4px rgba(46, 95, 202, 0.1);
-  outline: 0;
 }
 
 .barra-pesquisa button,
@@ -1396,7 +1397,7 @@ button[type="submit"]:disabled {
 
 .conteudo-cartao:focus-visible,
 .alca-arraste:focus-visible {
-  outline: 3px solid rgba(46, 95, 202, 0.35);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -2993,7 +2994,7 @@ button[type="submit"]:disabled {
 .formulario-membro .campos-membro, .formulario-membro fieldset,
 .formulario-membro .grade-campos-membro { min-width: 0; max-width: 100%; }
 .campo-membro input, .campo-membro select { min-width: 0; max-width: 100%; min-height: 50px; font-size: 1rem; }
-.campo-membro input:focus, .campo-membro select:focus { border-color: var(--azul-600); outline: 0; box-shadow: 0 0 0 4px #2e5fca1a; }
+.campo-membro input:focus, .campo-membro select:focus { border-color: var(--azul-600); }
 .grupo-campos-membro { margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
 .grupo-campos-membro legend em { color: var(--vermelho); font-style: normal; }
 .opcoes-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
@@ -3001,7 +3002,7 @@ button[type="submit"]:disabled {
   min-width: 0; padding: 12px; color: var(--texto); background: #fff; border: 1px solid #cbd2df;
   border-radius: 12px; cursor: pointer; font-size: .94rem; line-height: 1.35; overflow-wrap: anywhere; }
 .opcao-membro.selecionada { color: var(--azul-900); border-color: var(--azul-600); background: var(--azul-100); font-weight: 750; }
-.opcao-membro:focus-within { outline: 3px solid #2e5fca66; outline-offset: 2px; }
+.opcao-membro:focus-within { outline: 3px solid var(--foco); outline-offset: 2px; }
 .marcador-opcao-membro { display: grid; place-items: center; flex: 0 0 20px; height: 20px;
   border: 1px solid #abb6ca; border-radius: 50%; color: transparent; }
 .selecionada .marcador-opcao-membro { color: #fff; background: var(--azul-600); border-color: var(--azul-600); }

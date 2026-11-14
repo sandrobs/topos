@@ -9,7 +9,10 @@ import {
   type SolicitacaoMembroDetalhe, type SolicitacaoMembroResumo,
 } from "./api";
 import { CamposMembro, dadosMembroVazios, funcoesMembro } from "./CadastroMembro";
-import { formatarTelefoneBrasileiro } from "./formatadores";
+import {
+  formatarDataHora, formatarDataIso, formatarTelefoneBrasileiro,
+  rotuloAcaoHistorico, rotuloSituacaoMembro,
+} from "./formatadores";
 
 const paginaVazia = <T,>(): Pagina<T> => ({ itens: [], total: 0, pagina: 1, tamanhoPagina: 20 });
 
@@ -248,7 +251,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
           </button></div>
           {duplicados.length > 0 && <div className="aviso-duplicidade">
             <strong>Confira antes de criar outro cadastro</strong>
-            {duplicados.map((item) => <p key={item.id}>{item.nome} {item.sobrenome} · {item.situacao}</p>)}
+            {duplicados.map((item) => <p key={item.id}>{item.nome} {item.sobrenome} · {rotuloSituacaoMembro(item.situacao)}</p>)}
             <button type="button" disabled={salvando}
               onClick={() => void salvarMembro(true)}>
               Confirmar cadastro separado</button>
@@ -261,7 +264,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
             <button type="button" className="botao-secundario voltar-lista-membros" onClick={voltarParaLista}>← Voltar à lista</button></div>
           <ResumoDados dados={membro.dados} />
           <p><strong>Origem:</strong> {membro.origem === "FORMULARIO" ? "Formulário" : "Inclusão interna"}</p>
-          {membro.dataIngresso && <p><strong>Ingresso:</strong> {membro.dataIngresso}</p>}
+          {membro.dataIngresso && <p><strong>Ingresso:</strong> {formatarDataIso(membro.dataIngresso)}</p>}
           {membro.observacaoPastoral && <p><strong>Observação pastoral:</strong> {membro.observacaoPastoral}</p>}
           {membro.motivoInativacao && <p><strong>Motivo da inativação:</strong> {membro.motivoInativacao}</p>}
           <Historico itens={membro.historico} />
@@ -310,7 +313,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
             <strong>Possível cadastro existente. Escolha como prosseguir:</strong>
             <small>Ao vincular, os dados do membro existente não serão alterados. Confira-os antes de decidir.</small>
             {duplicados.map((item) => <div key={item.id}>
-              <span>{item.nome} {item.sobrenome} · {item.situacao}</span>
+              <span>{item.nome} {item.sobrenome} · {rotuloSituacaoMembro(item.situacao)}</span>
               <button type="button" onClick={() => void aprovar(item.id)}>
                 Vincular a este membro</button></div>)}
             <button type="button" className="botao-secundario"
@@ -336,7 +339,7 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
               <span className="nome-linha-membro"><strong>{item.nome} {item.sobrenome}</strong>
                 <small>{item.whatsapp ? formatarTelefoneBrasileiro(item.whatsapp) : "Sem WhatsApp"}
                   {item.ehMenor ? " · Menor de idade" : ""}</small></span>
-              <span className={`selo-membro ${item.situacao.toLowerCase()}`}>{item.situacao}</span>
+              <span className={`selo-membro ${item.situacao.toLowerCase()}`}>{rotuloSituacaoMembro(item.situacao)}</span>
               <span aria-hidden="true">›</span>
             </button>
           ))}
@@ -369,11 +372,11 @@ function ResumoDados({ dados }: { dados: DadosMembro }) {
     <div><dt>Função na igreja</dt><dd>{funcoesMembro.find((item) => item.codigo === dados.funcao)?.nome ?? "Membro"}</dd></div>
     <div><dt>WhatsApp</dt><dd>{dados.whatsapp ? formatarTelefoneBrasileiro(dados.whatsapp) : "Não informado"}</dd></div>
     <div><dt>E-mail</dt><dd>{dados.email || "Não informado"}</dd></div>
-    <div><dt>Nascimento</dt><dd>{dados.dataNascimento || "Não informado"}</dd></div>
+    <div><dt>Nascimento</dt><dd>{formatarDataIso(dados.dataNascimento) || "Não informado"}</dd></div>
     <div><dt>Endereço</dt><dd>{endereco || "Não informado"}</dd></div>
     <div><dt>Batismo</dt><dd>{dados.situacaoBatismo === "BATIZADO" ? "Batizado" :
       dados.situacaoBatismo === "NAO_BATIZADO" ? "Não batizado" : "Não informado"}
-      {dados.dataBatismo ? ` · ${dados.dataBatismo}` : ""}</dd></div>
+      {dados.dataBatismo ? ` · ${formatarDataIso(dados.dataBatismo)}` : ""}</dd></div>
     {dados.ehMenor && <div><dt>Responsável legal</dt><dd>{dados.nomeResponsavelLegal} · {dados.vinculoResponsavelLegal}
       {dados.whatsappResponsavelLegal ? ` · ${formatarTelefoneBrasileiro(dados.whatsappResponsavelLegal)}` : ""}</dd></div>}
   </dl>;
@@ -383,7 +386,7 @@ function Historico({ itens }: { itens: Array<{ acao: string; descricao: string |
   criadoEm: string; nomeAutor: string }> }) {
   return <div className="historico-membro"><h3>Histórico</h3>
     {itens.map((item, indice) => <p key={`${item.criadoEm}-${indice}`}>
-      <strong>{item.acao.replaceAll("_", " ")}</strong> · {item.nomeAutor} · {new Date(item.criadoEm).toLocaleString("pt-BR")}
+      <strong>{rotuloAcaoHistorico(item.acao)}</strong> · {item.nomeAutor} · {formatarDataHora(item.criadoEm)}
       {item.descricao && <small>{item.descricao}</small>}
     </p>)}
   </div>;

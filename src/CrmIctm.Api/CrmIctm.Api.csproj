@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Recursos/Convite/*" LogicalName="Convite.%(Filename)%(Extension)" />
-    <EmbeddedResource Include="../CrmIctm.Web/public/logo-igreja.png" LogicalName="Convite.logo-igreja.png" />
     <EmbeddedResource Include="../CrmIctm.Web/public/imagem-nave-igreja.png" LogicalName="Convite.imagem-nave-igreja.png" />
     <Content Include="Recursos/Convite/LICENSE" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>

@@ -39,3 +39,49 @@ export function formatarEndereco(igreja: EnderecoIgreja) {
   const complemento = igreja.complemento ? `, ${igreja.complemento}` : "";
   return `${igreja.logradouro}, ${igreja.numero}${complemento} · ${igreja.bairro} · ${igreja.cidade}/${igreja.estado} · CEP ${formatarCep(igreja.cep)}`;
 }
+
+/**
+ * Data ISO sem hora (AAAA-MM-DD). Não usa `new Date`: a string seria
+ * interpretada como UTC e exibiria o dia anterior em fusos negativos.
+ */
+export function formatarDataIso(valor: string | null | undefined) {
+  if (!valor) return "";
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+  if (!partes) return valor;
+  return `${partes[3]}/${partes[2]}/${partes[1]}`;
+}
+
+/** Instante ISO completo, apresentado no fuso do navegador. */
+export function formatarDataHora(valor: string) {
+  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" })
+    .format(new Date(valor));
+}
+
+function capitalizar(valor: string) {
+  const texto = valor.toLocaleLowerCase("pt-BR");
+  return texto.charAt(0).toLocaleUpperCase("pt-BR") + texto.slice(1);
+}
+
+const rotulosSituacaoMembro: Record<string, string> = {
+  ATIVO: "Ativo",
+  INATIVO: "Inativo",
+};
+
+export function rotuloSituacaoMembro(valor: string) {
+  return rotulosSituacaoMembro[valor] ?? capitalizar(valor);
+}
+
+const rotulosAcaoHistorico: Record<string, string> = {
+  CRIADO: "Cadastro criado",
+  EDITADO: "Dados editados",
+  INATIVADO: "Membro inativado",
+  REATIVADO: "Membro reativado",
+  SOLICITACAO_CORRIGIDA: "Solicitação corrigida",
+  SOLICITACAO_APROVADA: "Solicitação aprovada",
+  SOLICITACAO_VINCULADA: "Vinculada a membro existente",
+  SOLICITACAO_RECUSADA: "Solicitação recusada",
+};
+
+export function rotuloAcaoHistorico(valor: string) {
+  return rotulosAcaoHistorico[valor] ?? capitalizar(valor.replaceAll("_", " "));
+}

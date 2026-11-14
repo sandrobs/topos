@@ -36,7 +36,7 @@ import {
   obterUltimaIgrejaSelecionadaDoUsuario,
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
-import { formatarTelefoneBrasileiro } from "./formatadores";
+import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
 
 const etapas: Array<{ codigo: EtapaAtendimento; nome: string }> = [
@@ -1000,10 +1000,6 @@ function DetalheAtendimento({
       </article>
     </div>
   );
-}
-
-function formatarData(valor: string) {
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(valor));
 }
 
 function nomeResultado(resultado: ResultadoAtendimento) {
