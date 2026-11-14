@@ -3,6 +3,7 @@ import {
   ErroDaApi, enviarSolicitacaoMembro, obterFormularioMembro,
   type DadosMembro, type ErrosValidacao, type IgrejaPublica,
 } from "./api";
+import { focarPrimeiroErro } from "./foco";
 import { formatarCep, formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
 import { LogoIgreja } from "./LogoIgreja";
@@ -60,6 +61,7 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
           type={tipo} value={typeof valor === "string" ? valor : ""}
           required={obrigatorio} placeholder={dica}
           aria-invalid={Boolean(erros[id]?.[0])}
+          aria-describedby={erros[id]?.[0] ? `membro-${id}-erro` : undefined}
           onChange={(evento) => atualizar(id, (
             id === "whatsapp" || id === "whatsappResponsavelLegal"
               ? formatarTelefoneBrasileiro(evento.target.value)
@@ -67,7 +69,7 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
               : tipo === "date" ? evento.target.value || null : evento.target.value
           ) as DadosMembro[typeof id])}
         />
-        {erros[id]?.[0] && <small className="erro-campo">{erros[id][0]}</small>}
+        {erros[id]?.[0] && <small id={`membro-${id}-erro`} className="erro-campo">{erros[id][0]}</small>}
       </label>
     );
   }
@@ -172,8 +174,7 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
 
   useEffect(() => { if (enviado) confirmacaoRef.current?.focus(); }, [enviado]);
   useEffect(() => {
-    if (Object.keys(erros).length) requestAnimationFrame(() =>
-      formularioRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+    if (Object.keys(erros).length) focarPrimeiroErro(formularioRef.current);
   }, [erros]);
 
   useEffect(() => {
@@ -236,7 +237,16 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
                 O cadastro ainda não está disponível. Procure a equipe da igreja.
               </div>}
               {erro && igreja.avisoPrivacidade && <div className="alerta" role="alert">{erro}</div>}
-              <form ref={formularioRef} className="formulario-membro" onSubmit={enviar} aria-busy={enviando}>
+              {/*
+                * `noValidate` desliga só a bolha do navegador, não os atributos
+                * `required`, que seguem valendo como semântica para leitor de
+                * tela. A validação é a do servidor, que devolve erro por campo
+                * com as mesmas chaves — e aí o efeito acima leva o foco até o
+                * primeiro deles. Com a validação nativa no caminho, o envio era
+                * bloqueado antes, e esse efeito nunca chegava a disparar.
+                */}
+              <form ref={formularioRef} className="formulario-membro" onSubmit={enviar}
+                aria-busy={enviando} noValidate>
                 <CamposMembro dados={dados} alterar={setDados} erros={erros} />
                 {igreja.avisoPrivacidade && (
                   <div className="aviso-privacidade">

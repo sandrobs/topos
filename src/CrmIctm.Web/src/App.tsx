@@ -1,5 +1,5 @@
 import {
-  Suspense, lazy, useEffect, useMemo, useState,
+  Suspense, lazy, useEffect, useMemo, useRef, useState,
   type FormEvent, type ReactNode,
 } from "react";
 import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
@@ -12,6 +12,7 @@ import {
 } from "./api";
 import { LogoIgreja } from "./LogoIgreja";
 import { FormularioPublicoMembros } from "./CadastroMembro";
+import { focarPrimeiroErro } from "./foco";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 
 /*
@@ -92,6 +93,7 @@ function FormularioPublico({ identificador }: { identificador: string }) {
   const [enviando, setEnviando] = useState(false);
   const [erroPagina, setErroPagina] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
+  const formularioRef = useRef<HTMLFormElement>(null);
   const [confirmacao, setConfirmacao] = useState("");
   const [avisoPrivacidadeAberto, setAvisoPrivacidadeAberto] = useState(false);
 
@@ -133,6 +135,7 @@ function FormularioPublico({ identificador }: { identificador: string }) {
       if (erro instanceof ErroDaApi) {
         setErros(erro.erros);
         setErroPagina(erro.message);
+        focarPrimeiroErro(formularioRef.current);
       } else {
         setErroPagina("Não foi possível enviar seus dados. Verifique sua conexão e tente novamente.");
       }
@@ -191,7 +194,7 @@ function FormularioPublico({ identificador }: { identificador: string }) {
             <div className="alerta" role="alert">{erroPagina}</div>
           )}
 
-          <form className="formulario-visitante" onSubmit={enviar} noValidate>
+          <form ref={formularioRef} className="formulario-visitante" onSubmit={enviar} noValidate>
           <CampoTexto
             id="nome"
             label="Seu nome"

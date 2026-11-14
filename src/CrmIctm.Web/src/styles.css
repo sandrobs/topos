@@ -581,7 +581,8 @@ fieldset {
 }
 
 .abrir-aviso-privacidade {
-  min-height: 40px;
+  /* 44px: alvo de toque mínimo. Era 40px, o último abaixo do limite. */
+  min-height: 44px;
   padding: 8px 11px;
   display: inline-flex;
   flex: none;

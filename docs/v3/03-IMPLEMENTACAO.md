@@ -323,3 +323,54 @@ O formulário de membros depende das bolhas de validação nativas do navegador.
 O comportamento do Safari no iPhone precisa ser conferido num aparelho antes de
 se concluir o Lote 3 — se ele focar o campo sem exibir mensagem, hoje o
 cadastro de membros está sem retorno de erro no iOS.
+
+---
+
+## Lote 3, primeira parte — retorno de erro e alvo de toque — 14/11/2026
+
+Itens **3.3**, **3.3b** e **3.3c**, feitos primeiro por serem pequenos e
+independentes do refactor de campos. O restante do Lote 3 segue pendente.
+
+### O que mudou
+
+- `.abrir-aviso-privacidade` passou de `min-height: 40px` para **44px**. Era o
+  último alvo abaixo do mínimo nos dois formulários públicos.
+- Novo [`foco.ts`](../../src/CrmIctm.Web/src/foco.ts) com `focarPrimeiroErro`:
+  foca o primeiro campo `aria-invalid` e o rola para o centro; se o erro não
+  pertencer a um campo focável, rola até a mensagem. `CadastroMembro` tinha uma
+  versão própria disso e passou a usar a compartilhada; `App.tsx` ganhou o
+  comportamento, que não tinha.
+- O formulário público de membros recebeu `noValidate`. Os atributos `required`
+  **continuam**, valendo como semântica para leitor de tela; sai apenas a bolha
+  do navegador. A validação passa a ser a do servidor, que devolve erro por
+  campo com as mesmas chaves do cliente (`ValidacaoDadosMembro`).
+- Os campos de `CamposMembro` passaram a ligar `aria-describedby` à mensagem.
+
+### Medições, no fluxo real a 375 px
+
+Rolar até o fim do formulário e tocar em enviar:
+
+| | antes | depois |
+|---|---|---|
+| **visitantes** — foco após o envio | `<body>` | **`#nome`**, visível na tela |
+| rolagem | 625 → 799 (afastando) | **625 → 129** (aproximando) |
+| erros de nome e WhatsApp | −231 px e −112 px, fora da tela | **439 px e 558 px, visíveis** |
+| **membros** — foco após o envio | campo focado pelo navegador | **`#membro-nome`**, visível |
+| rolagem | — | **2007 → 225** |
+| mensagem de erro | bolha do navegador | **a da aplicação** |
+| campos com `aria-describedby` | 0 de 20 | **3 de 3 com erro** |
+| alvo do aviso de privacidade | 269×40 | **269×44** |
+
+### Efeito colateral bem-vindo
+
+O risco registrado no item 3.3 — o Safari do iPhone poder focar o campo sem
+exibir a bolha nativa, deixando o cadastro de membros sem retorno de erro no
+iOS — **deixa de existir**: o formulário não depende mais de validação nativa.
+A mensagem é renderizada pela aplicação, igual em todos os navegadores.
+
+### Validação
+
+Build Docker completo e **59 testes aprovados**. Conferido na aplicação em
+execução (`crm-ictm:ui-lote3a-20261114` em `http://localhost:8082`), nos dois
+formulários, a 375 px. Nenhum cadastro foi criado: todos os envios falharam na
+validação, que é o que se queria observar.
