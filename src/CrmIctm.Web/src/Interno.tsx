@@ -37,6 +37,7 @@ import {
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
 import { Dialogo } from "./Dialogo";
+import { soltarFocoDePonteiro } from "./foco";
 import { tituloInterno, useTitulo } from "./titulo";
 import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
@@ -477,13 +478,25 @@ export function PainelAtendimentos() {
               Ver convite e QR Code
             </a>
           )}
-          <button
-            className="botao-secundario"
-            onClick={() => void sair().then(() => window.location.replace(`/entrar?atualizacao=${Date.now()}`))}
-          >
-            Sair
-          </button>
         </div>
+        {/*
+          * Fora de `.acoes-topo` de propósito: no celular este botão sobe
+          * para a linha do nome do sistema, virando só o ícone. Em largura
+          * cheia ele ficava grande demais e perto demais do polegar, para uma
+          * ação que derruba a sessão.
+          */}
+        <button
+          className="botao-secundario botao-sair"
+          aria-label="Sair"
+          onClick={() => void sair().then(() => window.location.replace(`/entrar?atualizacao=${Date.now()}`))}
+        >
+          <svg className="icone-sair" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+            <path d="M10 16l-4-4 4-4" />
+            <path d="M6 12h10" />
+          </svg>
+          <span className="texto-sair">Sair</span>
+        </button>
       </header>
 
       {/*
@@ -493,21 +506,21 @@ export function PainelAtendimentos() {
       <nav className="navegacao-interna" aria-label="Seções do sistema">
         <button type="button" className={secao === "ATENDIMENTOS" ? "ativo" : ""}
           aria-current={secao === "ATENDIMENTOS" ? "page" : undefined}
-          onClick={() => setSecao("ATENDIMENTOS")}>Atendimentos</button>
+          onClick={(evento) => { setSecao("ATENDIMENTOS"); soltarFocoDePonteiro(evento); }}>Atendimentos</button>
         {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
           <button type="button" className={secao === "MEMBROS" ? "ativo" : ""}
             aria-current={secao === "MEMBROS" ? "page" : undefined}
-            onClick={() => { setSecao("MEMBROS"); setDetalhe(null); }}>Membros</button>
+            onClick={(evento) => { setSecao("MEMBROS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Membros</button>
         )}
         {sessao?.perfil === "ADMINISTRADOR" && (
           <button type="button" className={secao === "IGREJAS" ? "ativo" : ""}
             aria-current={secao === "IGREJAS" ? "page" : undefined}
-            onClick={() => { setSecao("IGREJAS"); setDetalhe(null); }}>Igrejas</button>
+            onClick={(evento) => { setSecao("IGREJAS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Igrejas</button>
         )}
         {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
           <button type="button" className={secao === "USUARIOS" ? "ativo" : ""}
             aria-current={secao === "USUARIOS" ? "page" : undefined}
-            onClick={() => { setSecao("USUARIOS"); setDetalhe(null); }}>Usuários</button>
+            onClick={(evento) => { setSecao("USUARIOS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Usuários</button>
         )}
       </nav>
 

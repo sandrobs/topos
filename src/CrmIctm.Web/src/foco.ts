@@ -10,6 +10,22 @@
  * pertence a um campo focável — um grupo de opções ou o aviso de privacidade —,
  * apenas rola até a mensagem.
  */
+/**
+ * Solta o foco de um botão quando ele foi acionado por toque ou clique.
+ *
+ * No Safari do iPhone o botão tocado continua sendo o `activeElement`, e o
+ * navegador desenha o próprio anel de foco em volta dele. Em abas de
+ * navegação isso se lê como "continua selecionado", mesmo depois de abrir
+ * outra seção — foi o que o responsável relatou.
+ *
+ * `detail` é 0 quando o clique veio do teclado (Enter ou Espaço) e maior que
+ * 0 quando veio de ponteiro. Assim quem navega por teclado não perde o foco,
+ * que é justamente o que o anel existe para mostrar.
+ */
+export function soltarFocoDePonteiro(evento: { detail: number; currentTarget: HTMLElement }) {
+  if (evento.detail > 0) evento.currentTarget.blur();
+}
+
 export function focarPrimeiroErro(formulario: HTMLFormElement | null) {
   if (!formulario) return;
 

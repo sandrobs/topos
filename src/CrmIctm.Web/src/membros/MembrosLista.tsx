@@ -1,3 +1,4 @@
+import { soltarFocoDePonteiro } from "../foco";
 import { formatarTelefoneBrasileiro, rotuloSituacaoMembro } from "../formatadores";
 import type { MembroResumo, Pagina, SolicitacaoMembroResumo } from "../api";
 
@@ -32,10 +33,10 @@ export function MembrosLista({
       <div className="abas-membros" role="tablist" aria-label="Cadastros de membros">
         <button type="button" role="tab" aria-selected={aba === "MEMBROS"}
           className={aba === "MEMBROS" ? "ativo" : ""}
-          onClick={() => aoTrocarAba("MEMBROS")}>Membros</button>
+          onClick={(evento) => { aoTrocarAba("MEMBROS"); soltarFocoDePonteiro(evento); }}>Membros</button>
         <button type="button" role="tab" aria-selected={aba === "SOLICITACOES"}
           className={aba === "SOLICITACOES" ? "ativo" : ""}
-          onClick={() => aoTrocarAba("SOLICITACOES")}>
+          onClick={(evento) => { aoTrocarAba("SOLICITACOES"); soltarFocoDePonteiro(evento); }}>
           Solicitações {pendentes > 0 && <span>{pendentes}</span>}
         </button>
       </div>

@@ -1037,26 +1037,26 @@ button[type="submit"]:disabled {
 }
 
 /*
- * Largura máxima única do painel. Antes só a gestão de membros tinha teto,
- * então o conteúdo saltava de 1600 px para 1280 px ao trocar de aba num
- * monitor largo, enquanto a barra de abas seguia inteira.
+ * O painel usa a tela inteira, por decisão do responsável: o kanban rende
+ * mais com espaço, e num monitor largo um teto de 1280 px deixava as colunas
+ * espremidas com faixas vazias dos dois lados.
  *
- * O teto fica na própria página, e não em `> *`: cada filho tem a sua regra
- * de `margin`, e várias delas zeram o `margin-inline`, o que desalinhava uns
- * em relação aos outros — a barra de abas ia para a borda enquanto o
- * cabeçalho ficava centralizado.
+ * O problema original — o conteúdo saltar de largura ao trocar de aba —
+ * continua resolvido, porque agora todas as seções usam a mesma medida: a
+ * largura cheia. O teto que a gestão de membros tinha sozinha foi removido.
  */
-.pagina-painel {
-  max-width: calc(1280px + 40px);
-  margin-inline: auto;
-}
 
+/*
+ * Grade de três faixas: identidade, ações e sair. Em grade, e não em flex,
+ * porque no celular o botão de sair sobe para a linha da identidade sem
+ * precisar aparecer duas vezes no HTML.
+ */
 .topo-painel {
   margin-bottom: 22px;
   padding: 13px 16px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
-  justify-content: space-between;
   gap: 18px;
   color: var(--branco);
   background: linear-gradient(125deg, var(--azul-950), var(--azul-900));
@@ -1068,6 +1068,24 @@ button[type="submit"]:disabled {
 .identidade-painel,
 .acoes-topo {
   gap: 12px;
+}
+
+.botao-sair {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.icone-sair {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .identidade-painel .logo-igreja {
@@ -2364,9 +2382,16 @@ dialog.sobreposicao::backdrop {
 
 @media (min-width: 721px) and (max-width: 1024px) {
   .topo-painel {
-    align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "identidade sair"
+      "acoes acoes";
+    align-items: center;
   }
+
+  .identidade-painel { grid-area: identidade; }
+  .acoes-topo { grid-area: acoes; }
+  .botao-sair { grid-area: sair; }
 
   .acoes-topo {
     width: 100%;
@@ -2426,15 +2451,35 @@ dialog.sobreposicao::backdrop {
     padding: 10px;
   }
 
-  .topo-painel,
   .acoes-topo,
   .apresentacao-painel {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .identidade-painel {
+  /* O sair sobe para a linha do nome do sistema e fica só com o ícone. */
+  .topo-painel {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "identidade sair"
+      "acoes acoes";
     align-items: center;
+    gap: 12px;
+  }
+
+  .identidade-painel { grid-area: identidade; align-items: center; }
+  .acoes-topo { grid-area: acoes; }
+
+  .botao-sair {
+    grid-area: sair;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 9px;
+    justify-content: center;
+  }
+
+  .texto-sair {
+    display: none;
   }
 
   .seletor-igreja {

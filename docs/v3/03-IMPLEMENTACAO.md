@@ -694,3 +694,44 @@ as peças ficam soltas sobre o fundo da página, como nas outras telas.
 **Ainda:** `scrollbar-gutter: stable` no `html`. Sem isso o conteúdo
 centralizado deslocava 7 px ao trocar para uma aba mais alta, quando a barra
 de rolagem aparece. Agora as quatro abas renderizam na mesma caixa, medida.
+
+### Terceira avaliação — 14/11/2026
+
+**Largura do painel: volta a ser a tela inteira.** O teto de 1280 px foi
+removido, por decisão do responsável: num monitor largo ele espremia as
+colunas do kanban e deixava faixas vazias dos dois lados. O problema original
+do item 4.2 — o conteúdo saltar ao trocar de aba — segue resolvido, porque
+agora todas as seções usam a mesma medida, que é a largura cheia; o teto que
+só a gestão de membros tinha continua removido.
+
+Medido a 1900 px: as quatro seções em 20→1865, e o kanban com **5 colunas de
+357 px** contra ~235 px com o teto, sem rolagem horizontal.
+
+**O menu no iPhone: o diagnóstico anterior estava incompleto.** A proteção
+`@media (hover: hover)` do Lote 4 estava certa e funciona — conferido com
+emulação de toque, onde `hover: none` casa e as regras de `:hover` não se
+aplicam. Mas não era `:hover`.
+
+Simulando um toque real, e não um `.click()` por script, o quadro apareceu: o
+botão continua sendo o `activeElement` e casa `:focus`. Nenhuma regra do CSS
+pinta esse estado — quem desenha é o **próprio Safari**, com o anel de foco
+dele. Em abas de navegação isso se lê como "continua selecionado".
+
+Correção em `foco.ts`: `soltarFocoDePonteiro` tira o foco quando `detail > 0`,
+ou seja, quando a ativação veio de ponteiro. Com `detail === 0` — teclado —
+o foco permanece, porque é exatamente aí que o anel precisa aparecer.
+Aplicado às quatro abas de seção e às duas de membros. Verificado: após
+toque, `activeElement` é o `body`; após Tab, o anel de 3 px continua lá.
+
+**Botão "Sair" no celular.** Virou um ícone de 44×44 na mesma linha do nome do
+sistema. Em largura cheia ele ficava grande e perto demais do polegar, para
+uma ação que derruba a sessão.
+
+Para isso o botão saiu de `.acoes-topo` e `.topo-painel` virou grade de três
+faixas. Em grade, e não em flex, porque assim o mesmo HTML se reorganiza por
+breakpoint sem precisar do botão duas vezes na página: no desktop fica à
+direita, como antes; abaixo de 1024 px sobe para a linha da identidade. O
+rótulo "Sair" some visualmente no celular, mas o `aria-label` mantém o nome
+acessível.
+
+Validação: build Docker completo e **59 testes aprovados**.
