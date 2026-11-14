@@ -1,55 +1,33 @@
 # V3 — Revisão de interface, acessibilidade e desempenho visual
 
-**Estado:** em implementação local na branch `feature/ui-lote1`. Lotes 1 e 2
-concluídos e verificados em 14/11/2026. Lote 3 ainda não começado. Nada
-publicado em produção.
+**Estado:** em implementação local na branch `feature/ui-lote1`. Lotes 1, 2 e a
+maior parte do 3 concluídos e verificados em 14/11/2026. Nada publicado em
+produção.
 
-## Ponto de retomada — Lote 3
+## Ponto de retomada — o que falta do Lote 3
 
-Os itens pequenos do Lote 3 já foram feitos em 14/11/2026 (commit `4149c6b`);
-o refactor de campos e a limpeza da cascata seguem pendentes. Ordem sugerida,
-do mais barato e seguro ao mais arriscado:
+Sobraram os dois itens que reordenam regras de CSS e, por isso, mudam a
+cascata. O risco deles não é quebrar o build — ele continuaria passando — e sim
+deslocar algo silenciosamente numa tela. Pedem uma passada tela a tela, em cada
+largura, com a instância 8081 aberta ao lado para comparação.
 
-1. ~~**3.3c** — alvo de 44 px~~ · **feito em 14/11/2026**
-2. **3.2 + 3.1 (parte de campos)** — criar um `<CampoFormulario>` único e migrar
-   `App.tsx`, `CadastroMembro.tsx` e `Administracao.tsx`. Unificar na classe
-   `.campo` e **apagar** `.campo-membro`, que é a origem da deriva medida
-   (padding 12/14 contra 10/12, raio 11 contra 10, rótulo 14,4 px contra
-   13,76 px). Atenção: `.grade-campos-membro` seleciona `.campo-membro` como
-   filho; os seletores de layout precisam passar a mirar `> .campo`.
-3. ~~**3.3 + 3.3b** — formulários públicos~~ · **feito em 14/11/2026**. Falta a
-   administração: acrescentar `noValidate` ao formulário dela, **mantendo** os
-   atributos `required` (eles continuam valendo como semântica para leitor de
-   tela; só a bolha do navegador sai de cena), e exibir erro por campo, que ela
-   hoje não tem. Reusar `focarPrimeiroErro` de `foco.ts`.
-4. **3.4** — trocar os dois `window.confirm` por uma variante de confirmação do
-   `Dialogo` já existente.
-5. **3.1 (tokens)** — escala de espaçamento, raio e tipografia em `:root`, mais
-   três breakpoints. Verificável: contar os hexadecimais fixos antes e depois.
-6. **3.5** — remover os 92 blocos que redeclaram seletores e juntar os três
-   `@media print`. É o item de maior risco de regressão visual, porque mexe na
-   ordem da cascata; deixar por último e conferir tela a tela.
+1. **Normalização de breakpoints** (parte do 3.1). Hoje são sete pontos sem
+   escala: 400, 420, 700, 720, 721–1024, 850 e 900. A proposta é 480 / 768 /
+   1200. Mexer nisto é alterar onde cada layout muda de forma.
+2. **3.5 — limpeza da cascata.** Remover os 92 blocos que redeclaram um seletor
+   já declarado e juntar os três `@media print`. Exemplo do tipo de par a
+   resolver: `.grupo-campos-membro` aparece duas vezes, com `padding` e
+   `border-radius` diferentes, e só a segunda vale.
 
-### Descoberta que muda o item 3.3
+Também segue aberto, de 3.1: os 123 hexadecimais fora do `:root` que não
+coincidem com nenhum token. Cada um exige decidir se vira token ou se aproxima
+de um existente, o que muda cor na tela. O caminho é aplicar as escalas
+(`--esp-*`, `--raio-*`, `--txt-*`) componente a componente, não num passe só.
 
-`CadastroMembro.tsx` **já tem** o efeito que move o foco para o primeiro campo
-inválido:
-
-```tsx
-useEffect(() => {
-  if (Object.keys(erros).length) requestAnimationFrame(() =>
-    formularioRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
-}, [erros]);
-```
-
-Ele nunca dispara porque a validação nativa bloqueia o envio antes de o servidor
-responder, e `erros` só é preenchido com o que o servidor devolve. Ou seja:
-acrescentar `noValidate` basta para o foco passar a funcionar ali. Quem precisa
-ganhar o efeito do zero é o formulário de visitantes, em `App.tsx`.
-
-Os três formulários validam no servidor e recebem `ErrosValidacao`
-(`Record<string, string[]>`), então o mesmo componente e o mesmo auxiliar de
-foco servem para todos.
+O que já foi feito do Lote 3 está em
+[03-IMPLEMENTACAO.md](03-IMPLEMENTACAO.md): alvo de 44 px, foco no primeiro
+erro, validação própria nos três formulários, `CampoFormulario` único,
+confirmação em `<dialog>` e as escalas de token no `:root`.
 
 ## Objetivo
 
