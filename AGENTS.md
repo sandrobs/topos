@@ -1,8 +1,18 @@
 # Instruções para agentes desenvolvedores
 
-## Versão vigente
+## Versões vigentes
 
-Leia primeiro [docs/v2/README.md](docs/v2/README.md) e os documentos da V2 indicados ali. A próxima versão do produto é o **cadastro e a gestão de membros**. As instruções de implementação do MVP de visitantes não são o backlog ativo.
+Duas frentes correm em paralelo. Leia a que corresponde ao seu trabalho.
+
+**V2 — cadastro e gestão de membros.** Leia [docs/v2/README.md](docs/v2/README.md) e os documentos indicados ali. É a frente de produto: núcleo publicado em 14/11/2026, com a expansão (conversão de visitante em membro) ainda por fazer. As instruções de implementação do MVP de visitantes não são o backlog ativo.
+
+**V3 — revisão de interface, acessibilidade e desempenho visual.** Leia [docs/v3/README.md](docs/v3/README.md) e, em seguida, [docs/v3/01-ESCOPO-E-LOTES.md](docs/v3/01-ESCOPO-E-LOTES.md). A V3 não acrescenta funcionalidade: corrige a camada de apresentação do que já existe, em cinco lotes ordenados por impacto dividido por esforço. Cada achado está marcado como **confirmado** (reproduzido na aplicação em execução, com medição) ou **a validar**.
+
+Se for mexer em `styles.css`, em qualquer componente de formulário, em sobreposição modal ou em estado de carregamento, leia a V3 antes: provavelmente há um achado registrado sobre aquele trecho, com a medição e a solução já definidas.
+
+## Regra de precedência entre as versões
+
+A V3 rege apenas apresentação. Ela não altera campos, validações de domínio, permissões, regras de negócio, contratos de API, conteúdo dos PDFs nem o destino dos QR Codes. Em qualquer conflito aparente, o comportamento funcional descrito em `docs/` e `docs/v2/` prevalece e o ajuste visual cede.
 
 ## Baseline congelada
 
@@ -15,4 +25,12 @@ Preserve o formulário, o QR Code, o painel, as permissões e os dados já exist
 As decisões marcadas como **pendentes** em `docs/v2/04-DECISOES-PENDENTES.md` não devem ser inventadas pelo implementador, sobretudo campos obrigatórios, forma de acesso ao formulário, menores de idade e permissões da Equipe. Apresente as opções ao responsável pelo produto e registre as decisões nos documentos da V2 antes de construir as partes afetadas. É possível trabalhar nas partes independentes enquanto isso.
 
 Use migrações incrementais e preserve os registros de produção. Não trate um envio público como filiação confirmada: o cadastro entra em análise até aprovação por perfil autorizado.
+
+## Antes de implementar a V3
+
+Vale a mesma regra: as decisões marcadas como **pendentes** em `docs/v3/02-DECISOES-PENDENTES.md` não devem ser inventadas pelo implementador — hoje, a tipografia, o comportamento do kanban no celular e o significado dos contadores durante a busca. Apresente as opções ao responsável e registre a escolha antes de construir a parte afetada.
+
+Preserve a identidade visual: azul institucional, dourado, cartões com sombra suave. A V3 corrige deriva e defeito, não redesenha. Não acrescente dependências sem necessidade; quando um padrão correto já existir no repositório, reuse-o em vez de criar outro.
+
+Registre cada lote implementado em [docs/v3/03-IMPLEMENTACAO.md](docs/v3/03-IMPLEMENTACAO.md), com a medição que comprova o resultado.
 

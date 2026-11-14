@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  Suspense, lazy, useEffect, useMemo, useState,
+  type FormEvent, type ReactNode,
+} from "react";
 import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
 import {
   ErroDaApi,
@@ -7,12 +10,23 @@ import {
   type ErrosValidacao,
   type IgrejaPublica,
 } from "./api";
-import { PaginaLogin, PainelAtendimentos } from "./Interno";
 import { LogoIgreja } from "./LogoIgreja";
-import { PaginaQrCode } from "./QrCode";
 import { FormularioPublicoMembros } from "./CadastroMembro";
-import { PaginaQrCodeMembros } from "./QrCodeMembros";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
+
+/*
+ * As rotas internas só carregam quando alguém as acessa. Sem isto, quem escaneia
+ * o QR Code na porta da igreja baixa o painel, o kanban e o @dnd-kit para
+ * preencher dois campos.
+ */
+const PaginaLogin = lazy(() =>
+  import("./Interno").then((modulo) => ({ default: modulo.PaginaLogin })));
+const PainelAtendimentos = lazy(() =>
+  import("./Interno").then((modulo) => ({ default: modulo.PainelAtendimentos })));
+const PaginaQrCode = lazy(() =>
+  import("./QrCode").then((modulo) => ({ default: modulo.PaginaQrCode })));
+const PaginaQrCodeMembros = lazy(() =>
+  import("./QrCodeMembros").then((modulo) => ({ default: modulo.PaginaQrCodeMembros })));
 
 type EstadoFormulario = {
   nome: string;
@@ -38,22 +52,26 @@ function obterIdentificadorPublico(): string | null {
 export function App() {
   const identificador = useMemo(obterIdentificadorPublico, []);
   const caminho = window.location.pathname;
+  const partesQrCode = caminho.split("/").filter(Boolean);
+
+  const interna = (conteudo: ReactNode) => (
+    <Suspense fallback={<CarregandoRota />}>{conteudo}</Suspense>
+  );
 
   if (caminho === "/entrar") {
-    return <PaginaLogin />;
+    return interna(<PaginaLogin />);
   }
 
   if (caminho === "/painel") {
-    return <PainelAtendimentos />;
+    return interna(<PainelAtendimentos />);
   }
 
-  const partesQrCode = caminho.split("/").filter(Boolean);
   if (partesQrCode[0] === "qrcode" && partesQrCode[1]) {
-    return <PaginaQrCode igrejaId={partesQrCode[1]} />;
+    return interna(<PaginaQrCode igrejaId={partesQrCode[1]} />);
   }
 
   if (partesQrCode[0] === "qrcode-membros" && partesQrCode[1]) {
-    return <PaginaQrCodeMembros igrejaId={partesQrCode[1]} />;
+    return interna(<PaginaQrCodeMembros igrejaId={partesQrCode[1]} />);
   }
 
   if (partesQrCode[0] === "membros" && partesQrCode[1] === "cadastro" && partesQrCode[2]) {
@@ -400,6 +418,24 @@ function MensagemDePagina({
         <LogoIgreja />
         <h1>{titulo}</h1>
         <p>{texto}</p>
+      </section>
+    </main>
+  );
+}
+
+/*
+ * Espera pela rota interna. Vinda do cache, ela chega em poucos milissegundos:
+ * mostrar a mensagem de imediato faria piscar um layout inteiro a cada
+ * navegação. A classe `aguardando-rota` só a revela se a espera passar de
+ * 400 ms, que é quando o usuário realmente precisa saber que algo está vindo.
+ */
+function CarregandoRota() {
+  return (
+    <main className="pagina-mensagem aguardando-rota">
+      <section className="mensagem">
+        <LogoIgreja />
+        <h1>Carregando…</h1>
+        <p>Estamos abrindo esta página.</p>
       </section>
     </main>
   );

@@ -36,6 +36,7 @@ import {
   obterUltimaIgrejaSelecionadaDoUsuario,
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
+import { Dialogo } from "./Dialogo";
 import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
 
@@ -200,6 +201,8 @@ export function PainelAtendimentos() {
   const [carregando, setCarregando] = useState(true);
   const [pesquisa, setPesquisa] = useState("");
   const [termoPesquisa, setTermoPesquisa] = useState("");
+  const [pesquisando, setPesquisando] = useState(false);
+  const [abrindoDetalheId, setAbrindoDetalheId] = useState<string | null>(null);
   const [movendoAtendimentoId, setMovendoAtendimentoId] = useState<string | null>(null);
   const [conclusaoPendente, setConclusaoPendente] = useState<AtendimentoResumo | null>(null);
   const [resultadoConclusao, setResultadoConclusao] = useState<ResultadoAtendimento | "">("");
@@ -310,10 +313,14 @@ export function PainelAtendimentos() {
   }
 
   async function abrirDetalhe(id: string) {
+    if (abrindoDetalheId) return;
+    setAbrindoDetalheId(id);
     try {
       setDetalhe(await obterAtendimento(id, igrejaId));
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível abrir o atendimento.");
+    } finally {
+      setAbrindoDetalheId(null);
     }
   }
 
@@ -394,10 +401,13 @@ export function PainelAtendimentos() {
     setTermoPesquisa(termo);
     setDetalhe(null);
     setErro("");
+    setPesquisando(true);
     try {
       await carregarAtendimentos(igrejaId, termo);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível realizar a pesquisa.");
+    } finally {
+      setPesquisando(false);
     }
   }
 
@@ -406,12 +416,27 @@ export function PainelAtendimentos() {
     setTermoPesquisa("");
     setDetalhe(null);
     setErro("");
+    setPesquisando(true);
     try {
       await carregarAtendimentos(igrejaId);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível limpar a pesquisa.");
+    } finally {
+      setPesquisando(false);
     }
   }
+
+  /*
+   * `carregando` só era consultado na linha abaixo, com a sessão ainda nula.
+   * Depois disso o kanban renderizava a lista vazia e cada coluna anunciava
+   * "Nenhum atendimento" durante toda a requisição — um estado vazio falso.
+   */
+  const listaCarregando = carregando || pesquisando;
+  const mensagemDeEstado = listaCarregando
+    ? "Carregando atendimentos…"
+    : termoPesquisa
+      ? `${atendimentos.length} ${atendimentos.length === 1 ? "resultado" : "resultados"} para “${termoPesquisa}”.`
+      : "";
 
   if (carregando && !sessao) {
     return <main className="pagina-painel"><p>Carregando painel…</p></main>;
@@ -456,17 +481,28 @@ export function PainelAtendimentos() {
         </div>
       </header>
 
+      {/*
+        * A seção ativa era indicada só pela classe CSS `ativo`. `aria-current`
+        * faz o leitor de tela anunciar qual delas está aberta.
+        */}
       <nav className="navegacao-interna" aria-label="Seções do sistema">
-        <button type="button" className={secao === "ATENDIMENTOS" ? "ativo" : ""} onClick={() => setSecao("ATENDIMENTOS")}>Atendimentos</button>
+        <button type="button" className={secao === "ATENDIMENTOS" ? "ativo" : ""}
+          aria-current={secao === "ATENDIMENTOS" ? "page" : undefined}
+          onClick={() => setSecao("ATENDIMENTOS")}>Atendimentos</button>
         {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
           <button type="button" className={secao === "MEMBROS" ? "ativo" : ""}
+            aria-current={secao === "MEMBROS" ? "page" : undefined}
             onClick={() => { setSecao("MEMBROS"); setDetalhe(null); }}>Membros</button>
         )}
         {sessao?.perfil === "ADMINISTRADOR" && (
-          <button type="button" className={secao === "IGREJAS" ? "ativo" : ""} onClick={() => { setSecao("IGREJAS"); setDetalhe(null); }}>Igrejas</button>
+          <button type="button" className={secao === "IGREJAS" ? "ativo" : ""}
+            aria-current={secao === "IGREJAS" ? "page" : undefined}
+            onClick={() => { setSecao("IGREJAS"); setDetalhe(null); }}>Igrejas</button>
         )}
         {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
-          <button type="button" className={secao === "USUARIOS" ? "ativo" : ""} onClick={() => { setSecao("USUARIOS"); setDetalhe(null); }}>Usuários</button>
+          <button type="button" className={secao === "USUARIOS" ? "ativo" : ""}
+            aria-current={secao === "USUARIOS" ? "page" : undefined}
+            onClick={() => { setSecao("USUARIOS"); setDetalhe(null); }}>Usuários</button>
         )}
       </nav>
 
@@ -479,10 +515,16 @@ export function PainelAtendimentos() {
           <h1>Cuidado em cada etapa</h1>
           <p>Acompanhe os visitantes e mantenha a equipe alinhada.</p>
         </div>
-        <div className="resumo-painel" aria-label="Resumo dos atendimentos">
-          <div><strong>{atendimentos.length}</strong><span>Total</span></div>
-          <div><strong>{atendimentos.filter((item) => item.etapa === "NOVO").length}</strong><span>Novos</span></div>
-          <div><strong>{atendimentos.filter((item) => item.etapa === "EM_ATENDIMENTO").length}</strong><span>Em atendimento</span></div>
+        {/*
+          * Os três números vêm da lista já filtrada pela pesquisa. Enquanto
+          * houver termo ativo, o rótulo diz "resultados" em vez de "total",
+          * para não afirmar que a igreja tem menos atendimentos do que tem.
+          */}
+        <div className="resumo-painel" aria-busy={listaCarregando}
+          aria-label={termoPesquisa ? "Resumo dos resultados" : "Resumo dos atendimentos"}>
+          <div><strong>{listaCarregando ? "–" : atendimentos.length}</strong><span>{termoPesquisa ? "Resultados" : "Total"}</span></div>
+          <div><strong>{listaCarregando ? "–" : atendimentos.filter((item) => item.etapa === "NOVO").length}</strong><span>Novos</span></div>
+          <div><strong>{listaCarregando ? "–" : atendimentos.filter((item) => item.etapa === "EM_ATENDIMENTO").length}</strong><span>Em atendimento</span></div>
         </div>
       </section>
 
@@ -496,23 +538,31 @@ export function PainelAtendimentos() {
             value={pesquisa}
             onChange={(evento) => setPesquisa(evento.target.value)}
           />
-          <button type="submit">Pesquisar</button>
+          <button type="submit" disabled={listaCarregando}>
+            {pesquisando ? "Pesquisando…" : "Pesquisar"}
+          </button>
           {termoPesquisa && (
-            <button type="button" className="botao-limpar-pesquisa" onClick={() => void limparPesquisa()}>
+            <button type="button" className="botao-limpar-pesquisa" disabled={listaCarregando}
+              onClick={() => void limparPesquisa()}>
               Limpar
             </button>
           )}
         </div>
-        {termoPesquisa && <small>Resultados para “{termoPesquisa}”</small>}
+        {termoPesquisa && !listaCarregando && <small>Resultados para “{termoPesquisa}”</small>}
       </form>
 
+      {/* Única região anunciada por leitor de tela quando a lista muda. */}
+      <p className="estado-lista" role="status" aria-live="polite">{mensagemDeEstado}</p>
+
       <DragDropProvider onDragEnd={finalizarArraste}>
-        <section className="kanban" aria-label="Atendimentos por etapa">
+        <section className="kanban" aria-label="Atendimentos por etapa" aria-busy={listaCarregando}>
           {etapas.map((etapa) => (
             <ColunaKanban
               key={etapa.codigo}
               etapa={etapa}
               atendimentos={atendimentos.filter((item) => item.etapa === etapa.codigo)}
+              carregando={listaCarregando}
+              abrindoDetalheId={abrindoDetalheId}
               movendoAtendimentoId={movendoAtendimentoId}
               aoAbrir={abrirDetalhe}
             />
@@ -521,12 +571,12 @@ export function PainelAtendimentos() {
       </DragDropProvider>
 
       {conclusaoPendente && (
-        <div
-          className="sobreposicao sobreposicao-dialogo"
-          role="presentation"
-          onMouseDown={(evento) => evento.target === evento.currentTarget && setConclusaoPendente(null)}
+        <Dialogo
+          centralizado
+          rotuladoPor="titulo-conclusao-arraste"
+          aoFechar={() => setConclusaoPendente(null)}
         >
-          <section className="dialogo-conclusao" role="dialog" aria-modal="true" aria-labelledby="titulo-conclusao-arraste">
+          <section className="dialogo-conclusao">
             <p className="rotulo-painel">Concluir atendimento</p>
             <h2 id="titulo-conclusao-arraste">Qual foi o resultado?</h2>
             <p>Informe o resultado do atendimento de {conclusaoPendente.nomeVisitante} antes de concluir.</p>
@@ -551,7 +601,7 @@ export function PainelAtendimentos() {
               </button>
             </div>
           </section>
-        </div>
+        </Dialogo>
       )}
 
       {detalhe && (
@@ -684,11 +734,15 @@ function SeletorIgreja({
 function ColunaKanban({
   etapa,
   atendimentos,
+  carregando,
+  abrindoDetalheId,
   movendoAtendimentoId,
   aoAbrir,
 }: {
   etapa: { codigo: EtapaAtendimento; nome: string };
   atendimentos: AtendimentoResumo[];
+  carregando: boolean;
+  abrindoDetalheId: string | null;
   movendoAtendimentoId: string | null;
   aoAbrir: (id: string) => Promise<void>;
 }) {
@@ -709,18 +763,22 @@ function ColunaKanban({
     >
       <header>
         <div className="titulo-coluna"><span className="indicador-etapa" /><h2>{etapa.nome}</h2></div>
-        <span>{atendimentos.length}</span>
+        <span>{carregando ? "–" : atendimentos.length}</span>
       </header>
       <div className="lista-cartoes">
-        {atendimentos.map((atendimento) => (
+        {carregando && [0, 1].map((indice) => (
+          <p key={indice} className="cartao-esqueleto" aria-hidden="true" />
+        ))}
+        {!carregando && atendimentos.map((atendimento) => (
           <CartaoAtendimento
             key={atendimento.id}
             atendimento={atendimento}
             desabilitado={movendoAtendimentoId === atendimento.id}
+            abrindo={abrindoDetalheId === atendimento.id}
             aoAbrir={aoAbrir}
           />
         ))}
-        {atendimentos.length === 0 && <p className="coluna-vazia">Nenhum atendimento</p>}
+        {!carregando && atendimentos.length === 0 && <p className="coluna-vazia">Nenhum atendimento</p>}
       </div>
     </section>
   );
@@ -729,10 +787,12 @@ function ColunaKanban({
 function CartaoAtendimento({
   atendimento,
   desabilitado,
+  abrindo,
   aoAbrir,
 }: {
   atendimento: AtendimentoResumo;
   desabilitado: boolean;
+  abrindo: boolean;
   aoAbrir: (id: string) => Promise<void>;
 }) {
   const { ref, handleRef, isDragging } = useDraggable<DadosArrasteAtendimento>({
@@ -747,10 +807,18 @@ function CartaoAtendimento({
 
   return (
     <article ref={ref} className={`cartao-atendimento${isDragging ? " em-arraste" : ""}`}>
+      {/*
+        * `abrindo` usa aria-disabled, não disabled: desabilitar o botão que
+        * está com o foco faz o navegador devolvê-lo ao <body>, e aí o <dialog>
+        * não tem para onde restituir o foco quando fecha. O clique repetido é
+        * barrado em `abrirDetalhe`.
+        */}
       <button
         type="button"
         className="conteudo-cartao"
         disabled={desabilitado}
+        aria-disabled={abrindo || undefined}
+        aria-busy={abrindo}
         onClick={() => void aoAbrir(atendimento.id)}
       >
         <strong>{atendimento.nomeVisitante}</strong>
@@ -829,8 +897,8 @@ function DetalheAtendimento({
   }
 
   return (
-    <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && aoFechar()}>
-      <article className="detalhe-atendimento" role="dialog" aria-modal="true" aria-labelledby="titulo-detalhe">
+    <Dialogo rotuladoPor="titulo-detalhe" aoFechar={aoFechar}>
+      <article className="detalhe-atendimento">
         <header>
           <div><p>Atendimento</p><h2 id="titulo-detalhe">{atendimento.nomeVisitante}</h2></div>
           <button className="fechar" aria-label="Fechar" onClick={aoFechar}>×</button>
@@ -998,7 +1066,7 @@ function DetalheAtendimento({
           {atendimento.historico.length === 0 && <p className="texto-neutro">Nenhuma alteração registrada.</p>}
         </section>
       </article>
-    </div>
+    </Dialogo>
   );
 }
 

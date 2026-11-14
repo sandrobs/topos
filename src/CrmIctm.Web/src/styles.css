@@ -1401,7 +1401,8 @@ button[type="submit"]:disabled {
   outline-offset: 2px;
 }
 
-.conteudo-cartao:disabled {
+.conteudo-cartao:disabled,
+.conteudo-cartao[aria-busy="true"] {
   cursor: wait;
   opacity: 0.7;
 }
@@ -1490,6 +1491,50 @@ button[type="submit"]:disabled {
   font-size: 0.8rem;
 }
 
+/*
+ * Esqueleto exibido enquanto a lista carrega, no lugar de "Nenhum atendimento".
+ * Decorativo: é `aria-hidden`, e quem usa leitor de tela recebe o aviso da
+ * região `.estado-lista`.
+ */
+.cartao-esqueleto {
+  height: 92px;
+  margin: 0;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #eef1f7 30%, #f7f9fc 50%, #eef1f7 70%);
+  background-size: 300% 100%;
+  animation: brilho-esqueleto 1.4s ease-in-out infinite;
+}
+
+@keyframes brilho-esqueleto {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+.estado-lista {
+  margin: 0 4px 10px;
+  min-height: 1.2em;
+  color: var(--texto-suave);
+  font-size: 0.84rem;
+}
+
+.estado-lista:empty {
+  margin-bottom: 0;
+}
+
+/*
+ * Espera pela rota interna carregada sob demanda. Fica invisível nos primeiros
+ * 400 ms — o caso comum, em que o arquivo vem do cache — e só então aparece.
+ * Sem isto, cada navegação interna pisca um layout inteiro por ~16 ms.
+ */
+.aguardando-rota {
+  animation: revelar-espera 0s 400ms both;
+}
+
+@keyframes revelar-espera {
+  from { visibility: hidden; }
+  to { visibility: visible; }
+}
+
 .rodape-painel {
   padding: 18px 4px 4px;
   display: flex;
@@ -1508,6 +1553,33 @@ button[type="submit"]:disabled {
   justify-content: flex-end;
   background: rgba(9, 15, 35, 0.62);
   backdrop-filter: blur(3px);
+}
+
+/*
+ * As sobreposições são elementos <dialog> nativos (ver Dialogo.tsx). O <dialog>
+ * tem largura, altura, margem, borda e preenchimento próprios do navegador que
+ * precisam ser zerados para que ele ocupe a tela como a antiga <div> ocupava.
+ * O escurecimento fica no próprio elemento, não no ::backdrop, para preservar
+ * o blur já existente.
+ */
+dialog.sobreposicao {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  overflow: hidden;
+}
+
+dialog.sobreposicao:not([open]) {
+  display: none;
+}
+
+dialog.sobreposicao::backdrop {
+  background: transparent;
 }
 
 .sobreposicao-dialogo {
@@ -2340,6 +2412,10 @@ button[type="submit"]:disabled {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .cartao-esqueleto {
+    animation: none;
   }
 }
 

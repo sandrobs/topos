@@ -146,80 +146,14 @@ com aplicação em `http://localhost:8081/entrar` e, na rede Wi-Fi atual,
 `http://192.168.101.13:8081/entrar`. Banco, chaves e migrações foram preservados.
 Esta atualização foi aplicada somente no ambiente local de testes.
 
-## Lote 1 de UI/UX — 14/11/2026
+## Revisão de interface — a partir de 14/11/2026
 
-Primeiro lote da revisão de layout e experiência, feito na branch
-`feature/ui-lote1`. São correções de apresentação e acessibilidade: nenhum campo,
-validação, permissão, regra de negócio ou conteúdo do QR Code e dos PDFs foi
-alterado, e o fluxo de visitantes foi preservado.
+A revisão de layout, acessibilidade e desempenho visual passou a ser tratada
+como versão própria. Escopo, achados com medição e registro de implementação
+estão em [docs/v3/](../v3/README.md).
 
-### Peso dos recursos públicos
-
-O original de 1254×1254 px da logo saiu de `src/CrmIctm.Web/public/` e passou a
-viver em `src/CrmIctm.Api/Recursos/Convite/logo-igreja.png`, onde já ficam as
-fontes dos convites; o glob `Recursos/Convite/*` do `.csproj` continua a
-incorporá-lo com o mesmo nome lógico `Convite.logo-igreja.png`, então os PDFs
-seguem usando a imagem em resolução plena. A `EmbeddedResource` explícita e a
-cópia correspondente no `Dockerfile` foram removidas por redundância.
-
-Em `public/` ficou uma versão de 192×192 px gerada do mesmo original, que serve
-o maior render de tela (20 mm do cartaz) com folga de densidade: **41,5 kB no
-lugar de 1.385 kB**. O caminho público continua sendo `/logo-igreja.png`, sem
-`srcset` e sem rota nova, para não mexer na lista do Caddy. Em consequência, a
-igualdade SHA-256 entre a logo servida e o arquivo incorporado, registrada na
-seção anterior, deixa de valer por desenho: são agora o original e um derivado.
-
-Também foi removida `public/imagem-louvor-convite.png` (1,8 MB), que não era
-referenciada por nenhum código, CSS, template ou recurso incorporado.
-
-Resultado medido no formulário público: a página passou de 1.826 kB para
-**492 kB** em quatro recursos. O `<img>` da logo ganhou `width`/`height`
-explícitos.
-
-### Acessibilidade
-
-O indicador de foco usava `rgba(46, 95, 202, 0.3)`, cerca de 1,5:1 sobre branco,
-abaixo do mínimo de 3:1 do critério WCAG 2.2 1.4.11. Foi criado o token `--foco`
-(opaco, `var(--azul-600)`) e aplicado às sete regras que tratavam de foco. Duas
-delas (`.login input:focus`, `.barra-pesquisa input:focus`) e a do formulário de
-membros anulavam o anel com `outline: 0`; a regra do membro ainda usava `:focus`
-em vez de `:focus-visible`, disparando também no clique de mouse. Medições na
-aplicação: **5,82:1** sobre branco, **5,38:1** sobre `--fundo` e **3,01:1** sobre
-a faixa `--azul-950`.
-
-O endereço no rodapé público usava `#8490a2` a 0,7 rem — 3,23:1, abaixo dos 4,5:1
-do critério 1.4.3. Passou para `var(--texto-suave)` a 0,76 rem: **4,59:1**.
-
-### Clareza do que é apresentado
-
-O marcador de `.indicador-selecao` era circular numa pergunta de múltipla
-escolha, enquanto o consentimento, logo abaixo, usava quadrado arredondado.
-Os dois agora usam `border-radius: 7px`; os marcadores de escolha única do
-formulário de membros seguem circulares.
-
-A caixa de consentimento ficava centralizada na vertical ao lado de um parágrafo
-de várias linhas. `align-items` passou de `center` para `start`, como já fazia
-`.aviso-membro label`.
-
-Na gestão de membros, datas ISO e enums apareciam crus: `2024-01-15`, `ATIVO`,
-`APROVACAO SOLICITACAO`. Foram acrescentados a `formatadores.ts` as funções
-`formatarDataIso`, `formatarDataHora`, `rotuloSituacaoMembro` e
-`rotuloAcaoHistorico`. `formatarDataIso` não usa `new Date`: a string sem hora
-seria lida como UTC e exibiria o dia anterior em fusos negativos. O
-`formatarData` duplicado em `Interno.tsx` passou a reusar `formatarDataHora`.
-
-### Validação
-
-Build completo de frontend e backend em Docker/Linux e **59 testes aprovados**.
-`GeradorConvitesPdfTests` exercita a leitura do recurso incorporado, então a
-mudança de local da logo do PDF está coberta por teste.
-
-Verificação na aplicação em execução, com a imagem `crm-ictm:ui-lote1-20261114`
-subida em `http://localhost:8082` contra o mesmo banco de testes, sem tocar na
-instância 8081: formulários públicos de visitantes e de membros a 375 px e
-1024 px, sem rolagem horizontal; anel de foco conferido por Tab real no
-formulário, no campo de pesquisa do painel e no cartão do kanban; datas e
-histórico conferidos contra os valores brutos do banco, sem deslocamento de dia.
-
-Pendente de verificação física: impressão dos PDFs e teste em Safari/iPad/iPhone
-reais. A emulação Chromium não prova o comportamento desses dispositivos.
+Observação que afeta esta seção: o Lote 1 da V3 passou a servir em `public/` uma
+variante de 192 px da logo, mantendo o original de 1254 px como recurso
+incorporado dos PDFs. A igualdade SHA-256 entre a logo servida e o arquivo do
+projeto, registrada na seção anterior, deixa de valer por desenho — são agora o
+original e um derivado. Os PDFs continuam usando a imagem em resolução plena.

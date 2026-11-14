@@ -17,6 +17,7 @@ import {
   type Sessao,
   type UsuarioGestao,
 } from "./api";
+import { Dialogo } from "./Dialogo";
 import { formatarCep, formatarEndereco } from "./formatadores";
 
 const unidadesFederativas = [
@@ -156,10 +157,10 @@ export function GestaoIgrejas({
       </div>
 
       {formularioAberto && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setFormularioAberto(false)}>
+        <Dialogo rotuladoPor="titulo-formulario-igreja" aoFechar={() => setFormularioAberto(false)}>
           <form className="formulario-administrativo" onSubmit={salvar}>
             <header>
-              <div><p>Igreja</p><h2>{igrejaEmEdicao ? "Editar cadastro" : "Nova igreja"}</h2></div>
+              <div><p>Igreja</p><h2 id="titulo-formulario-igreja">{igrejaEmEdicao ? "Editar cadastro" : "Nova igreja"}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setFormularioAberto(false)}>×</button>
             </header>
             {erro && <div className="alerta" role="alert">{erro}</div>}
@@ -194,7 +195,7 @@ export function GestaoIgrejas({
               <button type="submit" disabled={salvando}>{salvando ? "Salvando…" : "Salvar igreja"}</button>
             </footer>
           </form>
-        </div>
+        </Dialogo>
       )}
     </section>
   );
@@ -393,10 +394,10 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
       </div>
 
       {formularioAberto && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setFormularioAberto(false)}>
+        <Dialogo rotuladoPor="titulo-formulario-usuario" aoFechar={() => setFormularioAberto(false)}>
           <form className="formulario-administrativo formulario-usuario" onSubmit={salvar}>
             <header>
-              <div><p>Usuário</p><h2>{usuarioEmEdicao ? "Editar acesso" : "Novo acesso"}</h2></div>
+              <div><p>Usuário</p><h2 id="titulo-formulario-usuario">{usuarioEmEdicao ? "Editar acesso" : "Novo acesso"}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setFormularioAberto(false)}>×</button>
             </header>
             {erro && <div className="alerta" role="alert">{erro}</div>}
@@ -426,12 +427,12 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
               <button type="submit" disabled={salvando}>{salvando ? "Salvando…" : "Salvar usuário"}</button>
             </footer>
           </form>
-        </div>
+        </Dialogo>
       )}
 
       {usuarioRedefinindo && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setUsuarioRedefinindo(null)}>
-          <section className="formulario-administrativo formulario-senha" role="dialog" aria-modal="true" aria-labelledby="titulo-redefinir-senha">
+        <Dialogo rotuladoPor="titulo-redefinir-senha" aoFechar={() => setUsuarioRedefinindo(null)}>
+          <section className="formulario-administrativo formulario-senha">
             <header>
               <div><p>Redefinir acesso</p><h2 id="titulo-redefinir-senha">Nova senha para {usuarioRedefinindo.nome}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setUsuarioRedefinindo(null)}>×</button>
@@ -449,7 +450,7 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
               <button type="button" disabled={salvando || !senhaTemporaria} onClick={() => void confirmarRedefinicao()}>{salvando ? "Redefinindo…" : "Confirmar nova senha"}</button>
             </footer>
           </section>
-        </div>
+        </Dialogo>
       )}
     </section>
   );
