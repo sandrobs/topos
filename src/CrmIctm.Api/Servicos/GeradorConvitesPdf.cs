@@ -23,7 +23,7 @@ public sealed class GeradorConvitesPdf
 
         using var documento = new PdfDocument();
         documento.Info.Title = $"Convite de {(paraMembros ? "membros" : "visitantes")} - {igreja.Nome}";
-        documento.Info.Author = "Topos";
+        documento.Info.Author = "Tópos";
         var pagina = documento.AddPage();
         pagina.Size = PageSize.A4;
         pagina.Width = XUnit.FromMillimeter(210);

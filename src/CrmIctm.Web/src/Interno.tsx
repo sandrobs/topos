@@ -37,6 +37,7 @@ import {
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
 import { Dialogo } from "./Dialogo";
+import { tituloInterno, useTitulo } from "./titulo";
 import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
 
@@ -82,6 +83,7 @@ export function PaginaLogin() {
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  useTitulo(tituloInterno("Entrar"));
 
   async function autenticar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -103,7 +105,7 @@ export function PaginaLogin() {
         <section className="mensagem login">
           <div className="cabecalho-login">
             <LogoIgreja />
-            <div><small>Área da equipe</small><strong>Gestão da igreja</strong></div>
+            <div><small>Área da equipe</small><strong>Tópos - Gestão de Igrejas</strong></div>
           </div>
           <h1>Que bom ter você de volta</h1>
           <p>Entre com a conta fornecida pela sua igreja.</p>
@@ -431,6 +433,9 @@ export function PainelAtendimentos() {
    * Depois disso o kanban renderizava a lista vazia e cada coluna anunciava
    * "Nenhum atendimento" durante toda a requisição — um estado vazio falso.
    */
+  const nomesDeSecao = { ATENDIMENTOS: "Atendimentos", MEMBROS: "Membros", IGREJAS: "Igrejas", USUARIOS: "Usuários" } as const;
+  useTitulo(tituloInterno(nomesDeSecao[secao]));
+
   const listaCarregando = carregando || pesquisando;
   const mensagemDeEstado = listaCarregando
     ? "Carregando atendimentos…"
@@ -451,7 +456,7 @@ export function PainelAtendimentos() {
       <header className="topo-painel">
         <div className="identidade-painel">
           <LogoIgreja />
-          <div><strong>Gestão da igreja</strong><small>Olá, {sessao?.nome}</small></div>
+          <div><strong>Tópos - Gestão de Igrejas</strong><small>Olá, {sessao?.nome}</small></div>
         </div>
         <div className="acoes-topo">
           {(secao === "ATENDIMENTOS" || secao === "MEMBROS") && sessao?.perfil === "ADMINISTRADOR" && (
@@ -629,7 +634,7 @@ export function PainelAtendimentos() {
       )}
 
       <footer className="rodape-painel">
-        <span>IEC · Gestão da igreja</span>
+        <span>IEC · Tópos - Gestão de Igrejas</span>
         <span>Ambiente interno e protegido</span>
       </footer>
     </main>

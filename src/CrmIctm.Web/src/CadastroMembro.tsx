@@ -5,6 +5,7 @@ import {
 } from "./api";
 import { CampoFormulario } from "./CampoFormulario";
 import { focarPrimeiroErro } from "./foco";
+import { tituloPublico, useTitulo } from "./titulo";
 import { formatarCep, formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
 import { LogoIgreja } from "./LogoIgreja";
@@ -174,6 +175,7 @@ export function FormularioPublicoMembros({ identificador }: { identificador: str
   const [erros, setErros] = useState<ErrosValidacao>({});
   const formularioRef = useRef<HTMLFormElement>(null);
   const confirmacaoRef = useRef<HTMLHeadingElement>(null);
+  useTitulo(tituloPublico("Cadastro de membros", igreja?.nome));
 
   useEffect(() => { if (enviado) confirmacaoRef.current?.focus(); }, [enviado]);
   useEffect(() => {

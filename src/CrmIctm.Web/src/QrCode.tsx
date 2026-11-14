@@ -3,12 +3,14 @@ import { ErroDaApi, listarIgrejas, type IgrejaInterna } from "./api";
 import { enderecoPainelDaIgreja, salvarIgrejaSelecionada } from "./contextoIgreja";
 import { LogoIgreja } from "./LogoIgreja";
 import { formatarCep, formatarEndereco } from "./formatadores";
+import { tituloPublico, useTitulo } from "./titulo";
 
 export function PaginaQrCode({ igrejaId, paraMembros = false }: { igrejaId: string; paraMembros?: boolean }) {
   const [igreja, setIgreja] = useState<IgrejaInterna | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const enderecoRetorno = enderecoPainelDaIgreja(igrejaId, paraMembros ? "MEMBROS" : "ATENDIMENTOS");
+  useTitulo(tituloPublico(paraMembros ? "Convite de membros" : "Convite de boas-vindas", igreja?.nome));
 
   useEffect(() => {
     const carregar = async () => {

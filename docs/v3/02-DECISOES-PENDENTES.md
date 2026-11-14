@@ -46,7 +46,11 @@ duas opções são defensáveis; a diferença é estética.
 
 ---
 
-## D2 · Kanban no celular: empilhar ou um estágio por vez
+## D2 · Kanban no celular — **decidido em 14/11/2026: opção A, manter empilhado**
+
+> O responsável avaliou no aparelho e concluiu que a equipe usará o celular em
+> modo retrato mesmo. O empilhamento fica como está. O texto original segue
+> preservado como registro.
 
 **Situação medida.** Abaixo de 720 px o kanban vira `display: block` e empilha as
 cinco colunas. Com 1 atendimento são 1,1 tela de rolagem; com 20 atendimentos
@@ -62,11 +66,11 @@ justamente o que um kanban oferece.
 o painel no celular — se consulta um estágio específico ou se acompanha o fluxo
 inteiro. Isso não se deduz do código.
 
-**Decisão:** _pendente_
+**Decisão:** **opção A**, em 14/11/2026.
 
 ---
 
-## D3 · Contadores do painel durante a busca
+## D3 · Contadores na busca — **decidido em 14/11/2026: opção A, manter o rótulo**
 
 **Situação medida.** "Total", "Novos" e "Em atendimento" derivam da lista já
 filtrada. Numa igreja com 1 atendimento, pesquisar um termo sem correspondência
@@ -82,8 +86,8 @@ param de reagir à busca. **Exige endpoint novo na API.**
 **Recomendação técnica:** A para o Lote 2, por não tocar a API; B quando houver
 oportunidade de mexer no backend.
 
-**Decisão:** _pendente_ — o Lote 2 implementa A como medida imediata, de forma
-reversível.
+**Decisão:** **opção A**, confirmada em 14/11/2026. O que o Lote 2 implementou
+como medida reversível passa a ser a solução definitiva: nenhum endpoint novo.
 
 ---
 

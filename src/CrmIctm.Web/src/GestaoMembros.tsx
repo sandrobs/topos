@@ -1,398 +1,301 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ErroDaApi, alterarSituacaoMembro, aprovarSolicitacaoMembro,
   corrigirSolicitacaoMembro, criarMembro, editarMembro,
   listarMembros, listarSolicitacoesMembros, obterMembro,
   obterResumoMembros, obterSolicitacaoMembro, recusarSolicitacaoMembro,
   type DadosMembro, type ErrosValidacao, type IgrejaInterna,
-  type MembroDetalhe, type MembroResumo, type Pagina,
-  type SolicitacaoMembroDetalhe, type SolicitacaoMembroResumo,
+  type MembroDetalhe as Membro, type MembroResumo, type Pagina,
+  type SolicitacaoMembroDetalhe as Solicitacao, type SolicitacaoMembroResumo,
 } from "./api";
-import { CamposMembro, dadosMembroVazios, funcoesMembro } from "./CadastroMembro";
-import { CampoFormulario } from "./CampoFormulario";
-import {
-  formatarDataHora, formatarDataIso, formatarTelefoneBrasileiro,
-  rotuloAcaoHistorico, rotuloSituacaoMembro,
-} from "./formatadores";
+import { dadosMembroVazios } from "./CadastroMembro";
+import { MembroDetalhe } from "./membros/MembroDetalhe";
+import { MembroFormulario, type OrigemFormulario } from "./membros/MembroFormulario";
+import { MembrosLista, type Aba, type Filtros } from "./membros/MembrosLista";
+import { SolicitacaoDetalhe } from "./membros/SolicitacaoDetalhe";
 
 const paginaVazia = <T,>(): Pagina<T> => ({ itens: [], total: 0, pagina: 1, tamanhoPagina: 20 });
 
+/**
+ * Qual das cinco telas está aberta.
+ *
+ * Antes isto eram quatro estados soltos — `novo`, `editando`, `membro` e
+ * `solicitacao` — combinados numa cadeia ternária. Nada impedia dois deles
+ * verdadeiros ao mesmo tempo, e cada transição precisava lembrar de zerar os
+ * outros três. Com um estado só, a tela aberta é sempre uma, por construção.
+ */
+type Tela =
+  | { nome: "LISTA" }
+  | { nome: "MEMBRO"; membro: Membro }
+  | { nome: "SOLICITACAO"; solicitacao: Solicitacao }
+  | { nome: "FORMULARIO"; origem: OrigemFormulario; membro: Membro | null; solicitacao: Solicitacao | null };
+
 export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
-  const [aba, setAba] = useState<"MEMBROS" | "SOLICITACOES">("MEMBROS");
+  // Listagem
+  const [aba, setAba] = useState<Aba>("MEMBROS");
   const [resumo, setResumo] = useState({ ativos: 0, inativos: 0, pendentes: 0 });
   const [membros, setMembros] = useState<Pagina<MembroResumo>>(paginaVazia());
   const [solicitacoes, setSolicitacoes] = useState<Pagina<SolicitacaoMembroResumo>>(paginaVazia());
   const [pagina, setPagina] = useState(1);
-  const [textoPesquisa, setTextoPesquisa] = useState("");
+  const [filtros, setFiltros] = useState<Filtros>({ texto: "", situacao: "" });
   const [termo, setTermo] = useState("");
-  const [situacao, setSituacao] = useState("");
-  const [membro, setMembro] = useState<MembroDetalhe | null>(null);
-  const [solicitacao, setSolicitacao] = useState<SolicitacaoMembroDetalhe | null>(null);
-  const [novo, setNovo] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+
+  // Navegação
+  const [tela, setTela] = useState<Tela>({ nome: "LISTA" });
+
+  // Edição
   const [dados, setDados] = useState<DadosMembro>({ ...dadosMembroVazios });
   const [dataIngresso, setDataIngresso] = useState("");
   const [observacao, setObservacao] = useState("");
-  const [motivoRecusa, setMotivoRecusa] = useState("");
-  const [motivoInativacao, setMotivoInativacao] = useState("");
-  const [confirmandoInativacao, setConfirmandoInativacao] = useState(false);
-  const [editando, setEditando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
   const [duplicados, setDuplicados] = useState<ErroDaApi["duplicados"]>([]);
 
-  function voltarParaLista() {
-    setMembro(null); setSolicitacao(null); setNovo(false); setEditando(false);
-    setErro(""); setErros({}); setDuplicados([]); setConfirmandoInativacao(false);
-    // Pesquisa, situação, aba e página são preservadas.
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(".lista-membros button")?.focus());
-  }
+  // Transversais
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
 
   const carregar = useCallback(async () => {
     setCarregando(true);
-    setErro("");
     try {
       const [resumoAtual, lista] = await Promise.all([
         obterResumoMembros(igreja.id),
         aba === "MEMBROS"
-          ? listarMembros(igreja.id, pagina, termo, situacao)
+          ? listarMembros(igreja.id, pagina, termo, filtros.situacao)
           : listarSolicitacoesMembros(igreja.id, pagina),
       ]);
       setResumo(resumoAtual);
       if (aba === "MEMBROS") setMembros(lista as Pagina<MembroResumo>);
       else setSolicitacoes(lista as Pagina<SolicitacaoMembroResumo>);
     } catch (falha) {
-      setErro(falha instanceof Error ? falha.message : "Não foi possível carregar os membros.");
+      setErro(falha instanceof Error ? falha.message : "Não foi possível carregar os cadastros.");
     } finally {
       setCarregando(false);
     }
-  }, [igreja.id, aba, pagina, termo, situacao]);
+  }, [igreja.id, aba, pagina, termo, filtros.situacao]);
 
   useEffect(() => { void carregar(); }, [carregar]);
-  useEffect(() => {
-    setMembro(null); setSolicitacao(null); setNovo(false); setEditando(false);
-    setPagina(1); setTermo(""); setTextoPesquisa(""); setSituacao("");
-  }, [igreja.id]);
 
-  function editarDados(dadosAtuais: DadosMembro, ingresso: string | null,
-    observacaoAtual: string | null) {
-    setDados({ ...dadosAtuais });
-    setDataIngresso(ingresso ?? "");
-    setObservacao(observacaoAtual ?? "");
-    setErros({}); setDuplicados([]); setErro(""); setEditando(true);
+  function limparEdicao() {
+    setDados({ ...dadosMembroVazios });
+    setDataIngresso("");
+    setObservacao("");
+    setErro("");
+    setErros({});
+    setDuplicados([]);
+  }
+
+  function voltarParaLista() {
+    setTela({ nome: "LISTA" });
+    limparEdicao();
+    void carregar();
+  }
+
+  function tratarFalha(falha: unknown) {
+    setErro(falha instanceof Error ? falha.message : "Não foi possível concluir a operação.");
+    if (falha instanceof ErroDaApi) {
+      setErros(falha.erros);
+      setDuplicados(falha.duplicados);
+    }
   }
 
   async function abrirMembro(id: string) {
     setErro("");
     try {
-      const detalhe = await obterMembro(igreja.id, id);
-      setMembro(detalhe); setSolicitacao(null); setNovo(false); setEditando(false);
-      setConfirmandoInativacao(false); setMotivoInativacao("");
-    } catch (falha) { setErro(falha instanceof Error ? falha.message : "Não foi possível abrir o membro."); }
+      setTela({ nome: "MEMBRO", membro: await obterMembro(igreja.id, id) });
+    } catch (falha) { tratarFalha(falha); }
   }
 
   async function abrirSolicitacao(id: string) {
     setErro("");
+    setDuplicados([]);
     try {
-      const detalhe = await obterSolicitacaoMembro(igreja.id, id);
-      setSolicitacao(detalhe); setMembro(null); setNovo(false); setEditando(false);
-      setDados({ ...detalhe.dados }); setDataIngresso(""); setObservacao("");
-      setMotivoRecusa(""); setDuplicados([]);
-    } catch (falha) { setErro(falha instanceof Error ? falha.message : "Não foi possível abrir a solicitação."); }
+      setTela({ nome: "SOLICITACAO", solicitacao: await obterSolicitacaoMembro(igreja.id, id) });
+    } catch (falha) { tratarFalha(falha); }
   }
 
-  function tratarFalha(falha: unknown) {
-    if (falha instanceof ErroDaApi) {
-      setErro(falha.message);
-      setErros(falha.erros);
-      setDuplicados(falha.duplicados ?? []);
-    } else setErro(falha instanceof Error ? falha.message : "Não foi possível salvar.");
+  function abrirFormulario(origem: OrigemFormulario) {
+    limparEdicao();
+    if (origem === "NOVO") {
+      setTela({ nome: "FORMULARIO", origem, membro: null, solicitacao: null });
+      return;
+    }
+    if (origem === "EDICAO" && tela.nome === "MEMBRO") {
+      setDados(tela.membro.dados);
+      setDataIngresso(tela.membro.dataIngresso ?? "");
+      setObservacao(tela.membro.observacaoPastoral ?? "");
+      setTela({ nome: "FORMULARIO", origem, membro: tela.membro, solicitacao: null });
+      return;
+    }
+    if (origem === "CORRECAO" && tela.nome === "SOLICITACAO") {
+      setDados(tela.solicitacao.dados);
+      setTela({ nome: "FORMULARIO", origem, membro: null, solicitacao: tela.solicitacao });
+    }
   }
 
   async function salvarMembro(confirmarDuplicidade = false) {
-    setSalvando(true); setErro(""); setErros({}); setDuplicados([]);
+    if (tela.nome !== "FORMULARIO") return;
+    setSalvando(true);
+    setErro("");
+    setErros({});
+    setDuplicados([]);
     try {
-      const corpo = { dados, dataIngresso: dataIngresso || null,
+      const corpo = {
+        dados,
+        dataIngresso: dataIngresso || null,
         observacaoPastoral: observacao || null,
-        confirmarNovoApesarDuplicidade: confirmarDuplicidade };
-      if (membro) await editarMembro(igreja.id, membro.id, corpo);
+        confirmarNovoApesarDuplicidade: confirmarDuplicidade,
+      };
+      if (tela.membro) await editarMembro(igreja.id, tela.membro.id, corpo);
       else await criarMembro(igreja.id, corpo);
-      setNovo(false); setEditando(false);
-      if (membro) setMembro(await obterMembro(igreja.id, membro.id));
-      await carregar();
+      voltarParaLista();
     } catch (falha) { tratarFalha(falha); }
     finally { setSalvando(false); }
   }
 
   async function salvarCorrecao() {
-    if (!solicitacao) return;
-    setSalvando(true); setErro(""); setErros({});
+    if (tela.nome !== "FORMULARIO" || !tela.solicitacao) return;
+    setSalvando(true);
+    setErro("");
+    setErros({});
     try {
-      await corrigirSolicitacaoMembro(igreja.id, solicitacao.id, dados);
-      setSolicitacao(await obterSolicitacaoMembro(igreja.id, solicitacao.id));
-      setEditando(false); await carregar();
+      await corrigirSolicitacaoMembro(igreja.id, tela.solicitacao.id, dados);
+      await abrirSolicitacao(tela.solicitacao.id);
     } catch (falha) { tratarFalha(falha); }
     finally { setSalvando(false); }
   }
 
   async function aprovar(membroExistenteId: string | null = null, confirmarNovo = false) {
-    if (!solicitacao) return;
-    setSalvando(true); setErro(""); setDuplicados([]);
+    if (tela.nome !== "SOLICITACAO") return;
+    setSalvando(true);
+    setErro("");
+    setDuplicados([]);
     try {
-      const resultado = await aprovarSolicitacaoMembro(igreja.id, solicitacao.id,
+      await aprovarSolicitacaoMembro(igreja.id, tela.solicitacao.id,
         membroExistenteId, confirmarNovo, dataIngresso || null, observacao || null);
-      setSolicitacao(null); setAba("MEMBROS"); setPagina(1);
-      await abrirMembro(resultado.membroId);
-      await carregar();
+      voltarParaLista();
     } catch (falha) { tratarFalha(falha); }
     finally { setSalvando(false); }
   }
 
-  async function recusar() {
-    if (!solicitacao) return;
-    if (!motivoRecusa.trim()) { setErro("Informe o motivo da recusa."); return; }
-    setSalvando(true); setErro("");
+  async function recusar(motivo: string) {
+    if (tela.nome !== "SOLICITACAO") return;
+    setSalvando(true);
+    setErro("");
     try {
-      await recusarSolicitacaoMembro(igreja.id, solicitacao.id, motivoRecusa);
-      setSolicitacao(null); await carregar();
+      await recusarSolicitacaoMembro(igreja.id, tela.solicitacao.id, motivo);
+      voltarParaLista();
     } catch (falha) { tratarFalha(falha); }
     finally { setSalvando(false); }
   }
 
-  async function trocarSituacao(ativo: boolean) {
-    if (!membro) return;
-    setSalvando(true); setErro("");
+  async function trocarSituacao(ativo: boolean, motivo: string) {
+    if (tela.nome !== "MEMBRO") return;
+    setSalvando(true);
+    setErro("");
     try {
-      await alterarSituacaoMembro(igreja.id, membro.id, ativo,
-        ativo ? "" : motivoInativacao);
-      setMembro(await obterMembro(igreja.id, membro.id)); await carregar();
-      setConfirmandoInativacao(false); setMotivoInativacao("");
+      await alterarSituacaoMembro(igreja.id, tela.membro.id, ativo, motivo);
+      await abrirMembro(tela.membro.id);
+      void carregar();
     } catch (falha) { tratarFalha(falha); }
     finally { setSalvando(false); }
   }
 
-  const lista = aba === "MEMBROS" ? membros : solicitacoes;
-  const totalPaginas = Math.max(1, Math.ceil(lista.total / lista.tamanhoPagina));
+  function trocarAba(nova: Aba) {
+    setAba(nova);
+    setPagina(1);
+    setTela({ nome: "LISTA" });
+  }
 
   return (
     <section className="gestao-membros" aria-labelledby="titulo-membros">
-      <header className="cabecalho-gestao-membros">
-        <div><p className="rotulo-painel">Comunidade · {igreja.nome}</p>
+      <header className="apresentacao-painel">
+        <div>
+          <p className="rotulo-painel">Comunidade · {igreja.nome}</p>
           <h1 id="titulo-membros">Gestão de membros</h1>
-          <p>Cadastros organizados, com análise pastoral antes da aprovação.</p></div>
-        <div className="acoes-gestao-membros">
-          <a className="botao-secundario" href={`/qrcode-membros/${igreja.id}`}
-            target="_blank" rel="noreferrer">Ver QR de membros</a>
-          <button type="button" onClick={() => {
-            setNovo(true); setMembro(null); setSolicitacao(null); setEditando(false);
-            setDados({ ...dadosMembroVazios }); setDataIngresso(""); setObservacao("");
-            setErro(""); setErros({}); setDuplicados([]);
-          }}>Novo membro</button>
+          <p>Cadastros organizados, com análise pastoral antes da aprovação.</p>
+        </div>
+        <div className="lado-painel">
+          <div className="acoes-painel">
+            <a className="botao-secundario" href={`/qrcode-membros/${igreja.id}`}
+              target="_blank" rel="noreferrer">Ver QR de membros</a>
+            <button type="button" className="botao-principal"
+              onClick={() => abrirFormulario("NOVO")}>Novo membro</button>
+          </div>
+          <div className="resumo-painel" aria-label="Resumo dos membros">
+            <div><strong>{resumo.ativos}</strong><span>Ativos</span></div>
+            <div><strong>{resumo.pendentes}</strong><span>Aguardando</span></div>
+            <div><strong>{resumo.inativos}</strong><span>Inativos</span></div>
+          </div>
         </div>
       </header>
 
-      <div className="indicadores-membros" aria-label="Resumo dos membros">
-        <div><strong>{resumo.ativos}</strong><span>Ativos</span></div>
-        <div><strong>{resumo.pendentes}</strong><span>Aguardando análise</span></div>
-        <div><strong>{resumo.inativos}</strong><span>Inativos</span></div>
-      </div>
-
-      <div className="abas-membros" role="tablist" aria-label="Cadastros de membros">
-        <button type="button" role="tab" aria-selected={aba === "MEMBROS"}
-          className={aba === "MEMBROS" ? "ativo" : ""}
-          onClick={() => { setAba("MEMBROS"); setPagina(1); setMembro(null); setSolicitacao(null); setNovo(false); }}>
-          Membros</button>
-        <button type="button" role="tab" aria-selected={aba === "SOLICITACOES"}
-          className={aba === "SOLICITACOES" ? "ativo" : ""}
-          onClick={() => { setAba("SOLICITACOES"); setPagina(1); setMembro(null); setSolicitacao(null); setNovo(false); }}>
-          Solicitações {resumo.pendentes > 0 && <span>{resumo.pendentes}</span>}</button>
-      </div>
-
-      {aba === "MEMBROS" && (
-        <form className="filtros-membros" onSubmit={(evento) => {
-          evento.preventDefault(); setPagina(1); setTermo(textoPesquisa.trim());
-        }} role="search">
-          <input type="search" aria-label="Pesquisar por nome ou WhatsApp"
-            placeholder="Nome ou WhatsApp" value={textoPesquisa}
-            onChange={(evento) => setTextoPesquisa(evento.target.value)} />
-          <select aria-label="Filtrar por situação" value={situacao}
-            onChange={(evento) => { setSituacao(evento.target.value); setPagina(1); }}>
-            <option value="">Todos</option><option value="ATIVO">Ativos</option>
-            <option value="INATIVO">Inativos</option>
-          </select>
-          <button type="submit">Pesquisar</button>
-        </form>
-      )}
-
       {erro && <div className="alerta" role="alert">{erro}</div>}
 
-      {novo || editando ? (
-        <form className="cartao-gestao-membro" onSubmit={(evento) => {
-          evento.preventDefault();
-          if (solicitacao) void salvarCorrecao();
-          else void salvarMembro();
-        }}>
-          <div className="topo-cartao-membro"><div>
-            <p className="rotulo-painel">{solicitacao ? "Conferência pastoral" : membro ? "Atualização" : "Inclusão interna"}</p>
-            <h2>{solicitacao ? "Corrigir solicitação" : membro ? "Editar membro" : "Novo membro"}</h2>
-          </div><button type="button" className="botao-secundario"
-            onClick={() => { setNovo(false); setEditando(false); setErro(""); }}>Cancelar</button></div>
-          <CamposMembro dados={dados} alterar={setDados} erros={erros} interno={!solicitacao} />
-          {!solicitacao && <div className="grade-campos-membro">
-            <CampoFormulario id="data-ingresso" rotulo="Data de ingresso (opcional)"
-              tipo="date" valor={dataIngresso} aoAlterar={setDataIngresso} />
-            <CampoFormulario id="observacao-pastoral" rotulo="Observação pastoral (interna)">
-              {(atributos) => (
-                <textarea {...atributos} value={observacao} maxLength={2000}
-                  onChange={(evento) => setObservacao(evento.target.value)} />
-              )}
-            </CampoFormulario>
-          </div>}
-          <div className="acoes-cartao-membro"><button type="submit" disabled={salvando}>
-            {salvando ? "Salvando…" : solicitacao ? "Salvar correção" : "Salvar membro"}
-          </button></div>
-          {duplicados.length > 0 && <div className="aviso-duplicidade">
-            <strong>Confira antes de criar outro cadastro</strong>
-            {duplicados.map((item) => <p key={item.id}>{item.nome} {item.sobrenome} · {rotuloSituacaoMembro(item.situacao)}</p>)}
-            <button type="button" disabled={salvando}
-              onClick={() => void salvarMembro(true)}>
-              Confirmar cadastro separado</button>
-          </div>}
-        </form>
-      ) : membro ? (
-        <article className="cartao-gestao-membro">
-          <div className="topo-cartao-membro"><div><p className="rotulo-painel">Membro {membro.situacao.toLowerCase()}</p>
-            <h2>{membro.dados.nome} {membro.dados.sobrenome}</h2></div>
-            <button type="button" className="botao-secundario voltar-lista-membros" onClick={voltarParaLista}>← Voltar à lista</button></div>
-          <ResumoDados dados={membro.dados} />
-          <p><strong>Origem:</strong> {membro.origem === "FORMULARIO" ? "Formulário" : "Inclusão interna"}</p>
-          {membro.dataIngresso && <p><strong>Ingresso:</strong> {formatarDataIso(membro.dataIngresso)}</p>}
-          {membro.observacaoPastoral && <p><strong>Observação pastoral:</strong> {membro.observacaoPastoral}</p>}
-          {membro.motivoInativacao && <p><strong>Motivo da inativação:</strong> {membro.motivoInativacao}</p>}
-          <Historico itens={membro.historico} />
-          <div className="acoes-cartao-membro">
-            <button type="button" onClick={() => editarDados(membro.dados,
-              membro.dataIngresso, membro.observacaoPastoral)}>Editar dados</button>
-            <button type="button" className="botao-secundario" disabled={salvando}
-              onClick={() => membro.situacao === "ATIVO"
-                ? setConfirmandoInativacao(true) : void trocarSituacao(true)}>
-              {membro.situacao === "ATIVO" ? "Inativar" : "Reativar"}</button>
-          </div>
-          {confirmandoInativacao && <div className="recusa-membro">
-            <label htmlFor="motivo-inativacao">Motivo da inativação (opcional)</label>
-            <textarea id="motivo-inativacao" maxLength={500} value={motivoInativacao}
-              onChange={(evento) => setMotivoInativacao(evento.target.value)} />
-            <div className="acoes-cartao-membro">
-              <button type="button" className="botao-secundario"
-                onClick={() => setConfirmandoInativacao(false)}>Cancelar</button>
-              <button type="button" disabled={salvando}
-                onClick={() => void trocarSituacao(false)}>Confirmar inativação</button>
-            </div>
-          </div>}
-        </article>
-      ) : solicitacao ? (
-        <article className="cartao-gestao-membro">
-          <div className="topo-cartao-membro"><div><p className="rotulo-painel">Solicitação pendente</p>
-            <h2>{solicitacao.dados.nome} {solicitacao.dados.sobrenome}</h2></div>
-            <button type="button" className="botao-secundario voltar-lista-membros" onClick={voltarParaLista}>← Voltar à lista</button></div>
-          <ResumoDados dados={solicitacao.dados} />
-          <p><small>Enviada em {new Date(solicitacao.criadaEm).toLocaleDateString("pt-BR")} · Aviso {solicitacao.avisoPrivacidadeVersao}</small></p>
-          <Historico itens={solicitacao.historico} />
-          <div className="grade-campos-membro">
-            <CampoFormulario id="data-ingresso" rotulo="Data de ingresso (opcional)"
-              tipo="date" valor={dataIngresso} aoAlterar={setDataIngresso} />
-            <CampoFormulario id="observacao-pastoral" rotulo="Observação pastoral (interna)">
-              {(atributos) => (
-                <textarea {...atributos} value={observacao} maxLength={2000}
-                  onChange={(evento) => setObservacao(evento.target.value)} />
-              )}
-            </CampoFormulario>
-          </div>
-          <div className="acoes-cartao-membro">
-            <button type="button" className="botao-secundario"
-              onClick={() => editarDados(solicitacao.dados, null, null)}>Corrigir dados</button>
-            <button type="button" disabled={salvando} onClick={() => void aprovar()}>Aprovar</button>
-          </div>
-          {duplicados.length > 0 && <div className="aviso-duplicidade">
-            <strong>Possível cadastro existente. Escolha como prosseguir:</strong>
-            <small>Ao vincular, os dados do membro existente não serão alterados. Confira-os antes de decidir.</small>
-            {duplicados.map((item) => <div key={item.id}>
-              <span>{item.nome} {item.sobrenome} · {rotuloSituacaoMembro(item.situacao)}</span>
-              <button type="button" onClick={() => void aprovar(item.id)}>
-                Vincular a este membro</button></div>)}
-            <button type="button" className="botao-secundario"
-              onClick={() => void aprovar(null, true)}>Criar outro membro mesmo assim</button>
-          </div>}
-          <div className="recusa-membro">
-            <label htmlFor="motivo-recusa">Motivo da recusa (interno)</label>
-            <textarea id="motivo-recusa" value={motivoRecusa} maxLength={500}
-              onChange={(evento) => setMotivoRecusa(evento.target.value)} />
-            <button type="button" className="botao-secundario" disabled={salvando}
-              onClick={() => void recusar()}>Recusar solicitação</button>
-          </div>
-        </article>
-      ) : (
-        <div className="lista-membros">
-          {carregando && <p>Carregando cadastros…</p>}
-          {!carregando && lista.itens.length === 0 && <p className="vazio-membros">
-            {aba === "MEMBROS" ? "Nenhum membro encontrado." : "Nenhuma solicitação pendente."}</p>}
-          {aba === "MEMBROS" && membros.itens.map((item) => (
-            <button className="linha-membro" type="button" key={item.id}
-              onClick={() => void abrirMembro(item.id)}>
-              <span className="avatar-membro">{item.nome.charAt(0)}{item.sobrenome.charAt(0)}</span>
-              <span className="nome-linha-membro"><strong>{item.nome} {item.sobrenome}</strong>
-                <small>{item.whatsapp ? formatarTelefoneBrasileiro(item.whatsapp) : "Sem WhatsApp"}
-                  {item.ehMenor ? " · Menor de idade" : ""}</small></span>
-              <span className={`selo-membro ${item.situacao.toLowerCase()}`}>{rotuloSituacaoMembro(item.situacao)}</span>
-              <span aria-hidden="true">›</span>
-            </button>
-          ))}
-          {aba === "SOLICITACOES" && solicitacoes.itens.map((item) => (
-            <button className="linha-membro" type="button" key={item.id}
-              onClick={() => void abrirSolicitacao(item.id)}>
-              <span className="avatar-membro">{item.nome.charAt(0)}{item.sobrenome.charAt(0)}</span>
-              <span className="nome-linha-membro"><strong>{item.nome} {item.sobrenome}</strong>
-                <small>{new Date(item.criadaEm).toLocaleDateString("pt-BR")} · {item.whatsapp ? formatarTelefoneBrasileiro(item.whatsapp) : ""}</small></span>
-              <span className="selo-membro pendente">Pendente</span><span aria-hidden="true">›</span>
-            </button>
-          ))}
-          {lista.total > 0 && <nav className="paginacao-membros" aria-label="Páginas de membros">
-            <button type="button" disabled={pagina <= 1}
-              onClick={() => setPagina((atual) => atual - 1)}>Anterior</button>
-            <span>Página {pagina} de {totalPaginas} · {lista.total} registros</span>
-            <button type="button" disabled={pagina >= totalPaginas}
-              onClick={() => setPagina((atual) => atual + 1)}>Próxima</button>
-          </nav>}
-        </div>
+      {tela.nome === "FORMULARIO" && (
+        <MembroFormulario
+          origem={tela.origem}
+          dados={dados}
+          erros={erros}
+          duplicados={duplicados}
+          dataIngresso={dataIngresso}
+          observacao={observacao}
+          salvando={salvando}
+          aoAlterarDados={setDados}
+          aoAlterarIngresso={setDataIngresso}
+          aoAlterarObservacao={setObservacao}
+          aoEnviar={() => { if (tela.origem === "CORRECAO") void salvarCorrecao(); else void salvarMembro(); }}
+          aoConfirmarDuplicidade={() => void salvarMembro(true)}
+          aoCancelar={voltarParaLista}
+        />
+      )}
+
+      {tela.nome === "MEMBRO" && (
+        <MembroDetalhe
+          membro={tela.membro}
+          salvando={salvando}
+          aoVoltar={voltarParaLista}
+          aoEditar={() => abrirFormulario("EDICAO")}
+          aoTrocarSituacao={(ativo, motivo) => void trocarSituacao(ativo, motivo)}
+        />
+      )}
+
+      {tela.nome === "SOLICITACAO" && (
+        <SolicitacaoDetalhe
+          solicitacao={tela.solicitacao}
+          salvando={salvando}
+          duplicados={duplicados}
+          dataIngresso={dataIngresso}
+          observacao={observacao}
+          aoVoltar={voltarParaLista}
+          aoCorrigir={() => abrirFormulario("CORRECAO")}
+          aoAlterarIngresso={setDataIngresso}
+          aoAlterarObservacao={setObservacao}
+          aoAprovar={(id, confirmar) => void aprovar(id ?? null, confirmar ?? false)}
+          aoRecusar={(motivo) => void recusar(motivo)}
+        />
+      )}
+
+      {tela.nome === "LISTA" && (
+        <MembrosLista
+          aba={aba}
+          pendentes={resumo.pendentes}
+          membros={membros}
+          solicitacoes={solicitacoes}
+          filtros={filtros}
+          pagina={pagina}
+          carregando={carregando}
+          aoTrocarAba={trocarAba}
+          aoAlterarFiltros={(novos) => {
+            setFiltros(novos);
+            if (novos.situacao !== filtros.situacao) setPagina(1);
+          }}
+          aoPesquisar={() => { setPagina(1); setTermo(filtros.texto.trim()); }}
+          aoTrocarPagina={setPagina}
+          aoAbrirMembro={(id) => void abrirMembro(id)}
+          aoAbrirSolicitacao={(id) => void abrirSolicitacao(id)}
+        />
       )}
     </section>
   );
-}
-
-function ResumoDados({ dados }: { dados: DadosMembro }) {
-  const endereco = [dados.logradouro, dados.numero, dados.bairro,
-    dados.complemento, dados.cep, dados.cidade, dados.estado].filter(Boolean).join(", ");
-  return <dl className="resumo-dados-membro">
-    <div><dt>Função na igreja</dt><dd>{funcoesMembro.find((item) => item.codigo === dados.funcao)?.nome ?? "Membro"}</dd></div>
-    <div><dt>WhatsApp</dt><dd>{dados.whatsapp ? formatarTelefoneBrasileiro(dados.whatsapp) : "Não informado"}</dd></div>
-    <div><dt>E-mail</dt><dd>{dados.email || "Não informado"}</dd></div>
-    <div><dt>Nascimento</dt><dd>{formatarDataIso(dados.dataNascimento) || "Não informado"}</dd></div>
-    <div><dt>Endereço</dt><dd>{endereco || "Não informado"}</dd></div>
-    <div><dt>Batismo</dt><dd>{dados.situacaoBatismo === "BATIZADO" ? "Batizado" :
-      dados.situacaoBatismo === "NAO_BATIZADO" ? "Não batizado" : "Não informado"}
-      {dados.dataBatismo ? ` · ${formatarDataIso(dados.dataBatismo)}` : ""}</dd></div>
-    {dados.ehMenor && <div><dt>Responsável legal</dt><dd>{dados.nomeResponsavelLegal} · {dados.vinculoResponsavelLegal}
-      {dados.whatsappResponsavelLegal ? ` · ${formatarTelefoneBrasileiro(dados.whatsappResponsavelLegal)}` : ""}</dd></div>}
-  </dl>;
-}
-
-function Historico({ itens }: { itens: Array<{ acao: string; descricao: string | null;
-  criadoEm: string; nomeAutor: string }> }) {
-  return <div className="historico-membro"><h3>Histórico</h3>
-    {itens.map((item, indice) => <p key={`${item.criadoEm}-${indice}`}>
-      <strong>{rotuloAcaoHistorico(item.acao)}</strong> · {item.nomeAutor} · {formatarDataHora(item.criadoEm)}
-      {item.descricao && <small>{item.descricao}</small>}
-    </p>)}
-  </div>;
 }

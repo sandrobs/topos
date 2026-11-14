@@ -313,7 +313,7 @@ eliminando os pares conflitantes.
 
 ## Lote 4 — responsividade do painel
 
-### 4.1 · Kanban exige rolagem horizontal em todo tablet · **M** · confirmado
+### 4.1 · Kanban exige rolagem horizontal em todo tablet · **M** · **resolvido em 14/11/2026**
 
 ```css
 .kanban { grid-template-columns: repeat(5, minmax(255px, 1fr)); overflow-x: auto; }
@@ -338,7 +338,7 @@ celular, um seletor de etapa (chips) que mostra uma coluna por vez.
 rolável pode conflitar com a rolagem por toque. Precisa de teste em aparelho
 real — a emulação não prova.
 
-### 4.2 · Largura do conteúdo muda ao trocar de aba · **P** · confirmado
+### 4.2 · Largura do conteúdo muda ao trocar de aba · **P** · **resolvido em 14/11/2026**
 
 `.pagina-painel` não tem `max-width`; `.gestao-membros` tem
 `max-width: 1280px; margin: 0 auto`. Medido a 1600 px de janela: o conteúdo salta
@@ -347,7 +347,7 @@ abas continua em largura total.
 
 **Solução:** um contêiner de largura máxima único para o painel.
 
-### 4.3 · `document.title` nunca muda · **P** · confirmado
+### 4.3 · `document.title` nunca muda · **P** · **resolvido em 14/11/2026**
 
 Todas as rotas — login, painel, formulário público, cartaz — compartilham
 "Igreja Evangélica de Cristo". Atrapalha abas múltiplas e histórico, que o painel
@@ -359,7 +359,7 @@ usa (`/qrcode/{id}` abre em nova aba).
 
 ## Lote 5 — quando a expansão da V2 entrar
 
-### 5.1 · `GestaoMembros` concentra cinco telas · **G** · confirmado
+### 5.1 · `GestaoMembros` concentra cinco telas · **G** · **resolvido em 14/11/2026**
 
 390 linhas, ~25 `useState`, e uma cadeia ternária
 `novo || editando ? … : membro ? … : solicitacao ? … : lista` que decide entre

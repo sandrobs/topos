@@ -556,3 +556,113 @@ Os 123 hexadecimais fora do `:root` que não coincidem com token nenhum, e a
 aplicação das escalas `--esp-*`, `--raio-*` e `--txt-*` nos componentes. Nada
 disso é cascata: é substituição valor a valor, que muda cor e espaçamento na
 tela e pede decisão de desenho, componente a componente.
+
+---
+
+## Lotes 4 e 5, padronização visual e ajustes do responsável — 14/11/2026
+
+Rodada a partir da avaliação do responsável no aparelho real. Fecha os Lotes 4
+e 5 e acrescenta itens que só apareceram no uso.
+
+### Verificação física, finalmente feita
+
+O responsável **imprimiu os PDFs em papel e aprovou**. Era a pendência mais
+antiga da V3, aberta desde o Lote 1. Continua pendente apenas o teste em
+Safari/iPad/iPhone além do que já foi observado aqui.
+
+### Decisões fechadas
+
+- **D2 — kanban no celular:** manter empilhado. A equipe usa o aparelho em
+  modo retrato.
+- **D3 — contadores na busca:** manter o rótulo "Resultados". O que o Lote 2
+  fez como medida reversível vira definitivo; nenhum endpoint novo.
+
+### O menu que ficava aceso no iPhone
+
+Relatado com captura: estando em Atendimentos, o botão "Igrejas" continuava
+destacado. Causa: **26 regras `:hover` e nenhuma protegida**. No Safari do
+iPhone o `:hover` gruda no elemento tocado até o toque seguinte em outro
+lugar — não era bug do menu, era de toda a aplicação.
+
+As 17 regras de nível superior com `:hover` passaram a viver dentro de
+`@media (hover: hover)`. Conferido depois: zero regras `:hover` desprotegidas,
+inclusive dentro de media queries. Em aparelho com mouse, nada muda.
+
+### Padronização das telas
+
+As quatro seções do painel usavam três cabeçalhos diferentes:
+`.apresentacao-painel` em Atendimentos, `.cabecalho-gestao-membros` em Membros
+e `.cabecalho-administracao` em Igrejas e Usuários — cartão numa, texto solto
+nas outras.
+
+Agora todas usam `.apresentacao-painel`, no desenho de Atendimentos: rótulo,
+título e descrição à esquerda; `.lado-painel` à direita com as ações em cima e
+os indicadores embaixo. Igrejas e Usuários ganharam indicadores que não tinham
+(total / ativas / inativas e total / ativos / inativos), calculados das listas
+que já chegam — sem API nem banco.
+
+Os cabeçalhos antigos foram removidos do CSS. Onde um seletor morto dividia a
+regra com seletores vivos — os botões de rodapé dos modais —, só o morto saiu.
+
+### Botão de ação primária
+
+`+ Nova igreja`, `+ Novo usuário` e `Novo membro` tinham cada um o seu azul
+chapado. Agora os três usam `.botao-principal`, com o mesmo degradê do botão
+de envio: criar se parece com criar em qualquer tela.
+
+### Marca e ícone
+
+"Gestão da igreja" passou a **"Tópos - Gestão de Igrejas"** nas três
+ocorrências da interface, e o autor nos metadados dos PDFs foi de "Topos" para
+"Tópos", para a marca ficar escrita igual em todo lugar.
+
+Favicon e ícone de tela inicial gerados da logo (32 px e 180 px). Ficam em
+`src/icones/` e não em `public/`, pelo mesmo motivo das fontes: o Caddy só
+libera `/assets/*` no domínio público.
+
+### Lote 4
+
+- **4.1 · Kanban.** `grid-template-columns: repeat(auto-fit, minmax(208px, 1fr))`
+  no lugar das cinco colunas fixas de 255 px. Medido: 5 colunas a 1440 px,
+  4 a 1024 px, 3 a 768 px, **sem rolagem horizontal em nenhuma largura** —
+  antes eram 1.333 px fixos contra 728 px visíveis no tablet. No celular segue
+  empilhado, conforme D2. O arraste é por código de etapa, não por posição,
+  então a quebra de linha não muda quais movimentos são permitidos.
+- **4.2 · Largura entre abas.** `.pagina-painel > *` recebeu
+  `width: min(100%, 1280px)` e o teto saiu de `.gestao-membros`. O conteúdo
+  parou de saltar de 1600 px para 1280 px ao trocar de aba.
+- **4.3 · Título por rota.** Novo `titulo.ts`. As telas internas ficam
+  "Seção · Tópos - Gestão de Igrejas"; as públicas, "Página · Nome da igreja",
+  que é o que o visitante reconhece.
+
+### Lote 5 · Gestão de membros em componentes
+
+`GestaoMembros.tsx` tinha 401 linhas, 24 `useState` e cinco telas numa cadeia
+ternária. Foi dividido:
+
+| arquivo | linhas | papel |
+|---|---|---|
+| `GestaoMembros.tsx` | 301 | contêiner: dados, mutações, navegação |
+| `membros/MembrosLista.tsx` | 118 | abas, filtros, lista e paginação |
+| `membros/MembroPartes.tsx` | 105 | blocos compartilhados pelos dois detalhes |
+| `membros/SolicitacaoDetalhe.tsx` | 73 | aprovar, recusar, duplicidade |
+| `membros/MembroFormulario.tsx` | 72 | novo, edição e correção |
+| `membros/MembroDetalhe.tsx` | 65 | detalhe e inativação |
+
+O ganho principal não é o tamanho: os quatro sinalizadores de navegação
+(`novo`, `editando`, `membro`, `solicitacao`) viraram **um** estado
+discriminado. Antes nada impedia dois verdadeiros ao mesmo tempo, e cada
+transição precisava lembrar de zerar os outros três. O contêiner foi de 24
+para 17 `useState`, e os estados que pertenciam a uma tela só — motivo da
+recusa, motivo da inativação, confirmação de inativação — desceram para os
+componentes que os usam.
+
+Os cabeçalhos dos cartões seguem o mesmo desenho das seções, como pedido.
+
+### Validação
+
+Build Docker completo e **59 testes aprovados**. Exercitado na aplicação em
+execução, nas cinco telas: lista → detalhe → edição com campos preenchidos →
+cancelar → lista; e aba de solicitações → detalhe → correção → cancelar. Os
+campos pastorais aparecem no detalhe da solicitação e somem na correção, como
+antes. Nenhum cadastro foi criado ou alterado.

@@ -14,6 +14,7 @@ import { LogoIgreja } from "./LogoIgreja";
 import { FormularioPublicoMembros } from "./CadastroMembro";
 import { CampoFormulario } from "./CampoFormulario";
 import { focarPrimeiroErro } from "./foco";
+import { tituloPublico, useTitulo } from "./titulo";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 
 /*
@@ -95,6 +96,7 @@ function FormularioPublico({ identificador }: { identificador: string }) {
   const [erroPagina, setErroPagina] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
   const formularioRef = useRef<HTMLFormElement>(null);
+  useTitulo(tituloPublico("Boas-vindas", igreja?.nome));
 
   // Só depois do commit do React os aria-invalid existem no DOM.
   useEffect(() => {

@@ -12,6 +12,13 @@
       em /assets/ no build.
     -->
     <link rel="preload" href="/src/fontes/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!--
+      Ícones gerados da logo da igreja. Ficam em src/ e não em public/ porque o
+      Caddy só libera /assets/* no domínio público dos formulários; o Vite
+      publica estes caminhos lá, com hash.
+    -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/src/icones/icone-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/src/icones/icone-180.png" />
     <title>Igreja Evangélica de Cristo</title>
   </head>
   <body>

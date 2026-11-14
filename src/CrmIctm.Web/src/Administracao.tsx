@@ -134,13 +134,22 @@ export function GestaoIgrejas({
 
   return (
     <section className="secao-administracao" aria-labelledby="titulo-igrejas">
-      <header className="cabecalho-administracao">
+      <header className="apresentacao-painel">
         <div>
           <p className="rotulo-painel">Administração</p>
           <h1 id="titulo-igrejas">Igrejas</h1>
           <p>Gerencie os dados, o endereço público e a disponibilidade de cada igreja.</p>
         </div>
-        <button type="button" onClick={abrirNovo}>+ Nova igreja</button>
+        <div className="lado-painel">
+          <div className="acoes-painel">
+            <button type="button" className="botao-principal" onClick={abrirNovo}>Nova igreja</button>
+          </div>
+          <div className="resumo-painel" aria-label="Resumo das igrejas">
+            <div><strong>{igrejas.length}</strong><span>Total</span></div>
+            <div><strong>{igrejas.filter((item) => item.ativa).length}</strong><span>Ativas</span></div>
+            <div><strong>{igrejas.filter((item) => !item.ativa).length}</strong><span>Inativas</span></div>
+          </div>
+        </div>
       </header>
 
       {erro && <div className="alerta" role="alert">{erro}</div>}
@@ -371,13 +380,22 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
 
   return (
     <section className="secao-administracao" aria-labelledby="titulo-usuarios">
-      <header className="cabecalho-administracao">
+      <header className="apresentacao-painel">
         <div>
           <p className="rotulo-painel">Administração</p>
           <h1 id="titulo-usuarios">Usuários</h1>
           <p>Gerencie acessos, perfis e senhas temporárias.</p>
         </div>
-        <button type="button" onClick={() => void abrirNovo()}>+ Novo usuário</button>
+        <div className="lado-painel">
+          <div className="acoes-painel">
+            <button type="button" className="botao-principal" onClick={() => void abrirNovo()}>Novo usuário</button>
+          </div>
+          <div className="resumo-painel" aria-label="Resumo dos usuários">
+            <div><strong>{usuarios.length}</strong><span>Total</span></div>
+            <div><strong>{usuarios.filter((item) => item.ativo).length}</strong><span>Ativos</span></div>
+            <div><strong>{usuarios.filter((item) => !item.ativo).length}</strong><span>Inativos</span></div>
+          </div>
+        </div>
       </header>
 
       {sessao.perfil === "ADMINISTRADOR" && (
