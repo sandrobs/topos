@@ -17,8 +17,9 @@ são três dívidas estruturais, não falta de capricho:
 
 1. **Não existe um sistema de design, existe um arquivo CSS.** 3.031 linhas,
    553 blocos de regra, 165 cores em hexadecimal fixo contra ~20 tokens em
-   `:root`, 8 breakpoints sem escala (400, 420, 700, 720, 721–1024, 850, 900,
-   1024) e 92 blocos que redeclaram um seletor já declarado.
+   `:root` e 7 breakpoints sem escala (400, 420, 700, 720, 721–1024, 850, 900).
+   Havia ainda 4 seletores declarados duas vezes no nível superior, um deles
+   com código morto. Tudo isso foi resolvido no Lote 3.
 2. **O mesmo componente foi reimplementado várias vezes.** Campo de formulário
    em quatro versões, sobreposição modal em quatro, confirmação destrutiva em
    três — com acessibilidade desigual entre elas. O padrão correto existe no
@@ -285,13 +286,21 @@ capturado: `"Deseja desativar a igreja Igreja de Teste V2?"`.
 
 **Solução:** o `<Dialogo>` do item 2.1, em variante de confirmação.
 
-### 3.5 · Limpeza estrutural do CSS · **M** · confirmado
+### 3.5 · Limpeza estrutural do CSS · **M** · resolvido em 14/11/2026
 
-- **92 dos 553 blocos redeclaram um seletor já declarado.** Exemplo sem media
-  query no meio: `.grupo-campos-membro` na linha 40 (`padding: 19px`,
-  `border-radius: 14px`) e de novo perto da 2997 (`padding: 20px`,
-  `border-radius: 16px`); a primeira é código morto.
-- **Três blocos `@media print` separados** (linhas 144, 2818, 2985).
+> **Correção de número.** Esta seção afirmava que **92 dos 553 blocos**
+> redeclaravam um seletor já declarado. Errado, e inflando o problema: aquela
+> contagem incluía repetições dentro de `@media`, que são a forma normal de
+> escrever responsividade, não duplicatas. Medido só no nível superior: **427
+> regras, 4 seletores duplicados, 1 com propriedade de fato sobrescrita.**
+> Os quatro foram fundidos; ver [03-IMPLEMENTACAO.md](03-IMPLEMENTACAO.md).
+
+- `.grupo-campos-membro` era o único caso de código morto real: declarado com
+  `padding: 19px` / `border-radius: 14px` e de novo 3.000 linhas abaixo com
+  `padding: 20px` / `border-radius: 16px`. Resolvido.
+- **Três blocos `@media print` separados.** Resolvido — dois existiam apenas
+  para `.cartaz-a4-membros` e `.conteudo-cartaz-membros`, classes que nenhum
+  componente renderiza, e saíram com elas.
 - Os estilos da V2 foram **prependidos**: começam na linha 24, antes do reset
   global `* { box-sizing: border-box }` da linha 152 — e há um segundo bloco V2
   no fim, sob `/* Ajustes V2: ... */`, que existe só para sobrescrever o primeiro.
