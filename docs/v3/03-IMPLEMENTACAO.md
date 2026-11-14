@@ -735,3 +735,32 @@ rótulo "Sair" some visualmente no celular, mas o `aria-label` mantém o nome
 acessível.
 
 Validação: build Docker completo e **59 testes aprovados**.
+
+### Menu no iPhone — segunda tentativa de correção — 14/11/2026
+
+A correção anterior era um no-op no aparelho que ela mirava. Ela dependia de
+`evento.detail > 0` para reconhecer um clique de ponteiro, mas no Safari do
+iPhone o clique sintetizado a partir do toque chega com **`detail: 0`** —
+igual ao do teclado. A guarda nunca disparava no iOS.
+
+Agora `foco.ts` observa a última modalidade de interação por ouvintes globais
+de `pointerdown`, `touchstart` e `keydown`. Eventos de ponteiro não existem na
+navegação por teclado, então isso é confiável em qualquer navegador e não
+depende de `detail`.
+
+Acrescentadas duas defesas para as outras causas plausíveis, já que não é
+possível reproduzir o Safari daqui:
+
+- `user-select: none` nas abas, contra o retângulo claro que o Safari pinta
+  quando um toque um pouco longo seleciona o texto do botão;
+- `:focus:not(:focus-visible) { outline: none }` nas abas, contra o anel que o
+  Safari desenha em botões que ficaram com `:focus` após o toque.
+
+Verificado com toque emulado: `activeElement` volta a ser o `body`, sem
+`:focus` nem outline. E com Tab: `:focus-visible` verdadeiro e o anel de 3 px
+em `rgb(46, 95, 202)` no lugar.
+
+**Ainda não confirmado em Safari real.** Se persistir, o dado que falta é a
+cor do retângulo: azul indica anel de foco; cinza ou claro indica seleção de
+texto; e a cor de fundo do botão ativo indicaria que o estado de React é que
+está errado, não o CSS.

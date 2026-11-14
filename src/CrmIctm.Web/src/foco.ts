@@ -11,19 +11,37 @@
  * apenas rola até a mensagem.
  */
 /**
- * Solta o foco de um botão quando ele foi acionado por toque ou clique.
+ * Última forma de interação do usuário.
  *
- * No Safari do iPhone o botão tocado continua sendo o `activeElement`, e o
- * navegador desenha o próprio anel de foco em volta dele. Em abas de
- * navegação isso se lê como "continua selecionado", mesmo depois de abrir
- * outra seção — foi o que o responsável relatou.
+ * Serve para distinguir "clicou/tocou" de "acionou pelo teclado". A primeira
+ * tentativa usava `evento.detail`, que é 0 no teclado e maior que 0 no mouse
+ * — mas no Safari do iPhone o clique sintetizado a partir do toque também
+ * chega com `detail: 0`, então a verificação nunca disparava justamente no
+ * aparelho que ela deveria atender.
  *
- * `detail` é 0 quando o clique veio do teclado (Enter ou Espaço) e maior que
- * 0 quando veio de ponteiro. Assim quem navega por teclado não perde o foco,
- * que é justamente o que o anel existe para mostrar.
+ * Eventos de ponteiro não existem na navegação por teclado, então observar
+ * qual veio por último é confiável em qualquer navegador.
  */
-export function soltarFocoDePonteiro(evento: { detail: number; currentTarget: HTMLElement }) {
-  if (evento.detail > 0) evento.currentTarget.blur();
+let modalidade: "ponteiro" | "teclado" = "teclado";
+
+if (typeof document !== "undefined") {
+  document.addEventListener("pointerdown", () => { modalidade = "ponteiro"; }, true);
+  document.addEventListener("touchstart", () => { modalidade = "ponteiro"; }, { capture: true, passive: true });
+  document.addEventListener("keydown", () => { modalidade = "teclado"; }, true);
+}
+
+/**
+ * Solta o foco de um botão acionado por toque ou clique.
+ *
+ * No Safari do iPhone o botão tocado continua sendo o `activeElement` e o
+ * navegador desenha o anel de foco dele em volta. Numa barra de abas isso se
+ * lê como "continua selecionado" mesmo depois de abrir outra seção.
+ *
+ * Pelo teclado o foco permanece, porque é exatamente aí que o anel precisa
+ * aparecer.
+ */
+export function soltarFocoDePonteiro(evento: { currentTarget: HTMLElement }) {
+  if (modalidade === "ponteiro") evento.currentTarget.blur();
 }
 
 export function focarPrimeiroErro(formulario: HTMLFormElement | null) {

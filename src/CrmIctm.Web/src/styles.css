@@ -1328,6 +1328,27 @@ button[type="submit"]:disabled {
   gap: 7px;
 }
 
+.navegacao-interna button,
+.abas-membros button {
+  /*
+   * `user-select: none` evita que um toque um pouco longo selecione o texto
+   * da aba, o que o Safari pinta com um retângulo claro — outro jeito de o
+   * botão parecer "ainda selecionado".
+   */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/*
+ * O Safari desenha o anel dele em botões que ficaram com `:focus` depois de
+ * um toque. Aqui o anel só aparece em `:focus-visible`, que é o estado que
+ * importa para quem navega por teclado.
+ */
+.navegacao-interna button:focus:not(:focus-visible),
+.abas-membros button:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .navegacao-interna button {
   min-height: 40px;
   padding: 8px 15px;
