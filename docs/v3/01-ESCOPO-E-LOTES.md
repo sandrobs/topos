@@ -45,7 +45,7 @@ Prioridade mais alta do que o planejado originalmente: a validação de 14/11
 mostrou que o foco de teclado escapa para trás das sobreposições, o que é falha
 de uso real, não detalhe de conformidade.
 
-### 2.1 · Sobreposições modais sem Escape, sem armadilha de foco · **M** · confirmado
+### 2.1 · Sobreposições modais sem Escape, sem armadilha de foco · **M** · **resolvido em 14/11/2026**
 
 Quatro sobreposições construídas à mão com `<div className="sobreposicao">` em
 [Interno.tsx](../../src/CrmIctm.Web/src/Interno.tsx) e
@@ -75,7 +75,7 @@ Escape, armadilha de foco, devolução de foco, `inert` do fundo e backdrop sem
 código. Migrar as quatro sobreposições. **Resultado esperado:** menos código do
 que hoje e quatro modais acessíveis.
 
-### 2.2 · Estado vazio falso durante o carregamento · **M** · confirmado
+### 2.2 · Estado vazio falso durante o carregamento · **M** · **resolvido em 14/11/2026**
 
 `selecionarIgreja` faz `setAtendimentos([])` e `setCarregando(true)`, mas
 `carregando` só é consultado em `if (carregando && !sessao)`. Medido ao trocar
@@ -105,7 +105,7 @@ botão de busca desabilitado com texto de progresso; estado pendente no cartão
 clicado. `GestaoMembros` já faz certo (`{carregando && <p>Carregando cadastros…</p>}`)
 — alinhar os dois.
 
-### 2.3 · Nenhuma região `aria-live` na aplicação · **P** · confirmado
+### 2.3 · Nenhuma região `aria-live` na aplicação · **P** · **resolvido em 14/11/2026**
 
 Medido: **zero** elementos com `aria-live` em toda a aplicação. Nenhuma mensagem
 de status é anunciada a leitor de tela (WCAG 2.1 SC 4.1.3). Esta é a raiz comum
@@ -114,7 +114,7 @@ de todos os "sem retorno" acima.
 **Solução:** uma região de status polida por tela, alimentada pelos mesmos
 estados que já governam os textos visíveis.
 
-### 2.4 · Seção ativa indicada só por classe CSS · **P** · confirmado
+### 2.4 · Seção ativa indicada só por classe CSS · **P** · **resolvido em 14/11/2026**
 
 A navegação principal (`.navegacao-interna`: Atendimentos, Membros, Igrejas,
 Usuários) marca a seção aberta apenas com a classe `ativo`. Sem `aria-current`,
@@ -132,7 +132,7 @@ um `tablist`, que exigiria navegação por setas.
 > `aria-selected` corretos. A medição original misturou esse `tablist` com os
 > botões da navegação principal, que são outro componente.
 
-### 2.5 · "Total" não é o total quando há busca · **P** · confirmado
+### 2.5 · "Total" não é o total quando há busca · **P** · **resolvido em 14/11/2026**
 
 Os três indicadores derivam de `atendimentos.length`, e `atendimentos` é a lista
 já filtrada. Medido numa igreja com 1 atendimento: ao pesquisar um termo sem
@@ -142,7 +142,7 @@ correspondência, **Total passou a 0**.
 contadores num endpoint próprio. `GestaoMembros` já usa `obterResumoMembros()`
 separado da lista — é o padrão certo.
 
-### 2.6 · O visitante baixa o painel administrativo inteiro · **M** · confirmado
+### 2.6 · O visitante baixa o painel administrativo inteiro · **M** · **resolvido em 14/11/2026**
 
 Bundle único de 399 kB, sem code splitting.
 [App.tsx](../../src/CrmIctm.Web/src/App.tsx) importa `Interno` estaticamente no
@@ -179,7 +179,7 @@ diferente conforme tenha ou não Inter instalada.
 
 ## Lote 3 — fundação do sistema de design
 
-### 3.1 · Tokens e normalização de breakpoints · **G** · confirmado
+### 3.1 · Tokens e normalização de breakpoints · **G** · **parcial — tokens e breakpoints feitos em 14/11/2026**
 
 Mesmo controle, duas especificações, medidas nos dois formulários públicos:
 
@@ -198,7 +198,7 @@ Não são escolhas, é deriva de copiar-e-colar. Some 165 hexadecimais fixos con
 (`--raio-sm/md/lg`), tipografia (`--txt-xs..xl`) e três breakpoints
 (480 / 768 / 1200); substituir por token num passe.
 
-### 3.2 · Quatro implementações de campo de formulário · **G** · confirmado
+### 3.2 · Quatro implementações de campo de formulário · **G** · **resolvido em 14/11/2026**
 
 | implementação | arquivo | erro de campo | `aria-describedby` |
 |---|---|---|---|
@@ -219,7 +219,7 @@ corretos — 10 de 10 inputs têm rótulo por aninhamento implícito
 **Solução:** um `<CampoFormulario>` único (id, label, erro, `aria-invalid`,
 `aria-describedby`, `autoComplete`, `maxLength`) e migrar as cinco.
 
-### 3.3 · Validação divergente entre os dois formulários públicos · **M** · confirmado
+### 3.3 · Validação divergente entre os dois formulários públicos · **M** · **resolvido em 14/11/2026**
 
 Medido nos dois formulários em execução, enviando-os vazios:
 
@@ -250,7 +250,7 @@ iOS. A emulação Chromium não prova; precisa de teste em aparelho.
 com `noValidate` e validação própria, mais foco no primeiro campo inválido e
 anúncio por região viva.
 
-### 3.3b · O erro sai da tela no celular · **P** · confirmado
+### 3.3b · O erro sai da tela no celular · **P** · **resolvido em 14/11/2026**
 
 No formulário de visitantes, simulando o fluxo real num aparelho de 375 px —
 rolar até o fim e tocar em "Enviar meus dados":
@@ -270,7 +270,7 @@ apenas porque o navegador faz esse trabalho sozinho.
 e anunciar o total de erros numa região viva — o mesmo recurso já criado no
 painel no Lote 2 (`.estado-lista`).
 
-### 3.3c · Alvo de toque de 40 px nos dois formulários públicos · **P** · confirmado
+### 3.3c · Alvo de toque de 40 px nos dois formulários públicos · **P** · **resolvido em 14/11/2026**
 
 `.abrir-aviso-privacidade` mede 40 px de altura a 375 px e a 320 px, nos dois
 formulários. É o **único** alvo abaixo de 44 px que restou, e é o botão que abre
@@ -278,7 +278,7 @@ o aviso que o usuário precisa ler antes de consentir.
 
 **Solução:** `min-height: 44px`. Uma linha.
 
-### 3.4 · Confirmação destrutiva em três padrões · **P** · confirmado
+### 3.4 · Confirmação destrutiva em três padrões · **P** · **resolvido em 14/11/2026**
 
 `window.confirm()` nativo em `Administracao.tsx` (linhas 110 e 291), bloco em
 linha em `GestaoMembros.tsx` e modal customizado no kanban. Texto nativo
