@@ -202,3 +202,81 @@ foco ao elemento de origem. Nenhum registro foi criado ou desativado no banco.
 Pendente de verificação física: impressão dos PDFs e teste em Safari/iPad/iPhone
 reais — o `<dialog>` nativo e o `:has()` usados aqui têm suporte amplo, mas o
 comportamento de foco no iOS merece conferência em aparelho real.
+
+---
+
+## Lote 2, item 2.7 — tipografia hospedada — 14/11/2026
+
+Fecha o Lote 2. Decisão D1, opção A: a Inter passou a ser entregue pelo próprio
+projeto, em vez de depender de o usuário tê-la instalada.
+
+### O que foi feito
+
+Dois subconjuntos da Inter variável (versão 20 do Google Fonts, SIL OFL 1.1)
+ficam em `src/CrmIctm.Web/src/fontes/`, com a licença ao lado em
+`LICENSE-Inter.txt`:
+
+| arquivo | tamanho | quando é baixado |
+|---|---|---|
+| `inter-latin.woff2` | 48,3 kB | sempre |
+| `inter-latin-ext.woff2` | 85,1 kB | só se a página trouxer um caractere da faixa |
+
+Os arquivos ficam em `src/fontes/` e **não** em `public/`. O `deploy/Caddyfile`
+libera, no domínio público dos formulários, apenas `/assets/*`,
+`/logo-igreja.png` e as rotas da aplicação: servidos de `public/`, os arquivos
+cairiam em `/inter-latin.woff2` e dariam 404 para o visitante. Importados pelo
+CSS, o Vite os publica com hash em `/assets/`, que é permitido.
+
+Um `<link rel="preload">` em `index.html` aponta para o subconjunto latino; o
+Vite reescreve o caminho para o arquivo com hash no build. Sem ele a fonte só
+seria descoberta ao interpretar o CSS, e o texto apareceria na fonte do sistema
+antes de trocar — uma troca que desloca o layout, porque as métricas da Inter e
+da Segoe UI são diferentes.
+
+Declarados com `font-weight: 100 900` (eixo variável) e `font-display: swap`.
+
+### Medições
+
+Largura renderizada do mesmo texto, por peso declarado no CSS:
+
+| peso | antes (Inter local, estática) | depois (Inter variável) |
+|---|---|---|
+| 400 | 533,20 | 319,08 |
+| 450 | 533,20 | 320,56 |
+| 500 | 533,20 | 322,10 |
+| 700 | 556,99 | 328,01 |
+| 720 | 556,99 | 328,74 |
+| 750 | 556,99 | 329,90 |
+| 800 | 556,99 | 331,68 |
+| 850 | 556,99 | 333,67 |
+| 900 | 556,99 | 335,66 |
+| **valores distintos** | **2** | **12** |
+
+(As duas colunas não são comparáveis em valor absoluto: a medição original usou
+outro texto de amostra. O que importa é a contagem de valores distintos.)
+
+Outras medições, no formulário público em execução:
+
+- `document.fonts` traz a face variável com estado `loaded`; a face `latin-ext`
+  fica `unloaded`, confirmando que o `unicode-range` evita o download.
+- A requisição da fonte começa em 30 ms e termina em 46 ms — antes de o CSS
+  terminar, em 47 ms. O preload funciona e não há troca de fonte visível.
+- Peso total da página: **391 kB**, contra 341 kB antes da fonte. Partindo de
+  1.826 kB antes do Lote 1, continua **79% abaixo**.
+
+### O que deliberadamente não foi feito
+
+Os onze valores de `font-weight` do CSS (450, 700, 720, 750, 760, 780, 800,
+820, 850, 900) agora renderizam todos diferentes, mas diferenças de 20 unidades
+são imperceptíveis e vieram de copiar-e-colar, não de projeto. Normalizá-los
+para uma escala de três ou quatro pesos é outra mudança visível e pertence ao
+Lote 3, junto com os demais tokens.
+
+### Validação
+
+Build completo em Docker/Linux e **59 testes aprovados**. Conferido na
+aplicação em execução (`crm-ictm:ui-fonte-20261114` em `http://localhost:8082`).
+
+Pendente de verificação física: renderização em Safari/iPad/iPhone reais. O
+formato woff2 e as fontes variáveis têm suporte amplo, mas a aparência em tela
+Retina merece conferência em aparelho real.

@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#080c5c" />
     <meta name="description" content="Formulário de acolhimento da Igreja Evangélica de Cristo" />
+    <!--
+      A Inter é descoberta só quando o CSS é interpretado. Pré-carregá-la aqui
+      evita que o texto apareça na fonte do sistema e troque depois, o que
+      desloca o layout. O Vite reescreve este caminho para o arquivo com hash
+      em /assets/ no build.
+    -->
+    <link rel="preload" href="/src/fontes/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>Igreja Evangélica de Cristo</title>
   </head>
   <body>

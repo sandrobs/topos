@@ -7,7 +7,12 @@ isso.
 
 ---
 
-## D1 · Tipografia: entregar a Inter ou assumir a fonte do sistema
+## D1 · Tipografia — **decidido em 14/11/2026: opção A, entregar a Inter**
+
+> O responsável pelo produto escolheu hospedar a Inter no próprio projeto,
+> contra a recomendação técnica registrada abaixo. Implementado no mesmo dia;
+> ver [03-IMPLEMENTACAO.md](03-IMPLEMENTACAO.md). O texto original da decisão
+> segue preservado como registro.
 
 **Situação medida.** `:root` declara
 `font-family: Inter, ui-sans-serif, system-ui, …`, mas a Inter nunca é entregue:
@@ -37,7 +42,7 @@ PDFs já embutem Liberation Sans.
 aplicação inteira, e a instrução vigente é preservar a identidade visual. As
 duas opções são defensáveis; a diferença é estética.
 
-**Decisão:** _pendente_
+**Decisão:** **opção A**, em 14/11/2026.
 
 ---
 

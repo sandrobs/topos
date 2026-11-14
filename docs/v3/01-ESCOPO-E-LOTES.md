@@ -153,10 +153,12 @@ para preencher dois campos.
 `GestaoMembros`, `QrCode`) com `<Suspense>`. O roteamento é por `pathname` em
 `App.tsx`, então o corte é natural.
 
-### 2.7 · A fonte Inter é declarada mas nunca entregue · **M** · confirmado
+### 2.7 · A fonte Inter é declarada mas nunca entregue · **M** · resolvido
 
-**Depende de decisão do responsável — veja
-[02-DECISOES-PENDENTES.md](02-DECISOES-PENDENTES.md).**
+Decisão D1 tomada em 14/11/2026: a Inter passou a ser hospedada no projeto.
+Resultado medido em [03-IMPLEMENTACAO.md](03-IMPLEMENTACAO.md) — os doze pesos
+usados no CSS agora renderizam com larguras distintas. O diagnóstico original
+segue abaixo.
 
 `document.fonts` está vazio: não há `@font-face`, nem link para Google Fonts, nem
 pacote npm. A família resolve só se o usuário tiver Inter instalada. Largura de
