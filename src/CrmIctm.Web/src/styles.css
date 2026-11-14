@@ -94,7 +94,7 @@
 .campos-membro { display: grid; gap: 22px; }
 .grade-campos-membro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 /* `.campo-membro` foi removido: era deriva de copiar-e-colar do `.campo`. */
-.grupo-campos-membro { min-width: 0; margin: 0; padding: 19px; border: 1px solid var(--borda); border-radius: 14px; }
+.grupo-campos-membro { min-width: 0; margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
 .grupo-campos-membro legend { padding: 0 7px; color: var(--azul-900); font-weight: 800; }
 .grupo-campos-membro legend small { color: var(--texto-suave); font-weight: 500; }
 .opcao-membro-menor { display: flex; align-items: center; gap: 10px; font-weight: 720; }
@@ -123,7 +123,8 @@
 .cabecalho-gestao-membros h1 { margin: 4px 0; color: var(--azul-950); font-size: clamp(1.55rem, 3vw, 2.2rem); }
 .cabecalho-gestao-membros p:last-child { margin: 0; color: var(--texto-suave); }
 .acoes-gestao-membros, .acoes-cartao-membro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.acoes-gestao-membros .botao-secundario { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; }
+.acoes-gestao-membros .botao-secundario { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px;
+  color: var(--azul-900); background: var(--branco); border-color: #cdd5e3; }
 .indicadores-membros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 23px 0; }
 .indicadores-membros div { padding: 20px 22px; background: var(--branco); border: 1px solid var(--borda); border-radius: 16px; box-shadow: 0 8px 24px rgba(9,22,63,.04); }
 .indicadores-membros strong { display: block; color: var(--azul-900); font-size: 2rem; }
@@ -152,8 +153,8 @@
 .paginacao-membros button:disabled { opacity: .4; cursor: default; }
 .vazio-membros { padding: 26px; color: var(--texto-suave); }
 .cartao-gestao-membro { margin-top: 20px; padding: clamp(19px, 4vw, 30px); background: var(--branco); border: 1px solid var(--borda); border-radius: 17px; box-shadow: var(--sombra-cartao); }
-.topo-cartao-membro { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 24px; }
-.topo-cartao-membro h2 { margin: 5px 0 0; color: var(--azul-950); }
+.topo-cartao-membro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 24px; }
+.topo-cartao-membro h2 { margin: 5px 0 0; color: var(--azul-950); overflow-wrap: anywhere; }
 .cartao-gestao-membro .campos-membro { margin-bottom: 24px; }
 .acoes-cartao-membro { margin-top: 24px; }
 .resumo-dados-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
@@ -170,17 +171,7 @@
 .recusa-membro textarea { width: min(100%, 540px); min-height: 70px; padding: 10px; border: 1px solid #cdd5e3; border-radius: 10px; resize: vertical; }
 .recusa-membro button { min-height: 40px; }
 
-.cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
-.conteudo-cartaz-membros { display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 22mm; text-align: center; background: radial-gradient(circle at 50% 48%, var(--branco), #eef2fc); }
-.conteudo-cartaz-membros h1 { max-width: 140mm; margin: 5mm 0; color: var(--azul-950); font-size: clamp(2.2rem, 5vw, 3.7rem); line-height: 1.08; }
-.conteudo-cartaz-membros p:not(.rotulo-cartaz) { max-width: 130mm; color: #485775; font-size: 1.15rem; line-height: 1.5; }
-.conteudo-cartaz-membros .moldura-qr-code { width: 83mm; margin: 9mm 0 7mm; background: var(--branco); border: 1px solid #d7ddea; box-shadow: 0 15px 38px rgba(9,22,63,.12); }
-.conteudo-cartaz-membros .moldura-qr-code img { display: block; width: 100%; }
-.conteudo-cartaz-membros > strong { color: var(--azul-900); }
-.conteudo-cartaz-membros > small { margin-top: 6px; color: var(--texto-suave); }
-
-@media (max-width: 700px) {
+@media (max-width: 720px) {
   .grade-campos-membro, .resumo-dados-membro { grid-template-columns: 1fr; }
   .cabecalho-gestao-membros { align-items: stretch; flex-direction: column; }
   .indicadores-membros { gap: 7px; }
@@ -197,14 +188,6 @@
   .nome-linha-membro small { font-size: .72rem; }
   .paginacao-membros { flex-wrap: wrap; justify-content: center; }
   .pagina-formulario-membros .selo-boas-vindas { display: none; }
-}
-
-@media print {
-  .cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
-  .conteudo-cartaz-membros { padding: 18mm; }
-  .conteudo-cartaz-membros h1 { font-size: 14mm; }
-  .conteudo-cartaz-membros p:not(.rotulo-cartaz) { font-size: 4.5mm; }
-  .conteudo-cartaz-membros .moldura-qr-code { width: 83mm; margin: 9mm 0 7mm; }
 }
 
 * {
@@ -3141,13 +3124,6 @@ dialog.sobreposicao::backdrop {
   }
 }
 
-.cartaz-a4.cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
-
-.acoes-gestao-membros .botao-secundario {
-  color: var(--azul-900);
-  background: var(--branco);
-  border-color: #cdd5e3;
-}
 
 .filtros-membros button[type="submit"] {
   width: auto;
@@ -3156,17 +3132,12 @@ dialog.sobreposicao::backdrop {
   padding: 10px 17px;
 }
 
-@media print {
-  .cartaz-a4.cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
-}
-
 /* Ajustes V2: mesma linguagem visual do acolhimento, sem afetar visitantes. */
 .pagina-formulario-membros .identidade-publica { flex: 1; }
 .pagina-formulario-membros .identidade-publica strong { white-space: normal; overflow-wrap: anywhere; }
 .pagina-formulario-membros .cartao-formulario { min-width: 0; }
 .formulario-membro .campos-membro, .formulario-membro fieldset,
 .formulario-membro .grade-campos-membro { min-width: 0; max-width: 100%; }
-.grupo-campos-membro { margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
 .grupo-campos-membro legend em { color: var(--vermelho); font-style: normal; }
 .opcoes-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .opcao-membro { position: relative; display: flex; align-items: center; gap: 10px; min-height: 52px;
@@ -3180,21 +3151,19 @@ dialog.sobreposicao::backdrop {
 .opcoes-batismo { grid-column: 1 / -1; grid-template-columns: 1fr; }
 .formulario-membro > button { display: flex; justify-content: center; gap: 16px; width: 100%; min-height: 54px; }
 .formulario-membro .aviso-privacidade { min-width: 0; }
-.topo-cartao-membro { flex-wrap: wrap; }
 .topo-cartao-membro > div { min-width: 0; }
-.topo-cartao-membro h2 { overflow-wrap: anywhere; }
 .gestao-membros .botao-secundario { color: var(--azul-900); background: var(--branco);
   border-color: #cdd5e3; font-weight: 720; }
 .gestao-membros .botao-secundario:hover { background: var(--azul-100); }
 .voltar-lista-membros { flex-shrink: 0; min-height: 44px; }
 .convite-membros .texto-cartaz h1 { font-size: 8.6mm; }
-@media (max-width: 700px) {
+@media (max-width: 720px) {
   .pagina-formulario-membros .topo-publico { align-items: flex-start; }
   .grupo-campos-membro { padding: 15px; }
   .grade-campos-membro { grid-template-columns: minmax(0,1fr); }
   .formulario-membro .confirmacao-privacidade { padding: 16px; }
 }
-@media (max-width: 400px) {
+@media (max-width: 420px) {
   .opcoes-membro { grid-template-columns: minmax(0,1fr); }
   .pagina-formulario-membros .cartao-formulario { padding: 22px 18px; }
 }

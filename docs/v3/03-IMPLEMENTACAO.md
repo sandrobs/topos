@@ -473,3 +473,86 @@ administrativo sem mudança visual (44px / 10px 12px / 9px preservados) e com
 `label for` explícito, que antes era associação implícita; erro por campo na
 administração; confirmação em diálogo nativo. Nenhum registro foi criado,
 alterado ou desativado no banco de testes.
+
+---
+
+## Lote 3, parte final — cascata — 14/11/2026
+
+Item **3.5** e a consolidação de breakpoints. Com isto o Lote 3 está fechado.
+
+### Correção importante ao diagnóstico
+
+O documento afirmava que **92 dos 553 blocos redeclaravam um seletor já
+declarado**. O número estava errado, e de um jeito que inflava o problema:
+ele contava seletores repetidos em **qualquer** lugar do arquivo, incluindo
+dentro de `@media` — que é a forma normal e correta de escrever
+responsividade, não uma duplicata.
+
+Medido corretamente, considerando só o nível superior, fora de media queries:
+
+| | |
+|---|---|
+| regras de nível superior | 427 |
+| seletores declarados mais de uma vez | **4** |
+| desses, com propriedade de fato sobrescrita (código morto) | **1** |
+
+Os outros três eram declarações partidas em dois lugares do arquivo, sem
+conflito entre si: feias de manter, mas sem efeito algum na tela.
+
+### O que foi feito
+
+**Quatro seletores fundidos.** `.grupo-campos-membro` perdia `padding` e
+`border-radius` para uma segunda declaração 3.000 linhas abaixo; a primeira
+agora carrega os valores vencedores e a segunda saiu.
+`.acoes-gestao-membros .botao-secundario`, `.topo-cartao-membro` e
+`.topo-cartao-membro h2` tiveram suas metades juntadas na origem. Seletores
+duplicados no topo agora: **zero**.
+
+**CSS morto de uma renomeação.** As classes `.cartaz-a4-membros` e
+`.conteudo-cartaz-membros` não existem em componente nenhum: o cartaz de
+membros é renderizado com `cartaz-a4 convite-membros` e `conteudo-cartaz`.
+Eram 23 linhas de regras que nunca casavam com nada, mais duas regras de
+especificidade maior (`.cartaz-a4.cartaz-a4-membros`) criadas só para vencer
+as mortas. Tudo removido.
+
+**Os três `@media print` viraram um.** Não por fusão: dois deles existiam
+apenas para as classes mortas acima e saíram junto. O bloco de impressão que
+importa ficou intacto, no mesmo lugar — nenhuma regra de impressão foi
+movida, o que era o risco que mais preocupava, já que o cartaz A4 é um
+entregável físico que não dá para conferir daqui.
+
+**Breakpoints: de sete para quatro.** A V2 havia criado 400 e 700 onde o MVP
+já usava 420 e 720 — a mesma raiz da deriva dos campos. Os dois pares foram
+unificados nos valores do MVP.
+
+| antes | depois |
+|---|---|
+| 400, 420, 700, 720, 721–1024, 850, 900 | **420, 720, 721–1024, 850 e 900 (cartaz)** |
+
+Os 850 e 900 do cartaz **não** foram unificados de propósito: o bloco de 850 é
+`screen and`, e o de 900 é um `@media` simples que, a 210 mm (≈794 px), também
+vale na impressão. Juntá-los tiraria aquela regra do PDF impresso. Fica
+documentado como a única divergência de breakpoint que permanece, e por quê.
+
+### Verificação
+
+Antes de mexer, foi capturada uma linha de base de estilos computados: 23
+propriedades de **todos** os elementos, em 6 telas × 3 larguras — 1.614
+elementos. Depois da mudança, a mesma captura foi comparada campo a campo.
+
+**Zero diferenças.** Nenhum pixel mudou nas larguras 375, 768 e 1280.
+
+Nas duas faixas que mudam por desenho (401–420 px e 701–720 px), conferido a
+410 px e 710 px: as telas de membros passam ao layout compacto um pouco antes,
+que é exatamente o que a unificação pretendia, sem overflow horizontal e sem
+elemento vazando.
+
+Build Docker completo e **59 testes aprovados**. O arquivo foi de 3.195 para
+3.172 linhas.
+
+### O que continua aberto
+
+Os 123 hexadecimais fora do `:root` que não coincidem com token nenhum, e a
+aplicação das escalas `--esp-*`, `--raio-*` e `--txt-*` nos componentes. Nada
+disso é cascata: é substituição valor a valor, que muda cor e espaçamento na
+tela e pede decisão de desenho, componente a componente.
