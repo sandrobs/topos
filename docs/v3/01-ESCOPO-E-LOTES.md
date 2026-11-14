@@ -207,9 +207,9 @@ Não são escolhas, é deriva de copiar-e-colar. Some 165 hexadecimais fixos con
 | `.campo-detalhe` em linha | `Interno.tsx` | nenhum | ✗ |
 | `<label>`+`<input>` cru | `Interno.tsx` (login, troca de senha) | — | — |
 
-Medido: **0 de 11** inputs do formulário público de membros têm
-`aria-describedby`, então a mensagem de erro existe visualmente mas não é
-anunciada.
+Medido: **0 de 20** inputs do formulário público de membros têm
+`aria-describedby`, então a mensagem de erro que o servidor devolve existe
+visualmente mas não é anunciada nem ligada ao campo.
 
 Correção a um levantamento anterior: os rótulos da administração **estão**
 corretos — 10 de 10 inputs têm rótulo por aninhamento implícito
@@ -218,15 +218,64 @@ corretos — 10 de 10 inputs têm rótulo por aninhamento implícito
 **Solução:** um `<CampoFormulario>` único (id, label, erro, `aria-invalid`,
 `aria-describedby`, `autoComplete`, `maxLength`) e migrar as cinco.
 
-### 3.3 · Três padrões de validação diferentes · **M** · confirmado
+### 3.3 · Validação divergente entre os dois formulários públicos · **M** · confirmado
 
-- `App.tsx`: erro por campo, com `role="alert"` e `aria-describedby`
-- `CadastroMembro.tsx`: erro por campo, sem ligação ARIA
-- `Administracao.tsx`: **validação nativa do navegador** (`noValidate: false`,
-  7 campos `required`) — bolhas do navegador, no idioma e no estilo dele
+Medido nos dois formulários em execução, enviando-os vazios:
 
-**Solução:** decidido junto com 3.2; a administração passa a usar o mesmo
-componente e `noValidate` com validação própria.
+| | visitantes (`App.tsx`) | membros (`CadastroMembro.tsx`) | administração |
+|---|---|---|---|
+| mecanismo | `noValidate` + validação própria | **nativa do navegador** (8 `required`) | nativa (7 `required`) |
+| aparência do erro | `.erro-campo` da aplicação | bolha do navegador | bolha do navegador |
+| `aria-invalid` | 2 de 2 ✓ | 0 | 0 |
+| `aria-describedby` | 2 de 2 ✓ | 0 de 20 | 0 de 10 |
+| rola e foca o campo | **não** | sim, o navegador faz | sim |
+| anuncia a leitor de tela | **não** | depende do navegador | depende |
+
+São dois comportamentos distintos para a mesma ação, nas duas telas que o
+público usa. A bolha nativa aparece no idioma e no estilo do navegador, não da
+aplicação.
+
+> **Correção a um levantamento anterior.** O diagnóstico inicial afirmou que os
+> erros do formulário de visitantes tinham `role="alert"`. **Não têm** — o
+> atributo é nulo nos três erros. Nada é anunciado quando a validação falha.
+
+**Risco em iOS, a validar em aparelho real:** o formulário de membros depende
+inteiramente das bolhas nativas. O Safari do iPhone historicamente as trata de
+forma diferente do Chrome e pode focar o campo sem exibir mensagem alguma. Se
+isso se confirmar, o cadastro de membros fica sem nenhuma mensagem de erro no
+iOS. A emulação Chromium não prova; precisa de teste em aparelho.
+
+**Solução:** decidido junto com 3.2. Os três passam a usar o mesmo componente,
+com `noValidate` e validação própria, mais foco no primeiro campo inválido e
+anúncio por região viva.
+
+### 3.3b · O erro sai da tela no celular · **P** · confirmado
+
+No formulário de visitantes, simulando o fluxo real num aparelho de 375 px —
+rolar até o fim e tocar em "Enviar meus dados":
+
+| erro | posição após o envio |
+|---|---|
+| "Informe seu nome." | **−231 px**, acima da área visível |
+| "Informe um WhatsApp brasileiro válido…" | **−112 px**, acima da área visível |
+| "Selecione ao menos um interesse." | visível |
+| "Leia e reconheça o aviso de privacidade" | visível |
+
+O foco vai para o `<body>`. Metade do que impede o envio fica fora da tela, sem
+nada que leve o usuário até lá. O formulário de membros se sai melhor aqui
+apenas porque o navegador faz esse trabalho sozinho.
+
+**Solução:** mover o foco para o primeiro campo inválido ao falhar a validação,
+e anunciar o total de erros numa região viva — o mesmo recurso já criado no
+painel no Lote 2 (`.estado-lista`).
+
+### 3.3c · Alvo de toque de 40 px nos dois formulários públicos · **P** · confirmado
+
+`.abrir-aviso-privacidade` mede 40 px de altura a 375 px e a 320 px, nos dois
+formulários. É o **único** alvo abaixo de 44 px que restou, e é o botão que abre
+o aviso que o usuário precisa ler antes de consentir.
+
+**Solução:** `min-height: 44px`. Uma linha.
 
 ### 3.4 · Confirmação destrutiva em três padrões · **P** · confirmado
 

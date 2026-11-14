@@ -280,3 +280,46 @@ aplicação em execução (`crm-ictm:ui-fonte-20261114` em `http://localhost:808
 Pendente de verificação física: renderização em Safari/iPad/iPhone reais. O
 formato woff2 e as fontes variáveis têm suporte amplo, mas a aparência em tela
 Retina merece conferência em aparelho real.
+
+---
+
+## Auditoria móvel dos formulários públicos — 14/11/2026
+
+Verificação, sem alteração de código, do estado dos dois formulários públicos
+em `http://localhost:8082` após os Lotes 1 e 2. Serve de linha de base: o que
+está marcado como íntegro aqui não precisa ser reexaminado no Lote 3.
+
+### Íntegro nas duas larguras (375 px e 320 px)
+
+| | visitantes | membros |
+|---|---|---|
+| overflow horizontal | não | não |
+| elementos vazando à direita | 0 | 0 |
+| campos com rótulo associado | 5 de 5 | 20 de 20 |
+| campos de texto abaixo de 16 px (zoom automático do Safari) | 0 | 0 |
+| campos com `autocomplete` | 2 de 2 aplicáveis | 9 |
+| grade de opções a 375 px | — | colapsa para 1 coluna |
+| menor espaço entre alvos adjacentes | 12 px | — |
+| botão de envio | 254×54 | largura total |
+| altura total a 375 px / 320 px | 1,8 / 2,8 telas | 3,4 / 5,0 telas |
+
+Os Lotes 1 e 2 melhoraram o uso em celular sem terem sido dirigidos a ele: a
+página caiu de 1.826 kB para 391 kB, o anel de foco passou a ser visível para
+teclado externo, o marcador de múltipla escolha deixou de parecer escolha
+única e o consentimento foi alinhado ao topo — este último era pior justamente
+no celular, onde o parágrafo ao lado fica mais alto.
+
+### Problemas que ficaram para o Lote 3
+
+Por decisão do responsável em 14/11/2026, os ajustes não foram feitos agora.
+Estão descritos em [01-ESCOPO-E-LOTES.md](01-ESCOPO-E-LOTES.md), itens **3.3**,
+**3.3b** e **3.3c**: validação divergente entre os dois formulários, erro que
+sai da tela no celular sem mover o foco, e o alvo de 40 px do botão do aviso de
+privacidade.
+
+### Pendente de aparelho real
+
+O formulário de membros depende das bolhas de validação nativas do navegador.
+O comportamento do Safari no iPhone precisa ser conferido num aparelho antes de
+se concluir o Lote 3 — se ele focar o campo sem exibir mensagem, hoje o
+cadastro de membros está sem retorno de erro no iOS.
