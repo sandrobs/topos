@@ -103,14 +103,14 @@
 .aviso-membro label { display: flex; gap: 10px; align-items: flex-start; line-height: 1.45; font-size: .9rem; }
 .aviso-membro input { flex: 0 0 auto; width: 19px; height: 19px; margin-top: 2px; accent-color: var(--azul-700); }
 .aviso-membro .abrir-aviso-privacidade { justify-self: start; }
-.formulario-membro > button, .acoes-gestao-membros > button,
+.formulario-membro > button,
 .acoes-cartao-membro > button:not(.botao-secundario), .filtros-membros button,
 .aviso-duplicidade button {
   min-height: 44px; padding: 10px 17px; color: var(--branco); background: var(--azul-900);
   border: 1px solid var(--azul-900); border-radius: 10px; font-weight: 760; cursor: pointer;
 }
 @media (hover: hover) {
-  .formulario-membro > button:hover, .acoes-gestao-membros > button:hover,
+  .formulario-membro > button:hover,
   .acoes-cartao-membro > button:not(.botao-secundario):hover { background: var(--azul-700); }
 }
 .formulario-membro > button:disabled { opacity: .55; cursor: not-allowed; }
@@ -121,9 +121,22 @@
 .confirmacao-membro h1 { color: var(--azul-900); }
 
 .gestao-membros { padding: 28px 0 44px; }
-.acoes-gestao-membros, .acoes-cartao-membro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.acoes-gestao-membros .botao-secundario { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px;
-  color: var(--azul-900); background: var(--branco); border-color: #cdd5e3; }
+.acoes-cartao-membro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/*
+ * Links que se apresentam como botão não levam sublinhado. A regra antiga
+ * mirava `.acoes-gestao-membros`, que deixou de existir na padronização, e o
+ * sublinhado do "Ver QR de membros" voltou.
+ */
+.acoes-painel .botao-secundario,
+.acoes-cartao-membro .botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--azul-900);
+  background: var(--branco);
+  border-color: #cdd5e3;
+  text-decoration: none;
+}
 .abas-membros { display: flex; gap: 3px; border-bottom: 1px solid #d9e0ec; }
 .abas-membros button { padding: 13px 17px; color: var(--texto-suave); background: transparent; border: 0; border-bottom: 3px solid transparent; font-weight: 780; cursor: pointer; }
 .abas-membros button.ativo { color: var(--azul-900); border-bottom-color: var(--dourado); }
@@ -184,6 +197,15 @@
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  /*
+   * Reserva o espaço da barra de rolagem mesmo quando ela não aparece. Sem
+   * isto o conteúdo centralizado desloca alguns pixels ao trocar para uma
+   * aba mais alta, que é quando a barra surge.
+   */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -1018,9 +1040,14 @@ button[type="submit"]:disabled {
  * Largura máxima única do painel. Antes só a gestão de membros tinha teto,
  * então o conteúdo saltava de 1600 px para 1280 px ao trocar de aba num
  * monitor largo, enquanto a barra de abas seguia inteira.
+ *
+ * O teto fica na própria página, e não em `> *`: cada filho tem a sua regra
+ * de `margin`, e várias delas zeram o `margin-inline`, o que desalinhava uns
+ * em relação aos outros — a barra de abas ia para a borda enquanto o
+ * cabeçalho ficava centralizado.
  */
-.pagina-painel > * {
-  width: min(100%, 1280px);
+.pagina-painel {
+  max-width: calc(1280px + 40px);
   margin-inline: auto;
 }
 
@@ -1960,12 +1987,15 @@ dialog.sobreposicao::backdrop {
 
 /* Administração */
 
+/*
+ * Sem cartão externo: o cabeçalho e os cartões da lista são peças soltas
+ * sobre o fundo da página, como no painel de atendimentos. Antes Igrejas e
+ * Usuários vinham embrulhados num cartão branco maior, o que criava um nível
+ * de moldura que as outras telas não têm.
+ */
 .secao-administracao {
   min-height: 520px;
-  padding: 26px;
-  background: var(--branco);
-  border: 1px solid var(--borda);
-  border-radius: 17px;
+  padding: 0 0 44px;
 }
 
 .formulario-administrativo footer button:last-child,

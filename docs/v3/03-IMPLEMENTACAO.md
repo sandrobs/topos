@@ -666,3 +666,31 @@ execução, nas cinco telas: lista → detalhe → edição com campos preenchid
 cancelar → lista; e aba de solicitações → detalhe → correção → cancelar. Os
 campos pastorais aparecem no detalhe da solicitação e somem na correção, como
 antes. Nenhum cadastro foi criado ou alterado.
+
+### Correções da segunda avaliação — 14/11/2026
+
+Três problemas relatados com captura, no navegador de computador.
+
+**O painel desalinhou.** Causa minha, da rodada anterior: eu havia posto o teto
+de largura em `.pagina-painel > *`. Vários filhos têm regra própria de
+`margin` que zera o `margin-inline`, de mesma especificidade e declarada
+depois — então a barra de abas ia para a borda da janela enquanto o cabeçalho
+ficava centralizado. O teto passou para a própria `.pagina-painel`, que centra
+o bloco inteiro de uma vez e não disputa com regra nenhuma.
+
+Medido a 1900 px, nas quatro abas: topo, abas e cabeçalho todos em 303→1583.
+
+**Sublinhado no "Ver QR de membros".** O `text-decoration: none` vivia em
+`.acoes-gestao-membros .botao-secundario`, classe que deixou de existir na
+padronização. Recriado em `.acoes-painel`, junto com os demais ajustes de
+link-que-parece-botão. Dois seletores mortos de `.acoes-gestao-membros`
+saíram do arquivo.
+
+**Cartão externo em Igrejas e Usuários.** `.secao-administracao` tinha fundo
+branco, borda e raio, embrulhando cabeçalho e lista num cartão maior — um
+nível de moldura que o painel de atendimentos não tem. Agora é só espaçamento;
+as peças ficam soltas sobre o fundo da página, como nas outras telas.
+
+**Ainda:** `scrollbar-gutter: stable` no `html`. Sem isso o conteúdo
+centralizado deslocava 7 px ao trocar para uma aba mais alta, quando a barra
+de rolagem aparece. Agora as quatro abas renderizam na mesma caixa, medida.
