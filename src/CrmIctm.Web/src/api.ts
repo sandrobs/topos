@@ -93,6 +93,8 @@ export type IgrejaInterna = {
   cep: string;
   cidade: string;
   estado: string;
+  cultoPrincipal: string | null;
+  instagram: string | null;
   ativa: boolean;
   identificadorPublico: string;
   identificadorPublicoMembros: string;
@@ -102,7 +104,7 @@ export type IgrejaInterna = {
 
 export type DadosIgreja = Pick<
   IgrejaInterna,
-  "nome" | "logradouro" | "numero" | "bairro" | "complemento" | "cep" | "cidade" | "estado"
+  "nome" | "logradouro" | "numero" | "bairro" | "complemento" | "cep" | "cidade" | "estado" | "cultoPrincipal" | "instagram"
 >;
 
 export type UsuarioInterno = {

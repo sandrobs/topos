@@ -63,6 +63,16 @@ Deus”, “Ainda há lugar”, Lucas 14:22 e a referência discreta Romanos 12:
 “Voltar ao painel” retorna à gestão de membros da mesma igreja, inclusive quando
 o convite estiver indisponível. A impressão não usa o HTML responsivo da tela.
 
+No PDF de **visitantes com quatro por A4**, aplicar os ajustes aprovados em
+`07-CONVITE-COMPACTO-2026-11-14.md`: apoio próximo ao título e mais escuro,
+aviso pequeno de uso dos dados, chamada “Aponte a câmera do celular” e rodapé
+mais baixo com culto principal e Instagram configurados na própria igreja e
+endereço sem CEP. Campos opcionais vazios são omitidos. Preservar a foto, o
+QR e os demais modelos, inclusive quando a igreja não tiver essas configurações.
+
+Todos os modelos PDF devem recortar a logo em círculo, sem exibir os cantos
+quadrados da imagem. O recorte não pode ocultar os textos ou a foto do convite.
+
 ## Expansão
 
 ### CA-V2-10 — Conversão de visitante

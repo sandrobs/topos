@@ -133,7 +133,9 @@ public sealed class GestaoAdministrativaTests
                 complemento = "Sala 2",
                 cep = "98910-000",
                 cidade = "Três de Maio",
-                estado = "RS"
+                estado = "RS",
+                cultoPrincipal = " CULTO DA FAMÍLIA · Domingo, 19h ",
+                instagram = "igrejadecristotm"
             });
 
         Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
@@ -143,10 +145,69 @@ public sealed class GestaoAdministrativaTests
         var igreja = await banco.Igrejas.SingleAsync();
         Assert.Equal("98910000", igreja.Cep);
         Assert.Equal("S/N", igreja.Numero);
+        Assert.Equal("CULTO DA FAMÍLIA · Domingo, 19h", igreja.CultoPrincipal);
+        Assert.Equal("@igrejadecristotm", igreja.Instagram);
         Assert.NotEmpty(igreja.IdentificadorPublico);
         Assert.Contains(
             await banco.RegistrosAuditoriaAdministrativa.ToListAsync(),
             x => x.EntidadeId == igreja.Id && x.Acao == "CRIADA");
+    }
+
+    [Fact]
+    public async Task ConfiguracaoDeConvitePertenceAIgrejaEPodeSerRemovida()
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var (administrador, igreja) = await CriarAdministradorEIgrejaAsync(aplicacao.Services);
+        var outra = CriarIgreja("Outra unidade");
+        await using (var escopo = aplicacao.Services.CreateAsyncScope())
+        {
+            var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+            banco.Igrejas.Add(outra);
+            await banco.SaveChangesAsync();
+        }
+        var cliente = CriarCliente(aplicacao);
+        await EntrarAsync(cliente, administrador.Email!, SenhaAdministrador);
+        foreach (var limpar in new[] { false, true })
+        {
+            var resposta = await EnviarComCsrfAsync(cliente, HttpMethod.Put, $"/api/igrejas/{igreja.Id}", new
+            {
+                igreja.Nome, igreja.Logradouro, igreja.Numero, igreja.Bairro, igreja.Complemento,
+                igreja.Cep, igreja.Cidade, igreja.Estado,
+                cultoPrincipal = limpar ? "" : "CULTO DA FAMÍLIA · Domingo, 19h",
+                instagram = limpar ? "" : "@igrejadecristotm"
+            });
+            Assert.Equal(HttpStatusCode.NoContent, resposta.StatusCode);
+            var listagem = await cliente.GetFromJsonAsync<JsonElement>("/api/igrejas");
+            var atual = listagem.EnumerateArray().Single(x => x.GetProperty("id").GetGuid() == igreja.Id);
+            var outraUnidade = listagem.EnumerateArray().Single(x => x.GetProperty("id").GetGuid() == outra.Id);
+            Assert.Equal(limpar ? null : "CULTO DA FAMÍLIA · Domingo, 19h", atual.GetProperty("cultoPrincipal").GetString());
+            Assert.Equal(limpar ? null : "@igrejadecristotm", atual.GetProperty("instagram").GetString());
+            Assert.Null(outraUnidade.GetProperty("cultoPrincipal").GetString());
+            Assert.Null(outraUnidade.GetProperty("instagram").GetString());
+            Assert.Equal(igreja.IdentificadorPublico, atual.GetProperty("identificadorPublico").GetString());
+            Assert.Equal(igreja.IdentificadorPublicoMembros, atual.GetProperty("identificadorPublicoMembros").GetString());
+        }
+    }
+
+    [Theory]
+    [InlineData("https://instagram.com/conta")]
+    [InlineData("nome com espaços")]
+    [InlineData("@")]
+    public async Task InstagramInvalidoNaoAlteraDadosDaIgreja(string instagram)
+    {
+        await using var aplicacao = new AplicacaoDeTeste();
+        var (administrador, igreja) = await CriarAdministradorEIgrejaAsync(aplicacao.Services);
+        var cliente = CriarCliente(aplicacao);
+        await EntrarAsync(cliente, administrador.Email!, SenhaAdministrador);
+        var resposta = await EnviarComCsrfAsync(cliente, HttpMethod.Put, $"/api/igrejas/{igreja.Id}", new
+        {
+            igreja.Nome, igreja.Logradouro, igreja.Numero, igreja.Bairro, igreja.Complemento,
+            igreja.Cep, igreja.Cidade, igreja.Estado, instagram
+        });
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+        await using var escopo = aplicacao.Services.CreateAsyncScope();
+        var banco = escopo.ServiceProvider.GetRequiredService<BancoContexto>();
+        Assert.Null((await banco.Igrejas.SingleAsync()).Instagram);
     }
 
     [Fact]

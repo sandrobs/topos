@@ -4,12 +4,13 @@ Dependências de teste: pdfplumber, pypdf, Pillow e zxing-cpp.
 Não envia arquivos para serviços externos e não acessa banco de dados.
 """
 from pathlib import Path
+import sys
 import pdfplumber
 from pypdf import PdfReader
 from PIL import Image
 import zxingcpp
 
-saida = Path(__file__).resolve().parents[2] / ".tools" / "v2-ajustes-qa"
+saida = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[2] / ".tools" / "v2-ajustes-qa"
 for membros in (False, True):
     for quatro in (False, True):
         nome = f"{'membros' if membros else 'visitantes'}-{'4-por-a4' if quatro else 'a4'}"
@@ -25,7 +26,13 @@ for membros in (False, True):
             quantidade = 4 if quatro else 1
             assert texto.count('Ainda há lugar.') == quantidade, nome
             assert texto.count('LUCAS 14:22') == quantidade, nome
-            assert texto.count('CEP 98910-000') == quantidade, nome
+            if quatro and not membros:
+                assert 'CEP' not in texto, nome
+                assert texto.count('Dados usados apenas para contato da igreja.') == quantidade, nome
+                assert texto.count('Aponte a câmera do') == quantidade, nome
+                assert 'Escaneie aqui' not in texto, nome
+            else:
+                assert texto.count('CEP 98910-000') == quantidade, nome
             if membros:
                 assert texto.count('CADASTRO DE MEMBROS') >= quantidade, nome
                 assert texto.count('Romanos 12:4-5') == quantidade, nome

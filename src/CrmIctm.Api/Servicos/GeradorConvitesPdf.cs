@@ -10,9 +10,10 @@ public sealed class GeradorConvitesPdf
 {
     private static readonly XSolidBrush Azul = new(XColor.FromArgb(8, 12, 92));
     private static readonly XSolidBrush Cinza = new(XColor.FromArgb(88, 99, 126));
+    private static readonly XSolidBrush CinzaContato = new(XColor.FromArgb(55, 65, 81));
     private static readonly XSolidBrush Dourado = new(XColor.FromArgb(135, 98, 33));
     private static readonly XSolidBrush DouradoClaro = new(XColor.FromArgb(242, 207, 124));
-    private static readonly Lazy<byte[]> Logo = new(() => FontesConvitePdf.LerRecurso("logo-igreja.jpg"));
+    private static readonly Lazy<byte[]> Logo = new(() => FontesConvitePdf.LerRecurso("logo-igreja.png"));
     private static readonly Lazy<byte[]> Foto = new(() => FontesConvitePdf.LerRecurso("imagem-nave-igreja.png"));
 
     public byte[] Gerar(Igreja igreja, string enderecoFormulario, bool paraMembros = false, bool quatroPorFolha = false)
@@ -66,13 +67,7 @@ public sealed class GeradorConvitesPdf
     private static void DesenharCabecalho(XGraphics desenho, Igreja igreja, bool paraMembros)
     {
         desenho.DrawRectangle(Azul, 0, 0, Mm(210), Mm(34));
-        using var logo = XImage.FromStream(new MemoryStream(Logo.Value, writable: false));
-        var estadoLogo = desenho.Save();
-        var recorteLogo = new XGraphicsPath();
-        recorteLogo.AddEllipse(Mm(15), Mm(7), Mm(20), Mm(20));
-        desenho.IntersectClip(recorteLogo);
-        desenho.DrawImage(logo, Mm(15), Mm(7), Mm(20), Mm(20));
-        desenho.Restore(estadoLogo);
+        DesenharLogoRedonda(desenho, 15, 7, 20);
         Texto(desenho, paraMembros ? "CADASTRO DE MEMBROS" : "SEJA BEM-VINDO À", Sans(10, true), DouradoClaro, 40, 7, 155, 5);
         TextoAjustado(desenho, igreja.Nome, "Convite Sans", XBrushes.White,
             new XRect(Mm(40), Mm(12), Mm(155), Mm(14)), 17, 10);
@@ -186,8 +181,7 @@ public sealed class GeradorConvitesPdf
         const double altura = 140.5;
         desenho.DrawRectangle(XBrushes.White, 0, 0, Mm(largura), Mm(altura));
         desenho.DrawRectangle(Azul, 0, 0, Mm(largura), Mm(18));
-        using var logo = XImage.FromStream(new MemoryStream(Logo.Value, writable: false));
-        desenho.DrawImage(logo, Mm(3), Mm(3), Mm(12), Mm(12));
+        DesenharLogoRedonda(desenho, 3, 3, 12);
         TextoAjustado(desenho, igreja.Nome, "Convite Sans", XBrushes.White,
             new XRect(Mm(18), Mm(3), Mm(75), Mm(10)), 10, 6);
         TextoAjustado(desenho, $"{igreja.Cidade}/{igreja.Estado}", "Convite Sans", DouradoClaro,
@@ -202,15 +196,37 @@ public sealed class GeradorConvitesPdf
         Texto(desenho, "Ainda há lugar.", Serif(24), Azul, 4, 54, 89, 11);
         Texto(desenho, "LUCAS 14:22", Sans(8, true), Dourado, 4, 67, 89, 4);
         desenho.DrawLine(new XPen(XColors.LightGray, 0.4), Mm(4), Mm(74), Mm(93), Mm(74));
-        TextoEmLinhas(desenho, paraMembros ? "Uma família no amor de Deus" : "Vamos manter contato?", Serif(15), Azul,
+        var tituloContato = paraMembros ? "Uma família no amor de Deus" : "Vamos manter contato?";
+        var fonteTituloContato = Serif(15);
+        var linhasTituloContato = QuebrarLinhas(desenho, tituloContato, fonteTituloContato, Mm(46));
+        TextoEmLinhas(desenho, tituloContato, fonteTituloContato, Azul,
             new XRect(Mm(4), Mm(79), Mm(46), Mm(20)), 17);
-        TextoEmLinhas(desenho, paraMembros ? "Informe seus dados. A equipe pastoral analisará seu cadastro." :
-            "Deixe seu nome e WhatsApp. Queremos acolher você e continuar essa conversa.", Sans(8), Cinza,
-            new XRect(Mm(4), Mm(101), Mm(46), Mm(17)), 10);
-        desenho.DrawRoundedRectangle(Azul, new XRect(Mm(53), Mm(77), Mm(40), Mm(43)), new XSize(Mm(4), Mm(4)));
+        // O apoio acompanha a altura efetiva do título, sem o espaço vazio do modelo anterior.
+        var topoApoio = paraMembros ? Mm(101) : Mm(79) + linhasTituloContato.Count * 17 + Mm(1.5);
+        var apoio = paraMembros ? "Informe seus dados. A equipe pastoral analisará seu cadastro." :
+            "Deixe seu nome e WhatsApp. Queremos acolher você e continuar essa conversa.";
+        TextoEmLinhas(desenho, apoio, Sans(8), paraMembros ? Cinza : CinzaContato,
+            new XRect(Mm(4), topoApoio, Mm(46), Mm(17)), 10);
+        if (!paraMembros)
+        {
+            var topoAviso = topoApoio + QuebrarLinhas(desenho, apoio, Sans(8), Mm(46)).Count * 10 + Mm(2);
+            Texto(desenho, "Dados usados apenas para contato da igreja.", Sans(6), Cinza,
+                4, XUnit.FromPoint(topoAviso).Millimeter, 46, 3);
+        }
+        desenho.DrawRoundedRectangle(Azul, new XRect(Mm(53), Mm(77), Mm(40), Mm(paraMembros ? 43 : 46)), new XSize(Mm(4), Mm(4)));
         desenho.DrawRectangle(XBrushes.White, Mm(55), Mm(79), Mm(36), Mm(36));
         DesenharQr(desenho, url, 55, 79, 36);
-        Texto(desenho, "Escaneie aqui", Sans(8, true), XBrushes.White, 55, 115.5, 36, 4, XStringFormats.Center);
+        if (paraMembros)
+        {
+            Texto(desenho, "Escaneie aqui", Sans(8, true), XBrushes.White, 55, 115.5, 36, 4, XStringFormats.Center);
+        }
+        else
+        {
+            Texto(desenho, "Aponte a câmera do", Sans(8, true), XBrushes.White, 55, 115.5, 36, 3.2, XStringFormats.Center);
+            Texto(desenho, "celular", Sans(8, true), XBrushes.White, 55, 118.7, 36, 3.2, XStringFormats.Center);
+            DesenharRodapeCompactoVisitantes(desenho, igreja);
+            return;
+        }
 
         var endereco = $"{igreja.Logradouro}, {igreja.Numero}";
         if (!string.IsNullOrWhiteSpace(igreja.Complemento)) endereco += $", {igreja.Complemento}";
@@ -228,6 +244,70 @@ public sealed class GeradorConvitesPdf
         if (paraMembros) Texto(desenho, "Romanos 12:4-5", Sans(6.5), Dourado, 4, 118, 46, 2.5);
         TextoEmLinhas(desenho, endereco, fonte, DouradoClaro,
             new XRect(Mm(4), Mm(122), Mm(89), Mm(17.5)), fonte.Size * 1.1);
+    }
+
+    private static void DesenharRodapeCompactoVisitantes(XGraphics desenho, Igreja igreja)
+    {
+        var endereco = $"{igreja.Logradouro}, {igreja.Numero}";
+        if (!string.IsNullOrWhiteSpace(igreja.Complemento)) endereco += $", {igreja.Complemento}";
+        endereco += $" · {igreja.Bairro} · {igreja.Cidade}/{igreja.Estado}";
+        // As informações vêm da igreja selecionada, sem reutilizar dados de outra unidade.
+        var blocos = new List<(string Texto, bool Destaque)>();
+        if (!string.IsNullOrWhiteSpace(igreja.CultoPrincipal)) blocos.Add((igreja.CultoPrincipal, true));
+        blocos.Add((endereco, false));
+        if (!string.IsNullOrWhiteSpace(igreja.Instagram)) blocos.Add((igreja.Instagram, false));
+
+        var tamanho = 8.0;
+        double alturaConteudo;
+        do
+        {
+            alturaConteudo = blocos.Sum(bloco =>
+                QuebrarLinhas(desenho, bloco.Texto, Sans(tamanho, bloco.Destaque), Mm(89)).Count * tamanho * 1.15);
+            alturaConteudo += Mm(3 + (blocos.Count - 1) * 1.2);
+            if (alturaConteudo <= Mm(18)) break;
+            tamanho -= 0.25;
+        } while (tamanho >= 3);
+
+        var altura = Math.Max(Mm(7), alturaConteudo);
+        var topo = Mm(140.5) - altura;
+        desenho.DrawRectangle(Azul, 0, topo, Mm(97), altura);
+        var y = topo + Mm(1.5);
+        foreach (var bloco in blocos)
+        {
+            var fonte = Sans(tamanho, bloco.Destaque);
+            var linhas = QuebrarLinhas(desenho, bloco.Texto, fonte, Mm(89));
+            var alturaTexto = linhas.Count * tamanho * 1.15;
+            var partesCulto = bloco.Texto.Split('·', 2, StringSplitOptions.TrimEntries);
+            if (bloco.Destaque && linhas.Count == 1 && partesCulto.Length == 2)
+            {
+                var nomeCulto = partesCulto[0] + " · ";
+                var larguraNome = desenho.MeasureString(nomeCulto, fonte).Width;
+                desenho.DrawString(nomeCulto, fonte, DouradoClaro,
+                    new XRect(Mm(4), y, larguraNome, alturaTexto), XStringFormats.TopLeft);
+                desenho.DrawString(partesCulto[1], fonte, XBrushes.White,
+                    new XRect(Mm(4) + larguraNome, y, Mm(89) - larguraNome, alturaTexto), XStringFormats.TopLeft);
+            }
+            else
+            {
+                TextoEmLinhas(desenho, bloco.Texto, fonte,
+                    bloco.Destaque || bloco.Texto == igreja.Instagram ? DouradoClaro : XBrushes.White,
+                    new XRect(Mm(4), y, Mm(89), alturaTexto), tamanho * 1.15);
+            }
+            y += alturaTexto + Mm(1.2);
+            if (bloco.Destaque)
+                desenho.DrawLine(new XPen(XColor.FromArgb(72, 76, 132), 0.4), Mm(4), y - Mm(0.6), Mm(93), y - Mm(0.6));
+        }
+    }
+
+    private static void DesenharLogoRedonda(XGraphics desenho, double x, double y, double tamanho)
+    {
+        using var logo = XImage.FromStream(new MemoryStream(Logo.Value, writable: false));
+        var estado = desenho.Save();
+        var recorte = new XGraphicsPath();
+        recorte.AddEllipse(Mm(x), Mm(y), Mm(tamanho), Mm(tamanho));
+        desenho.IntersectClip(recorte);
+        desenho.DrawImage(logo, Mm(x), Mm(y), Mm(tamanho), Mm(tamanho));
+        desenho.Restore(estado);
     }
 
     private static void DesenharQr(XGraphics desenho, string url, double x, double y, double tamanho)

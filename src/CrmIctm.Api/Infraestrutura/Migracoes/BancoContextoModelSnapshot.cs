@@ -225,6 +225,10 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.Property<DateTimeOffset>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CultoPrincipal")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(2)
@@ -240,6 +244,10 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Instagram")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Logradouro")
                         .IsRequired()

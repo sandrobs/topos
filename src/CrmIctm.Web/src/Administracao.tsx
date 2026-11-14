@@ -38,6 +38,8 @@ const igrejaVazia: DadosIgreja = {
   cep: "",
   cidade: "",
   estado: "",
+  cultoPrincipal: "",
+  instagram: "",
 };
 
 export function GestaoIgrejas({
@@ -73,6 +75,8 @@ export function GestaoIgrejas({
       cep: formatarCep(igreja.cep),
       cidade: igreja.cidade,
       estado: igreja.estado,
+      cultoPrincipal: igreja.cultoPrincipal ?? "",
+      instagram: igreja.instagram ?? "",
     });
     setErro("");
     setMensagem("");
@@ -138,6 +142,8 @@ export function GestaoIgrejas({
               <small>{igreja.cidade} · {igreja.estado}</small>
             </header>
             <p className="endereco-administrativo">{formatarEndereco(igreja)}</p>
+            {igreja.cultoPrincipal && <p>{igreja.cultoPrincipal}</p>}
+            {igreja.instagram && <p>{igreja.instagram}</p>}
             <div className="acoes-cartao-administrativo">
               <button type="button" className="botao-secundario" onClick={() => abrirEdicao(igreja)}>Editar</button>
               <a className="botao-secundario" href={`/qrcode/${igreja.id}`} target="_blank" rel="noreferrer">Convite e QR</a>
@@ -176,6 +182,13 @@ export function GestaoIgrejas({
                 </select>
               </label>
             </div>
+            <Campo label="Culto principal (opcional)" obrigatorio={false} valor={formulario.cultoPrincipal ?? ""}
+              tamanhoMaximo={120} placeholder="CULTO DA FAMÍLIA · Domingo, 19h"
+              aoAlterar={(cultoPrincipal) => setFormulario({ ...formulario, cultoPrincipal })} />
+            <Campo label="Instagram (opcional)" obrigatorio={false} valor={formulario.instagram ?? ""}
+              tamanhoMaximo={100} placeholder="@igrejadecristotm"
+              aoAlterar={(instagram) => setFormulario({ ...formulario, instagram })} />
+            <p>O culto principal e o Instagram aparecem no convite de visitantes com 4 convites por A4.</p>
             <footer>
               <button type="button" className="botao-secundario" onClick={() => setFormularioAberto(false)}>Cancelar</button>
               <button type="submit" disabled={salvando}>{salvando ? "Salvando…" : "Salvar igreja"}</button>
@@ -449,6 +462,7 @@ function Campo({
   obrigatorio = true,
   tipo = "text",
   placeholder,
+  tamanhoMaximo,
 }: {
   label: string;
   valor: string;
@@ -456,10 +470,11 @@ function Campo({
   obrigatorio?: boolean;
   tipo?: "text" | "email";
   placeholder?: string;
+  tamanhoMaximo?: number;
 }) {
   return (
     <label className="campo-administrativo">{label}
-      <input type={tipo} required={obrigatorio} value={valor} placeholder={placeholder} onChange={(evento) => aoAlterar(evento.target.value)} />
+      <input type={tipo} required={obrigatorio} value={valor} placeholder={placeholder} maxLength={tamanhoMaximo} onChange={(evento) => aoAlterar(evento.target.value)} />
     </label>
   );
 }

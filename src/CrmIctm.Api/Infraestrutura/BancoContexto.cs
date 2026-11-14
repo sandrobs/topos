@@ -42,6 +42,8 @@ public sealed class BancoContexto(DbContextOptions<BancoContexto> options)
         igreja.Property(x => x.Numero).HasMaxLength(20).IsRequired();
         igreja.Property(x => x.Bairro).HasMaxLength(100).IsRequired();
         igreja.Property(x => x.Complemento).HasMaxLength(100);
+        igreja.Property(x => x.CultoPrincipal).HasMaxLength(120);
+        igreja.Property(x => x.Instagram).HasMaxLength(100);
         igreja.Property(x => x.Cep).HasMaxLength(8).IsFixedLength().IsRequired();
         igreja.Property(x => x.Cidade).HasMaxLength(100).IsRequired();
         igreja.Property(x => x.Estado).HasMaxLength(2).IsFixedLength().IsRequired();

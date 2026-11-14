@@ -1,6 +1,6 @@
 # V2 — Cadastro e gestão de membros
 
-**Estado:** núcleo em implementação e validação local na branch `feature/v2-membros` desde 25/09/2026. Nenhuma alteração da V2 foi publicada na VPS. O aviso específico de adultos foi aprovado em 03/10/2026 e configurado no ambiente local. A operação com dados reais de menores continua pendente; a publicação depende de aprovação expressa.
+**Estado:** núcleo publicado em produção em 14/11/2026, após aprovação expressa do responsável. O aviso específico de adultos aprovado em 03/10/2026 está configurado. A validação pública pós-deploy foi concluída; a conferência autenticada com a senha atual do responsável está pendente. A operação com dados reais de menores continua pendente. Consulte o [registro de publicação](08-PUBLICACAO-2026-11-14.md).
 
 ## Objetivo
 
@@ -15,6 +15,8 @@ Permitir que membros da igreja preencham um formulário próprio, vinculado à s
 5. [Baseline histórica do MVP](../BASELINE-MVP-2026-09-25.md)
 6. [Implementação e validação local](05-IMPLEMENTACAO-LOCAL.md)
 7. [Ajustes e aviso aprovados em 03/10/2026](06-AJUSTES-APROVADOS-2026-10-03.md)
+8. [Ajustes do convite compacto de visitantes em 14/11/2026](07-CONVITE-COMPACTO-2026-11-14.md)
+9. [Publicação em produção em 14/11/2026](08-PUBLICACAO-2026-11-14.md)
 
 ## Regra de precedência
 

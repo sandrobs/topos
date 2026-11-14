@@ -36,7 +36,8 @@ public sealed class GeradorConvitesPdfTests
     {
         FontesConvitePdf.Configurar();
         var igreja = Igreja.Criar(new string('M', 150), new string('R', 150), new string('8', 20),
-            new string('B', 100), new string('C', 100), "98910000", new string('T', 100), "RS", DateTimeOffset.UtcNow);
+            new string('B', 100), new string('C', 100), "98910000", new string('T', 100), "RS", DateTimeOffset.UtcNow,
+            new string('M', 120), new string('M', 99));
         Assert.NotEmpty(new GeradorConvitesPdf().Gerar(igreja, "https://exemplo.local/visita/token", quatroPorFolha: true));
     }
 }

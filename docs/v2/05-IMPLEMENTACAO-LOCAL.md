@@ -118,3 +118,30 @@ Ainda exigir avaliação do responsável pelo produto, impressão física e test
 Safari/iPad/iPhone reais: a emulação Chromium não prova comportamento desses
 dispositivos. Cores físicas dependem da impressora/papel; não prometemos CMYK.
 O procedimento para dados reais de menores permanece pendente.
+
+## Logo sem localidade — 14/11/2026
+
+A pedido do responsável pelo produto, foi removida a inscrição “Três de Maio - RS”
+de dentro da logo, a partir do arquivo fornecido. A versão editada com a ferramenta
+de imagens integrada está em `src/CrmIctm.Web/public/logo-igreja.png` e substitui
+o JPG no componente compartilhado, no recurso incorporado dos PDFs, no Dockerfile
+e na rota de arquivos públicos do Caddy. Os dados de cidade/endereço da igreja
+continuam sendo apresentados nos locais próprios dos formulários e convites.
+
+A recompilação identificou bloqueio da auditoria NuGet na dependência transitiva
+`System.Security.Cryptography.Pkcs` 8.0.1, trazida pelo PDFsharp. Foi adicionada
+referência explícita à correção 8.0.2, mantendo a auditoria e os avisos como erros.
+Referências: [aviso Microsoft GHSA-2fmv-rv2c-59x7](https://github.com/advisories/GHSA-2fmv-rv2c-59x7)
+e [aviso Microsoft GHSA-846f-f764-76mx](https://github.com/advisories/GHSA-846f-f764-76mx).
+
+Validação: build completo de frontend e backend em Docker/Linux e **55 testes
+aprovados**. No ambiente de testes, foram conferidos saúde, login, consulta da
+gestão de membros e igualdade SHA-256 entre a logo servida e o arquivo do projeto.
+Os quatro PDFs foram renderizados a 150 dpi e revisados visualmente; todos mantêm
+uma página A4, a nova logo incorporada com os mesmos pixels do PNG e os dez QR
+Codes decodificados para os destinos esperados.
+
+O contêiner local da V2 usa a imagem `crm-ictm:v2-logo-sem-localidade-20261114`,
+com aplicação em `http://localhost:8081/entrar` e, na rede Wi-Fi atual,
+`http://192.168.101.13:8081/entrar`. Banco, chaves e migrações foram preservados.
+Esta atualização foi aplicada somente no ambiente local de testes.
