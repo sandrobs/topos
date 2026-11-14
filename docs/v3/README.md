@@ -1,7 +1,52 @@
 # V3 — Revisão de interface, acessibilidade e desempenho visual
 
-**Estado:** em implementação local na branch `feature/ui-lote1`. Lote 1 concluído
-e verificado em 14/11/2026. Lote 2 em andamento. Nada publicado em produção.
+**Estado:** em implementação local na branch `feature/ui-lote1`. Lotes 1 e 2
+concluídos e verificados em 14/11/2026. Lote 3 ainda não começado. Nada
+publicado em produção.
+
+## Ponto de retomada — Lote 3
+
+O Lote 3 foi aprovado mas nenhuma linha dele foi escrita. A árvore está limpa
+no commit `8503848`. Ordem sugerida, do mais barato e seguro ao mais arriscado:
+
+1. **3.3c** — `min-height: 44px` em `.abrir-aviso-privacidade`. Uma linha.
+2. **3.2 + 3.1 (parte de campos)** — criar um `<CampoFormulario>` único e migrar
+   `App.tsx`, `CadastroMembro.tsx` e `Administracao.tsx`. Unificar na classe
+   `.campo` e **apagar** `.campo-membro`, que é a origem da deriva medida
+   (padding 12/14 contra 10/12, raio 11 contra 10, rótulo 14,4 px contra
+   13,76 px). Atenção: `.grade-campos-membro` seleciona `.campo-membro` como
+   filho; os seletores de layout precisam passar a mirar `> .campo`.
+3. **3.3 + 3.3b** — acrescentar `noValidate` aos formulários de membros e da
+   administração, **mantendo** os atributos `required` (eles continuam valendo
+   como semântica para leitor de tela; só a bolha do navegador sai de cena).
+4. **3.4** — trocar os dois `window.confirm` por uma variante de confirmação do
+   `Dialogo` já existente.
+5. **3.1 (tokens)** — escala de espaçamento, raio e tipografia em `:root`, mais
+   três breakpoints. Verificável: contar os hexadecimais fixos antes e depois.
+6. **3.5** — remover os 92 blocos que redeclaram seletores e juntar os três
+   `@media print`. É o item de maior risco de regressão visual, porque mexe na
+   ordem da cascata; deixar por último e conferir tela a tela.
+
+### Descoberta que muda o item 3.3
+
+`CadastroMembro.tsx` **já tem** o efeito que move o foco para o primeiro campo
+inválido:
+
+```tsx
+useEffect(() => {
+  if (Object.keys(erros).length) requestAnimationFrame(() =>
+    formularioRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
+}, [erros]);
+```
+
+Ele nunca dispara porque a validação nativa bloqueia o envio antes de o servidor
+responder, e `erros` só é preenchido com o que o servidor devolve. Ou seja:
+acrescentar `noValidate` basta para o foco passar a funcionar ali. Quem precisa
+ganhar o efeito do zero é o formulário de visitantes, em `App.tsx`.
+
+Os três formulários validam no servidor e recebem `ErrosValidacao`
+(`Record<string, string[]>`), então o mesmo componente e o mesmo auxiliar de
+foco servem para todos.
 
 ## Objetivo
 
