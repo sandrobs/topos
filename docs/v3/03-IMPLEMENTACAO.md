@@ -374,3 +374,102 @@ Build Docker completo e **59 testes aprovados**. Conferido na aplicação em
 execução (`crm-ictm:ui-lote3a-20261114` em `http://localhost:8082`), nos dois
 formulários, a 375 px. Nenhum cadastro foi criado: todos os envios falharam na
 validação, que é o que se queria observar.
+
+---
+
+## Lote 3, segunda parte — componente único de campo, confirmação e tokens — 14/11/2026
+
+Itens **3.2**, **3.3** (administração), **3.4** e a parte segura do **3.1**.
+A normalização de breakpoints e o item **3.5** seguem pendentes; a razão está
+no fim desta seção.
+
+### 3.2 · Um componente de campo
+
+Novo [`CampoFormulario.tsx`](../../src/CrmIctm.Web/src/CampoFormulario.tsx),
+usado por `App.tsx`, `CadastroMembro.tsx`, `GestaoMembros.tsx` e
+`Administracao.tsx`. Aceita um controle próprio por render prop, para `select`
+e `textarea`. Ele cuida de id, rótulo com `for`, asterisco de obrigatório,
+texto de ajuda, `aria-invalid`, `aria-describedby` e a mensagem de erro.
+
+Foram removidas as quatro implementações anteriores: `CampoTexto`, a closure
+`campo()`, o `Campo` da administração e os `<label>`+`<input>` soltos de
+`GestaoMembros`.
+
+`.campo-membro` foi **apagado** do CSS. A densidade menor do modal
+administrativo sobreviveu como `.campo.denso`, uma variação declarada;
+`.campo-administrativo` ficou como apelido da mesma régua, para os poucos
+controles ainda escritos à mão.
+
+Deriva eliminada, medida nos dois formulários públicos em execução:
+
+| | antes | depois |
+|---|---|---|
+| rótulo | 14,4 px / 750 contra 13,76 px / 700 | **14,4 px / 750 nos dois** |
+| `padding` do input | 12px 14px contra 10px 12px | **12px 14px nos dois** |
+| `border-radius` | 11px contra 10px | **11px nos dois** |
+| cor da borda | `#cbd2df` contra `#cdd5e3` | **a mesma nos dois** |
+| sobras de `.campo-membro` | — | **0** |
+
+### 3.3 · Validação da administração
+
+Os dois formulários administrativos receberam `noValidate` e passaram a exibir
+**erro por campo**, que nunca tiveram: antes, uma falha de validação virava uma
+única `.alerta` no topo com a primeira mensagem. Medido ao enviar o formulário
+de igreja vazio: **6 erros por campo**, 6 campos com `aria-invalid` e 6 com
+`aria-describedby` válido, contra zero antes.
+
+Um defeito apareceu na verificação: chamar `focarPrimeiroErro` dentro do
+`catch` não funciona, porque o React ainda não confirmou os `aria-invalid` no
+DOM. Os três formulários passaram a chamá-lo num `useEffect` dependente de
+`erros`, que é o padrão que `CadastroMembro` já usava.
+
+### 3.4 · Confirmação destrutiva
+
+Nova `DialogoConfirmacao` em [`Dialogo.tsx`](../../src/CrmIctm.Web/src/Dialogo.tsx),
+sobre o `<dialog>` nativo. Os dois `window.confirm` foram removidos — o diálogo
+do navegador trava a aba, não é estilizável e aparece no idioma dele.
+
+A confirmação agora explica a consequência em vez de só perguntar: "A igreja X
+deixa de aparecer para novos visitantes e membros. Os dados já registrados são
+preservados e ela pode ser reativada depois." O foco inicial cai em "Cancelar",
+que é o padrão seguro para ação destrutiva. Verificado: Escape fecha, o foco
+volta ao botão de origem e nada é desativado.
+
+### 3.1 · Tokens (parte segura)
+
+Acrescentadas ao `:root` as escalas de espaçamento (`--esp-1..6`), raio
+(`--raio-sm/md/lg/xl`) e tipografia (`--txt-xs..xl`), mais três cores
+recorrentes que não tinham nome: `--borda-campo`, `--borda-campo-hover` e
+`--texto-rotulo`.
+
+Substituídos **23 hexadecimais** que eram exatamente o valor de um token, de
+162 para 142 no arquivo. Conferido na aplicação: os valores computados ficaram
+idênticos — borda `rgb(203, 210, 223)`, rótulo `rgb(38, 49, 74)` —, ou seja,
+nenhuma mudança visual.
+
+Os 123 hexadecimais restantes fora do `:root` são, em boa parte, tons usados
+uma única vez. Trocá-los exige decidir caso a caso se cada um vira token ou se
+aproxima de um existente, o que muda cor na tela. Fica para quando as escalas
+acima começarem a ser aplicadas nos componentes.
+
+### O que não foi feito, e por quê
+
+**Normalização de breakpoints** (parte do 3.1) e **limpeza da cascata**
+(item 3.5, com os 92 blocos que redeclaram seletores e os três `@media print`).
+
+Os dois reordenam ou removem regras e, por isso, mudam a cascata: o risco não é
+quebrar o build, que continuaria passando, mas deslocar silenciosamente algo em
+uma das telas. É o tipo de mudança que precisa de uma passada tela a tela, em
+cada largura, e não de ser emendada no fim de uma sessão longa. Os sete pontos
+de quebra atuais (400, 420, 700, 720, 721–1024, 850, 900) continuam
+documentados no item 3.1.
+
+### Validação
+
+Build Docker completo e **59 testes aprovados**. Conferido na aplicação em
+execução (`crm-ictm:ui-lote3-20261114` em `http://localhost:8082`): formulários
+públicos de visitantes e de membros com especificação idêntica; modal
+administrativo sem mudança visual (44px / 10px 12px / 9px preservados) e com
+`label for` explícito, que antes era associação implícita; erro por campo na
+administração; confirmação em diálogo nativo. Nenhum registro foi criado,
+alterado ou desativado no banco de testes.

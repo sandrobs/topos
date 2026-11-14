@@ -59,6 +59,32 @@
   --sombra-cartao: 0 22px 60px rgba(9, 22, 63, 0.13);
   /* Indicador de foco: opaco para atender ao contraste 3:1 da WCAG 2.2 (1.4.11). */
   --foco: var(--azul-600);
+
+  /* Cores recorrentes que não tinham nome. */
+  --borda-campo: #cbd2df;
+  --borda-campo-hover: #9aa8c3;
+  --texto-rotulo: #26314a;
+
+  /* Escala de espaçamento. Usar estes valores em vez de pixels avulsos. */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 24px;
+  --esp-6: 32px;
+
+  /* Escala de raio. */
+  --raio-sm: 9px;
+  --raio-md: 11px;
+  --raio-lg: 16px;
+  --raio-xl: 20px;
+
+  /* Escala tipográfica. */
+  --txt-xs: 0.76rem;
+  --txt-sm: 0.84rem;
+  --txt-md: 0.9rem;
+  --txt-lg: 1rem;
+  --txt-xl: 1.25rem;
 }
 
 /* Cadastro e gestão de membros (V2) */
@@ -67,15 +93,7 @@
 .formulario-membro { display: grid; gap: 24px; }
 .campos-membro { display: grid; gap: 22px; }
 .grade-campos-membro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.campo-membro { display: grid; align-content: start; gap: 7px; min-width: 0; color: var(--texto); font-weight: 700; font-size: .86rem; }
-.campo-membro em { color: var(--vermelho); font-style: normal; }
-.campo-membro input, .campo-membro select, .campo-membro textarea {
-  width: 100%; min-height: 44px; padding: 10px 12px; color: var(--texto); background: #fff;
-  border: 1px solid #cdd5e3; border-radius: 10px; font-weight: 450;
-}
-.campo-membro textarea { min-height: 90px; resize: vertical; }
-.campo-membro input[aria-invalid="true"] { border-color: var(--vermelho); }
-.erro-campo { color: var(--vermelho); font-weight: 500; }
+/* `.campo-membro` foi removido: era deriva de copiar-e-colar do `.campo`. */
 .grupo-campos-membro { min-width: 0; margin: 0; padding: 19px; border: 1px solid var(--borda); border-radius: 14px; }
 .grupo-campos-membro legend { padding: 0 7px; color: var(--azul-900); font-weight: 800; }
 .grupo-campos-membro legend small { color: var(--texto-suave); font-weight: 500; }
@@ -88,7 +106,7 @@
 .formulario-membro > button, .acoes-gestao-membros > button,
 .acoes-cartao-membro > button:not(.botao-secundario), .filtros-membros button,
 .aviso-duplicidade button {
-  min-height: 44px; padding: 10px 17px; color: #fff; background: var(--azul-900);
+  min-height: 44px; padding: 10px 17px; color: var(--branco); background: var(--azul-900);
   border: 1px solid var(--azul-900); border-radius: 10px; font-weight: 760; cursor: pointer;
 }
 .formulario-membro > button:hover, .acoes-gestao-membros > button:hover,
@@ -97,7 +115,7 @@
 .aviso-membro-dialogo { max-width: 600px; white-space: pre-line; }
 .confirmacao-membro { padding: 48px 0; text-align: center; }
 .confirmacao-membro > span { display: inline-grid; place-items: center; width: 60px; height: 60px;
-  color: #fff; background: var(--verde); border-radius: 50%; font-size: 2rem; }
+  color: var(--branco); background: var(--verde); border-radius: 50%; font-size: 2rem; }
 .confirmacao-membro h1 { color: var(--azul-900); }
 
 .gestao-membros { max-width: 1280px; margin: 0 auto; padding: 28px 0 44px; }
@@ -107,19 +125,19 @@
 .acoes-gestao-membros, .acoes-cartao-membro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .acoes-gestao-membros .botao-secundario { display: inline-flex; align-items: center; text-decoration: none; min-height: 44px; }
 .indicadores-membros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 23px 0; }
-.indicadores-membros div { padding: 20px 22px; background: #fff; border: 1px solid var(--borda); border-radius: 16px; box-shadow: 0 8px 24px rgba(9,22,63,.04); }
+.indicadores-membros div { padding: 20px 22px; background: var(--branco); border: 1px solid var(--borda); border-radius: 16px; box-shadow: 0 8px 24px rgba(9,22,63,.04); }
 .indicadores-membros strong { display: block; color: var(--azul-900); font-size: 2rem; }
 .indicadores-membros span { color: var(--texto-suave); font-size: .82rem; font-weight: 700; }
 .abas-membros { display: flex; gap: 3px; border-bottom: 1px solid #d9e0ec; }
 .abas-membros button { padding: 13px 17px; color: var(--texto-suave); background: transparent; border: 0; border-bottom: 3px solid transparent; font-weight: 780; cursor: pointer; }
 .abas-membros button.ativo { color: var(--azul-900); border-bottom-color: var(--dourado); }
-.abas-membros span { margin-left: 5px; padding: 2px 7px; color: #fff; background: var(--azul-700); border-radius: 99px; font-size: .72rem; }
+.abas-membros span { margin-left: 5px; padding: 2px 7px; color: var(--branco); background: var(--azul-700); border-radius: 99px; font-size: .72rem; }
 .filtros-membros { display: flex; gap: 10px; margin: 18px 0; }
 .filtros-membros input, .filtros-membros select { min-height: 44px; padding: 10px 13px; border: 1px solid #cdd5e3; border-radius: 10px; }
 .filtros-membros input { flex: 1; min-width: 0; }
-.lista-membros { margin-top: 18px; overflow: hidden; background: #fff; border: 1px solid var(--borda); border-radius: 16px; }
+.lista-membros { margin-top: 18px; overflow: hidden; background: var(--branco); border: 1px solid var(--borda); border-radius: 16px; }
 .linha-membro { width: 100%; display: grid; grid-template-columns: 46px minmax(0,1fr) auto 16px; align-items: center; gap: 13px;
-  padding: 14px 18px; text-align: left; background: #fff; border: 0; border-bottom: 1px solid var(--borda); cursor: pointer; }
+  padding: 14px 18px; text-align: left; background: var(--branco); border: 0; border-bottom: 1px solid var(--borda); cursor: pointer; }
 .linha-membro:hover { background: #f8faff; }
 .avatar-membro { display: grid; place-items: center; width: 44px; height: 44px; color: var(--azul-900); background: var(--azul-100); border-radius: 12px; font-weight: 820; }
 .nome-linha-membro { min-width: 0; }
@@ -130,10 +148,10 @@
 .selo-membro.inativo { color: #7a3c40; background: #fae9e9; }
 .selo-membro.pendente { color: #79520b; background: var(--dourado-claro); }
 .paginacao-membros { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; color: var(--texto-suave); font-size: .82rem; }
-.paginacao-membros button { padding: 8px 12px; color: var(--azul-900); background: #fff; border: 1px solid var(--borda); border-radius: 8px; cursor: pointer; }
+.paginacao-membros button { padding: 8px 12px; color: var(--azul-900); background: var(--branco); border: 1px solid var(--borda); border-radius: 8px; cursor: pointer; }
 .paginacao-membros button:disabled { opacity: .4; cursor: default; }
 .vazio-membros { padding: 26px; color: var(--texto-suave); }
-.cartao-gestao-membro { margin-top: 20px; padding: clamp(19px, 4vw, 30px); background: #fff; border: 1px solid var(--borda); border-radius: 17px; box-shadow: var(--sombra-cartao); }
+.cartao-gestao-membro { margin-top: 20px; padding: clamp(19px, 4vw, 30px); background: var(--branco); border: 1px solid var(--borda); border-radius: 17px; box-shadow: var(--sombra-cartao); }
 .topo-cartao-membro { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 24px; }
 .topo-cartao-membro h2 { margin: 5px 0 0; color: var(--azul-950); }
 .cartao-gestao-membro .campos-membro { margin-bottom: 24px; }
@@ -154,10 +172,10 @@
 
 .cartaz-a4-membros { grid-template-rows: 34mm 1fr 22mm; }
 .conteudo-cartaz-membros { display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 22mm; text-align: center; background: radial-gradient(circle at 50% 48%, #fff, #eef2fc); }
+  padding: 22mm; text-align: center; background: radial-gradient(circle at 50% 48%, var(--branco), #eef2fc); }
 .conteudo-cartaz-membros h1 { max-width: 140mm; margin: 5mm 0; color: var(--azul-950); font-size: clamp(2.2rem, 5vw, 3.7rem); line-height: 1.08; }
 .conteudo-cartaz-membros p:not(.rotulo-cartaz) { max-width: 130mm; color: #485775; font-size: 1.15rem; line-height: 1.5; }
-.conteudo-cartaz-membros .moldura-qr-code { width: 83mm; margin: 9mm 0 7mm; background: #fff; border: 1px solid #d7ddea; box-shadow: 0 15px 38px rgba(9,22,63,.12); }
+.conteudo-cartaz-membros .moldura-qr-code { width: 83mm; margin: 9mm 0 7mm; background: var(--branco); border: 1px solid #d7ddea; box-shadow: 0 15px 38px rgba(9,22,63,.12); }
 .conteudo-cartaz-membros .moldura-qr-code img { display: block; width: 100%; }
 .conteudo-cartaz-membros > strong { color: var(--azul-900); }
 .conteudo-cartaz-membros > small { margin-top: 6px; color: var(--texto-suave); }
@@ -379,44 +397,71 @@ h1 {
   gap: 20px;
 }
 
+/*
+ * Especificação única de campo do sistema (ver CampoFormulario.tsx). Antes
+ * havia três: `.campo`, `.campo-membro` e `.campo-administrativo`, com
+ * espaçamento, raio e tamanho de rótulo diferentes para o mesmo controle.
+ * A densidade reduzida do modal administrativo sobrevive como `.denso`,
+ * agora uma variação declarada e não um acidente.
+ */
 .campo {
   display: grid;
+  align-content: start;
   gap: 8px;
+  min-width: 0;
 }
 
 .campo label,
 fieldset legend,
 .login label {
-  color: #26314a;
+  color: var(--texto-rotulo);
   font-size: 0.9rem;
   font-weight: 750;
 }
 
+.campo label em {
+  color: var(--vermelho);
+  font-style: normal;
+}
+
 .campo input,
+.campo select,
+.campo textarea,
 .login input,
 .acoes-topo select,
 .bloco-detalhe input,
 .bloco-detalhe select,
 .bloco-detalhe textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 50px;
   padding: 12px 14px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 11px;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
+.campo textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
 .campo input:hover,
+.campo select:hover,
+.campo textarea:hover,
 .login input:hover,
 .bloco-detalhe input:hover,
 .bloco-detalhe select:hover,
 .bloco-detalhe textarea:hover {
-  border-color: #9aa8c3;
+  border-color: var(--borda-campo-hover);
 }
 
 .campo input:focus,
+.campo select:focus,
+.campo textarea:focus,
 .login input:focus,
 .bloco-detalhe input:focus,
 .bloco-detalhe select:focus,
@@ -425,7 +470,9 @@ fieldset legend,
   box-shadow: 0 0 0 4px rgba(46, 95, 202, 0.1);
 }
 
-.campo input[aria-invalid="true"] {
+.campo input[aria-invalid="true"],
+.campo select[aria-invalid="true"],
+.campo textarea[aria-invalid="true"] {
   border-color: var(--vermelho);
 }
 
@@ -927,7 +974,7 @@ button[type="submit"]:disabled {
 
 .rodape-login {
   padding: 18px;
-  color: #667085;
+  color: var(--texto-suave);
   font-size: 0.76rem;
   text-align: center;
 }
@@ -1292,7 +1339,7 @@ button[type="submit"]:disabled {
 }
 
 .barra-pesquisa > label {
-  color: #26314a;
+  color: var(--texto-rotulo);
   font-size: 0.82rem;
   font-weight: 780;
 }
@@ -1309,7 +1356,7 @@ button[type="submit"]:disabled {
   padding: 10px 13px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 10px;
 }
 
@@ -1660,7 +1707,7 @@ dialog.sobreposicao::backdrop {
   padding: 11px 13px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 11px;
 }
 
@@ -2061,6 +2108,12 @@ dialog.sobreposicao::backdrop {
   grid-template-columns: 160px minmax(0, 1fr) 210px;
 }
 
+/*
+ * Densidade reduzida: formulários longos dentro de um modal. `.campo.denso` é
+ * o que o componente gera; `.campo-administrativo` fica como apelido para os
+ * poucos controles ainda escritos à mão, para que ambos sigam a mesma régua.
+ */
+.campo.denso,
 .campo-administrativo,
 .filtro-administrativo {
   margin-bottom: 14px;
@@ -2071,15 +2124,20 @@ dialog.sobreposicao::backdrop {
   font-weight: 720;
 }
 
+.campo.denso label {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.campo.denso input,
+.campo.denso select,
+.campo.denso textarea,
 .campo-administrativo input,
 .campo-administrativo select,
 .filtro-administrativo select {
-  width: 100%;
   min-height: 44px;
   padding: 10px 12px;
-  color: var(--texto);
-  background: var(--branco);
-  border: 1px solid #ccd4e2;
   border-radius: 9px;
 }
 
@@ -2490,7 +2548,7 @@ dialog.sobreposicao::backdrop {
 .acoes-cartaz a {
   color: var(--azul-900);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
 }
 
 .acoes-cartaz button {
@@ -3087,7 +3145,7 @@ dialog.sobreposicao::backdrop {
 
 .acoes-gestao-membros .botao-secundario {
   color: var(--azul-900);
-  background: #fff;
+  background: var(--branco);
   border-color: #cdd5e3;
 }
 
@@ -3108,26 +3166,24 @@ dialog.sobreposicao::backdrop {
 .pagina-formulario-membros .cartao-formulario { min-width: 0; }
 .formulario-membro .campos-membro, .formulario-membro fieldset,
 .formulario-membro .grade-campos-membro { min-width: 0; max-width: 100%; }
-.campo-membro input, .campo-membro select { min-width: 0; max-width: 100%; min-height: 50px; font-size: 1rem; }
-.campo-membro input:focus, .campo-membro select:focus { border-color: var(--azul-600); }
 .grupo-campos-membro { margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
 .grupo-campos-membro legend em { color: var(--vermelho); font-style: normal; }
 .opcoes-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .opcao-membro { position: relative; display: flex; align-items: center; gap: 10px; min-height: 52px;
-  min-width: 0; padding: 12px; color: var(--texto); background: #fff; border: 1px solid #cbd2df;
+  min-width: 0; padding: 12px; color: var(--texto); background: var(--branco); border: 1px solid var(--borda-campo);
   border-radius: 12px; cursor: pointer; font-size: .94rem; line-height: 1.35; overflow-wrap: anywhere; }
 .opcao-membro.selecionada { color: var(--azul-900); border-color: var(--azul-600); background: var(--azul-100); font-weight: 750; }
 .opcao-membro:focus-within { outline: 3px solid var(--foco); outline-offset: 2px; }
 .marcador-opcao-membro { display: grid; place-items: center; flex: 0 0 20px; height: 20px;
   border: 1px solid #abb6ca; border-radius: 50%; color: transparent; }
-.selecionada .marcador-opcao-membro { color: #fff; background: var(--azul-600); border-color: var(--azul-600); }
+.selecionada .marcador-opcao-membro { color: var(--branco); background: var(--azul-600); border-color: var(--azul-600); }
 .opcoes-batismo { grid-column: 1 / -1; grid-template-columns: 1fr; }
 .formulario-membro > button { display: flex; justify-content: center; gap: 16px; width: 100%; min-height: 54px; }
 .formulario-membro .aviso-privacidade { min-width: 0; }
 .topo-cartao-membro { flex-wrap: wrap; }
 .topo-cartao-membro > div { min-width: 0; }
 .topo-cartao-membro h2 { overflow-wrap: anywhere; }
-.gestao-membros .botao-secundario { color: var(--azul-900); background: #fff;
+.gestao-membros .botao-secundario { color: var(--azul-900); background: var(--branco);
   border-color: #cdd5e3; font-weight: 720; }
 .gestao-membros .botao-secundario:hover { background: var(--azul-100); }
 .voltar-lista-membros { flex-shrink: 0; min-height: 44px; }

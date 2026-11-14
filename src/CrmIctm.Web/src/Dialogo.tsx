@@ -65,3 +65,37 @@ export function Dialogo({
     </dialog>
   );
 }
+
+/**
+ * Confirmação de ação, no lugar de `window.confirm`. O diálogo nativo do
+ * navegador trava a aba inteira, não é estilizável, aparece no idioma do
+ * navegador e some do histórico do leitor de tela assim que fecha.
+ */
+export function DialogoConfirmacao({
+  titulo, descricao, rotuloConfirmar, ocupado = false, aoConfirmar, aoCancelar,
+}: {
+  titulo: string;
+  descricao: string;
+  rotuloConfirmar: string;
+  ocupado?: boolean;
+  aoConfirmar: () => void;
+  aoCancelar: () => void;
+}) {
+  return (
+    <Dialogo centralizado rotuladoPor="titulo-confirmacao" descritoPor="descricao-confirmacao"
+      aoFechar={aoCancelar}>
+      <section className="dialogo-conclusao">
+        <h2 id="titulo-confirmacao">{titulo}</h2>
+        <p id="descricao-confirmacao">{descricao}</p>
+        <div className="acoes-dialogo">
+          <button type="button" className="botao-secundario" onClick={aoCancelar}>Cancelar</button>
+          {/* Cancelar vem antes e recebe o foco inicial do <dialog>: numa ação
+              destrutiva, o padrão seguro é não confirmar sem querer. */}
+          <button type="button" disabled={ocupado} onClick={aoConfirmar}>
+            {ocupado ? "Aguarde…" : rotuloConfirmar}
+          </button>
+        </div>
+      </section>
+    </Dialogo>
+  );
+}

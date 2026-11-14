@@ -9,6 +9,7 @@ import {
   type SolicitacaoMembroDetalhe, type SolicitacaoMembroResumo,
 } from "./api";
 import { CamposMembro, dadosMembroVazios, funcoesMembro } from "./CadastroMembro";
+import { CampoFormulario } from "./CampoFormulario";
 import {
   formatarDataHora, formatarDataIso, formatarTelefoneBrasileiro,
   rotuloAcaoHistorico, rotuloSituacaoMembro,
@@ -239,12 +240,14 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
             onClick={() => { setNovo(false); setEditando(false); setErro(""); }}>Cancelar</button></div>
           <CamposMembro dados={dados} alterar={setDados} erros={erros} interno={!solicitacao} />
           {!solicitacao && <div className="grade-campos-membro">
-            <label className="campo-membro"><span>Data de ingresso (opcional)</span>
-              <input type="date" value={dataIngresso}
-                onChange={(evento) => setDataIngresso(evento.target.value)} /></label>
-            <label className="campo-membro"><span>Observação pastoral (interna)</span>
-              <textarea value={observacao} maxLength={2000}
-                onChange={(evento) => setObservacao(evento.target.value)} /></label>
+            <CampoFormulario id="data-ingresso" rotulo="Data de ingresso (opcional)"
+              tipo="date" valor={dataIngresso} aoAlterar={setDataIngresso} />
+            <CampoFormulario id="observacao-pastoral" rotulo="Observação pastoral (interna)">
+              {(atributos) => (
+                <textarea {...atributos} value={observacao} maxLength={2000}
+                  onChange={(evento) => setObservacao(evento.target.value)} />
+              )}
+            </CampoFormulario>
           </div>}
           <div className="acoes-cartao-membro"><button type="submit" disabled={salvando}>
             {salvando ? "Salvando…" : solicitacao ? "Salvar correção" : "Salvar membro"}
@@ -297,12 +300,14 @@ export function GestaoMembros({ igreja }: { igreja: IgrejaInterna }) {
           <p><small>Enviada em {new Date(solicitacao.criadaEm).toLocaleDateString("pt-BR")} · Aviso {solicitacao.avisoPrivacidadeVersao}</small></p>
           <Historico itens={solicitacao.historico} />
           <div className="grade-campos-membro">
-            <label className="campo-membro"><span>Data de ingresso (opcional)</span>
-              <input type="date" value={dataIngresso}
-                onChange={(evento) => setDataIngresso(evento.target.value)} /></label>
-            <label className="campo-membro"><span>Observação pastoral (interna)</span>
-              <textarea value={observacao} maxLength={2000}
-                onChange={(evento) => setObservacao(evento.target.value)} /></label>
+            <CampoFormulario id="data-ingresso" rotulo="Data de ingresso (opcional)"
+              tipo="date" valor={dataIngresso} aoAlterar={setDataIngresso} />
+            <CampoFormulario id="observacao-pastoral" rotulo="Observação pastoral (interna)">
+              {(atributos) => (
+                <textarea {...atributos} value={observacao} maxLength={2000}
+                  onChange={(evento) => setObservacao(evento.target.value)} />
+              )}
+            </CampoFormulario>
           </div>
           <div className="acoes-cartao-membro">
             <button type="button" className="botao-secundario"

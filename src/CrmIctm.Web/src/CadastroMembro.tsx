@@ -3,6 +3,7 @@ import {
   ErroDaApi, enviarSolicitacaoMembro, obterFormularioMembro,
   type DadosMembro, type ErrosValidacao, type IgrejaPublica,
 } from "./api";
+import { CampoFormulario } from "./CampoFormulario";
 import { focarPrimeiroErro } from "./foco";
 import { formatarCep, formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
@@ -53,24 +54,25 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
       nomeResponsavelLegal: 150, whatsappResponsavelLegal: 16, vinculoResponsavelLegal: 60,
     };
     return (
-      <label className="campo-membro" key={id}>
-        <span>{titulo}{obrigatorio && <em> *</em>}</span>
-        <input
-          id={`membro-${id}`} name={id} autoComplete={preenchimentoAutomatico[id]}
-          maxLength={limites[id]} inputMode={id === "cep" ? "numeric" : tipo === "tel" ? "tel" : undefined}
-          type={tipo} value={typeof valor === "string" ? valor : ""}
-          required={obrigatorio} placeholder={dica}
-          aria-invalid={Boolean(erros[id]?.[0])}
-          aria-describedby={erros[id]?.[0] ? `membro-${id}-erro` : undefined}
-          onChange={(evento) => atualizar(id, (
-            id === "whatsapp" || id === "whatsappResponsavelLegal"
-              ? formatarTelefoneBrasileiro(evento.target.value)
-              : id === "cep" ? formatarCep(evento.target.value)
-              : tipo === "date" ? evento.target.value || null : evento.target.value
-          ) as DadosMembro[typeof id])}
-        />
-        {erros[id]?.[0] && <small id={`membro-${id}-erro`} className="erro-campo">{erros[id][0]}</small>}
-      </label>
+      <CampoFormulario
+        key={id}
+        id={`membro-${id}`}
+        rotulo={titulo}
+        obrigatorio={obrigatorio}
+        erro={erros[id]?.[0]}
+        tipo={tipo}
+        valor={typeof valor === "string" ? valor : ""}
+        autoComplete={preenchimentoAutomatico[id]}
+        maxLength={limites[id]}
+        placeholder={dica}
+        inputMode={id === "cep" ? "numeric" : tipo === "tel" ? "tel" : undefined}
+        aoAlterar={(texto) => atualizar(id, (
+          id === "whatsapp" || id === "whatsappResponsavelLegal"
+            ? formatarTelefoneBrasileiro(texto)
+            : id === "cep" ? formatarCep(texto)
+            : tipo === "date" ? texto || null : texto
+        ) as DadosMembro[typeof id])}
+      />
     );
   }
 
@@ -125,14 +127,15 @@ export function CamposMembro({ dados, alterar, erros = {}, interno = false }: Ca
           {campo("complemento", "Complemento")}
           {campo("cep", "CEP", "text", false, "00000-000")}
           {campo("cidade", "Cidade")}
-          <label className="campo-membro"><span>UF</span>
-            <select value={dados.estado ?? ""}
-              onChange={(evento) => atualizar("estado", evento.target.value)}>
-              <option value="">Selecione</option>
-              {unidadesFederativas.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
-            </select>
-            {erros.estado?.[0] && <small className="erro-campo">{erros.estado[0]}</small>}
-          </label>
+          <CampoFormulario id="membro-estado" rotulo="UF" erro={erros.estado?.[0]}>
+            {(atributos) => (
+              <select {...atributos} value={dados.estado ?? ""}
+                onChange={(evento) => atualizar("estado", evento.target.value)}>
+                <option value="">Selecione</option>
+                {unidadesFederativas.map((uf) => <option key={uf} value={uf}>{uf}</option>)}
+              </select>
+            )}
+          </CampoFormulario>
         </div>
       </fieldset>
 

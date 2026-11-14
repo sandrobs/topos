@@ -12,6 +12,7 @@ import {
 } from "./api";
 import { LogoIgreja } from "./LogoIgreja";
 import { FormularioPublicoMembros } from "./CadastroMembro";
+import { CampoFormulario } from "./CampoFormulario";
 import { focarPrimeiroErro } from "./foco";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
 
@@ -94,6 +95,11 @@ function FormularioPublico({ identificador }: { identificador: string }) {
   const [erroPagina, setErroPagina] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
   const formularioRef = useRef<HTMLFormElement>(null);
+
+  // Só depois do commit do React os aria-invalid existem no DOM.
+  useEffect(() => {
+    if (Object.keys(erros).length) focarPrimeiroErro(formularioRef.current);
+  }, [erros]);
   const [confirmacao, setConfirmacao] = useState("");
   const [avisoPrivacidadeAberto, setAvisoPrivacidadeAberto] = useState(false);
 
@@ -135,7 +141,6 @@ function FormularioPublico({ identificador }: { identificador: string }) {
       if (erro instanceof ErroDaApi) {
         setErros(erro.erros);
         setErroPagina(erro.message);
-        focarPrimeiroErro(formularioRef.current);
       } else {
         setErroPagina("Não foi possível enviar seus dados. Verifique sua conexão e tente novamente.");
       }
@@ -195,18 +200,21 @@ function FormularioPublico({ identificador }: { identificador: string }) {
           )}
 
           <form ref={formularioRef} className="formulario-visitante" onSubmit={enviar} noValidate>
-          <CampoTexto
+          <CampoFormulario
             id="nome"
-            label="Seu nome"
+            rotulo="Seu nome"
+            obrigatorio
             autoComplete="name"
             valor={formulario.nome}
             erro={erros.nome?.[0]}
             aoAlterar={(nome) => setFormulario((atual) => ({ ...atual, nome }))}
           />
-          <CampoTexto
+          <CampoFormulario
             id="whatsapp"
-            label="WhatsApp com DDD"
+            rotulo="WhatsApp com DDD"
+            obrigatorio
             tipo="tel"
+            inputMode="tel"
             autoComplete="tel"
             placeholder="(11) 98765-4321"
             valor={formulario.whatsapp}
@@ -357,48 +365,6 @@ function IconeCoracao() {
     <svg viewBox="0 0 24 24" role="img">
       <path d="M20.8 5.8a5.5 5.5 0 0 0-7.8 0L12 6.9l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 22l8.8-8.4a5.5 5.5 0 0 0 0-7.8Z" />
     </svg>
-  );
-}
-
-type CampoTextoProps = {
-  id: string;
-  label: string;
-  valor: string;
-  erro?: string;
-  tipo?: "text" | "tel";
-  autoComplete?: string;
-  placeholder?: string;
-  aoAlterar: (valor: string) => void;
-};
-
-function CampoTexto({
-  id,
-  label,
-  valor,
-  erro,
-  tipo = "text",
-  autoComplete,
-  placeholder,
-  aoAlterar,
-}: CampoTextoProps) {
-  const erroId = `${id}-erro`;
-  return (
-    <div className="campo">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        name={id}
-        type={tipo}
-        inputMode={tipo === "tel" ? "tel" : undefined}
-        value={valor}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        aria-invalid={Boolean(erro)}
-        aria-describedby={erro ? erroId : undefined}
-        onChange={(evento) => aoAlterar(evento.target.value)}
-      />
-      <ErroCampo id={erroId} mensagem={erro} />
-    </div>
   );
 }
 
