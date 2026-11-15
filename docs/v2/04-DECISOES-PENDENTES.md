@@ -14,6 +14,10 @@ As respostas de 25/09/2026 estão registradas abaixo. Pontos ainda marcados como
 
 O batismo é esperado na prática da igreja, mas sua ausência ou falta de informação não impedirá tecnicamente o cadastro ou a aprovação. Não se deve presumir batismo a partir da aprovação.
 
+**Adicional aprovado em 03/10/2026:** função na igreja é obrigatória, com Membro
+pré-selecionado e opções Membro, Diácono, Presbítero, Pastor. Aplica-se ao
+autoenvio e ao cadastro interno e não altera as permissões de usuário.
+
 ## D3 — Como tratar membros menores de idade?
 
 **Aprovado:** o autoenvio será destinado a adultos. O cadastro de menores ficará na área interna, sob responsabilidade de Pastor ou Administrador. Não haverá autoenvio de menor pelo formulário desta etapa.
@@ -36,7 +40,7 @@ O batismo é esperado na prática da igreja, mas sua ausência ou falta de infor
 
 ## D7 — Aviso de privacidade de membros
 
-**Pendente para publicação do formulário:** aprovar texto e versão próprios para cadastro e gestão de membros, incluindo finalidade, perfis com acesso, retenção e canal de solicitação. O texto do visitante não deve ser reutilizado automaticamente, pois descreve acolhimento e contato inicial.
+**Aprovado em 03/10/2026:** texto específico e versão `membros-2026-10-03`, conforme [aviso integral e ajustes aprovados](06-AJUSTES-APROVADOS-2026-10-03.md). A confirmação inclui autorização expressa para os dados religiosos. Esta aprovação não autoriza deploy nem resolve o procedimento de menores.
 
 ## D8 — Ordem operacional
 

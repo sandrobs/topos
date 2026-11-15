@@ -23,7 +23,9 @@ public sealed record SalvarIgrejaRequisicao(
     string? Complemento,
     string? Cep,
     string? Cidade,
-    string? Estado);
+    string? Estado,
+    string? CultoPrincipal = null,
+    string? Instagram = null);
 
 public sealed record AlterarSituacaoRequisicao(bool Ativo);
 

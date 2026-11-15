@@ -149,6 +149,47 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.ToTable("historicos_atendimento", "crm");
                 });
 
+            modelBuilder.Entity("CrmIctm.Api.Dominio.HistoricoMembro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Descricao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("IgrejaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MembroId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("SolicitacaoId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AutorId");
+
+                    b.HasIndex("IgrejaId", "MembroId", "CriadoEm");
+
+                    b.HasIndex("IgrejaId", "SolicitacaoId", "CriadoEm");
+
+                    b.ToTable("historicos_membros", "crm");
+                });
+
             modelBuilder.Entity("CrmIctm.Api.Dominio.Igreja", b =>
                 {
                     b.Property<Guid>("Id")
@@ -184,6 +225,10 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.Property<DateTimeOffset>("CriadaEm")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CultoPrincipal")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
                     b.Property<string>("Estado")
                         .IsRequired()
                         .HasMaxLength(2)
@@ -194,6 +239,15 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("IdentificadorPublicoMembros")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Instagram")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Logradouro")
                         .IsRequired()
@@ -215,7 +269,53 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.HasIndex("IdentificadorPublico")
                         .IsUnique();
 
+                    b.HasIndex("IdentificadorPublicoMembros")
+                        .IsUnique();
+
                     b.ToTable("igrejas", "crm");
+                });
+
+            modelBuilder.Entity("CrmIctm.Api.Dominio.Membro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("DataIngresso")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("IgrejaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MotivoInativacao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ObservacaoPastoral")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Origem")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Situacao")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IgrejaId", "Situacao");
+
+                    b.ToTable("membros", "crm");
                 });
 
             modelBuilder.Entity("CrmIctm.Api.Dominio.ObservacaoAtendimento", b =>
@@ -284,6 +384,55 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.HasIndex("TipoEntidade", "EntidadeId", "CriadoEm");
 
                     b.ToTable("registros_auditoria_administrativa", "crm");
+                });
+
+            modelBuilder.Entity("CrmIctm.Api.Dominio.SolicitacaoMembro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("AtualizadaEm")
+                        .IsConcurrencyToken()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("AvisoPrivacidadeVersao")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DecididaEm")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DecididaPorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Estado")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("IgrejaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("MembroId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("MotivoRecusa")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecididaPorId");
+
+                    b.HasIndex("IgrejaId", "Estado", "CriadaEm");
+
+                    b.ToTable("solicitacoes_membros", "crm");
                 });
 
             modelBuilder.Entity("CrmIctm.Api.Dominio.Usuario", b =>
@@ -545,6 +694,123 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                     b.Navigation("Autor");
                 });
 
+            modelBuilder.Entity("CrmIctm.Api.Dominio.HistoricoMembro", b =>
+                {
+                    b.HasOne("CrmIctm.Api.Dominio.Usuario", "Autor")
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Autor");
+                });
+
+            modelBuilder.Entity("CrmIctm.Api.Dominio.Membro", b =>
+                {
+                    b.HasOne("CrmIctm.Api.Dominio.Igreja", "Igreja")
+                        .WithMany()
+                        .HasForeignKey("IgrejaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("CrmIctm.Api.Dominio.DadosCadastraisMembro", "Dados", b1 =>
+                        {
+                            b1.Property<Guid>("MembroId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Bairro")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("Cep")
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.Property<string>("Cidade")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("Complemento")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<DateOnly?>("DataBatismo")
+                                .HasColumnType("date");
+
+                            b1.Property<DateOnly?>("DataNascimento")
+                                .HasColumnType("date");
+
+                            b1.Property<bool>("EhMenor")
+                                .HasColumnType("boolean");
+
+                            b1.Property<string>("Email")
+                                .HasMaxLength(254)
+                                .HasColumnType("character varying(254)");
+
+                            b1.Property<string>("Estado")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)");
+
+                            b1.Property<string>("Funcao")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasDefaultValue("MEMBRO");
+
+                            b1.Property<string>("Logradouro")
+                                .HasMaxLength(150)
+                                .HasColumnType("character varying(150)");
+
+                            b1.Property<string>("Nome")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("NomeResponsavelLegal")
+                                .HasMaxLength(150)
+                                .HasColumnType("character varying(150)");
+
+                            b1.Property<string>("Numero")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("SituacaoBatismo")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("Sobrenome")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("VinculoResponsavelLegal")
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)");
+
+                            b1.Property<string>("Whatsapp")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)");
+
+                            b1.Property<string>("WhatsappResponsavelLegal")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)");
+
+                            b1.HasKey("MembroId");
+
+                            b1.ToTable("membros", "crm");
+
+                            b1.WithOwner()
+                                .HasForeignKey("MembroId");
+                        });
+
+                    b.Navigation("Dados")
+                        .IsRequired();
+
+                    b.Navigation("Igreja");
+                });
+
             modelBuilder.Entity("CrmIctm.Api.Dominio.ObservacaoAtendimento", b =>
                 {
                     b.HasOne("CrmIctm.Api.Dominio.Atendimento", "Atendimento")
@@ -573,6 +839,119 @@ namespace CrmIctm.Api.Infraestrutura.Migracoes
                         .IsRequired();
 
                     b.Navigation("Autor");
+                });
+
+            modelBuilder.Entity("CrmIctm.Api.Dominio.SolicitacaoMembro", b =>
+                {
+                    b.HasOne("CrmIctm.Api.Dominio.Usuario", "DecididaPor")
+                        .WithMany()
+                        .HasForeignKey("DecididaPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CrmIctm.Api.Dominio.Igreja", "Igreja")
+                        .WithMany()
+                        .HasForeignKey("IgrejaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.OwnsOne("CrmIctm.Api.Dominio.DadosCadastraisMembro", "Dados", b1 =>
+                        {
+                            b1.Property<Guid>("SolicitacaoMembroId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Bairro")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("Cep")
+                                .HasMaxLength(8)
+                                .HasColumnType("character varying(8)");
+
+                            b1.Property<string>("Cidade")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("Complemento")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<DateOnly?>("DataBatismo")
+                                .HasColumnType("date");
+
+                            b1.Property<DateOnly?>("DataNascimento")
+                                .HasColumnType("date");
+
+                            b1.Property<bool>("EhMenor")
+                                .HasColumnType("boolean");
+
+                            b1.Property<string>("Email")
+                                .HasMaxLength(254)
+                                .HasColumnType("character varying(254)");
+
+                            b1.Property<string>("Estado")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)");
+
+                            b1.Property<string>("Funcao")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasDefaultValue("MEMBRO");
+
+                            b1.Property<string>("Logradouro")
+                                .HasMaxLength(150)
+                                .HasColumnType("character varying(150)");
+
+                            b1.Property<string>("Nome")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("NomeResponsavelLegal")
+                                .HasMaxLength(150)
+                                .HasColumnType("character varying(150)");
+
+                            b1.Property<string>("Numero")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("SituacaoBatismo")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)");
+
+                            b1.Property<string>("Sobrenome")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("VinculoResponsavelLegal")
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)");
+
+                            b1.Property<string>("Whatsapp")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)");
+
+                            b1.Property<string>("WhatsappResponsavelLegal")
+                                .HasMaxLength(14)
+                                .HasColumnType("character varying(14)");
+
+                            b1.HasKey("SolicitacaoMembroId");
+
+                            b1.ToTable("solicitacoes_membros", "crm");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SolicitacaoMembroId");
+                        });
+
+                    b.Navigation("Dados")
+                        .IsRequired();
+
+                    b.Navigation("DecididaPor");
+
+                    b.Navigation("Igreja");
                 });
 
             modelBuilder.Entity("CrmIctm.Api.Dominio.Usuario", b =>

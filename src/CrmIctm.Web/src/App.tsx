@@ -1,4 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  Suspense, lazy, useEffect, useMemo, useRef, useState,
+  type FormEvent, type ReactNode,
+} from "react";
+import { DialogoAvisoPrivacidade } from "./DialogoAvisoPrivacidade";
 import {
   ErroDaApi,
   enviarAtendimento,
@@ -6,10 +10,26 @@ import {
   type ErrosValidacao,
   type IgrejaPublica,
 } from "./api";
-import { PaginaLogin, PainelAtendimentos } from "./Interno";
 import { LogoIgreja } from "./LogoIgreja";
-import { PaginaQrCode } from "./QrCode";
+import { FormularioPublicoMembros } from "./CadastroMembro";
+import { CampoFormulario } from "./CampoFormulario";
+import { focarPrimeiroErro } from "./foco";
+import { tituloPublico, useTitulo } from "./titulo";
 import { formatarEndereco, formatarTelefoneBrasileiro } from "./formatadores";
+
+/*
+ * As rotas internas só carregam quando alguém as acessa. Sem isto, quem escaneia
+ * o QR Code na porta da igreja baixa o painel, o kanban e o @dnd-kit para
+ * preencher dois campos.
+ */
+const PaginaLogin = lazy(() =>
+  import("./Interno").then((modulo) => ({ default: modulo.PaginaLogin })));
+const PainelAtendimentos = lazy(() =>
+  import("./Interno").then((modulo) => ({ default: modulo.PainelAtendimentos })));
+const PaginaQrCode = lazy(() =>
+  import("./QrCode").then((modulo) => ({ default: modulo.PaginaQrCode })));
+const PaginaQrCodeMembros = lazy(() =>
+  import("./QrCodeMembros").then((modulo) => ({ default: modulo.PaginaQrCodeMembros })));
 
 type EstadoFormulario = {
   nome: string;
@@ -35,18 +55,30 @@ function obterIdentificadorPublico(): string | null {
 export function App() {
   const identificador = useMemo(obterIdentificadorPublico, []);
   const caminho = window.location.pathname;
+  const partesQrCode = caminho.split("/").filter(Boolean);
+
+  const interna = (conteudo: ReactNode) => (
+    <Suspense fallback={<CarregandoRota />}>{conteudo}</Suspense>
+  );
 
   if (caminho === "/entrar") {
-    return <PaginaLogin />;
+    return interna(<PaginaLogin />);
   }
 
   if (caminho === "/painel") {
-    return <PainelAtendimentos />;
+    return interna(<PainelAtendimentos />);
   }
 
-  const partesQrCode = caminho.split("/").filter(Boolean);
   if (partesQrCode[0] === "qrcode" && partesQrCode[1]) {
-    return <PaginaQrCode igrejaId={partesQrCode[1]} />;
+    return interna(<PaginaQrCode igrejaId={partesQrCode[1]} />);
+  }
+
+  if (partesQrCode[0] === "qrcode-membros" && partesQrCode[1]) {
+    return interna(<PaginaQrCodeMembros igrejaId={partesQrCode[1]} />);
+  }
+
+  if (partesQrCode[0] === "membros" && partesQrCode[1] === "cadastro" && partesQrCode[2]) {
+    return <FormularioPublicoMembros identificador={partesQrCode[2]} />;
   }
 
   if (!identificador) {
@@ -63,6 +95,13 @@ function FormularioPublico({ identificador }: { identificador: string }) {
   const [enviando, setEnviando] = useState(false);
   const [erroPagina, setErroPagina] = useState("");
   const [erros, setErros] = useState<ErrosValidacao>({});
+  const formularioRef = useRef<HTMLFormElement>(null);
+  useTitulo(tituloPublico("Boas-vindas", igreja?.nome));
+
+  // Só depois do commit do React os aria-invalid existem no DOM.
+  useEffect(() => {
+    if (Object.keys(erros).length) focarPrimeiroErro(formularioRef.current);
+  }, [erros]);
   const [confirmacao, setConfirmacao] = useState("");
   const [avisoPrivacidadeAberto, setAvisoPrivacidadeAberto] = useState(false);
 
@@ -162,19 +201,22 @@ function FormularioPublico({ identificador }: { identificador: string }) {
             <div className="alerta" role="alert">{erroPagina}</div>
           )}
 
-          <form className="formulario-visitante" onSubmit={enviar} noValidate>
-          <CampoTexto
+          <form ref={formularioRef} className="formulario-visitante" onSubmit={enviar} noValidate>
+          <CampoFormulario
             id="nome"
-            label="Seu nome"
+            rotulo="Seu nome"
+            obrigatorio
             autoComplete="name"
             valor={formulario.nome}
             erro={erros.nome?.[0]}
             aoAlterar={(nome) => setFormulario((atual) => ({ ...atual, nome }))}
           />
-          <CampoTexto
+          <CampoFormulario
             id="whatsapp"
-            label="WhatsApp com DDD"
+            rotulo="WhatsApp com DDD"
+            obrigatorio
             tipo="tel"
+            inputMode="tel"
             autoComplete="tel"
             placeholder="(11) 98765-4321"
             valor={formulario.whatsapp}
@@ -278,83 +320,6 @@ function FormularioPublico({ identificador }: { identificador: string }) {
   );
 }
 
-function DialogoAvisoPrivacidade({
-  aberto,
-  nomeIgreja,
-  texto,
-  aoFechar,
-}: {
-  aberto: boolean;
-  nomeIgreja: string;
-  texto: string;
-  aoFechar: () => void;
-}) {
-  const dialogoRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialogo = dialogoRef.current;
-    if (!dialogo) {
-      return;
-    }
-
-    if (aberto && !dialogo.open) {
-      dialogo.showModal();
-    } else if (!aberto && dialogo.open) {
-      dialogo.close();
-    }
-  }, [aberto]);
-
-  return (
-    <dialog
-      ref={dialogoRef}
-      id="dialogo-aviso-privacidade"
-      className="dialogo-privacidade"
-      aria-labelledby="titulo-aviso-privacidade"
-      aria-describedby="introducao-aviso-privacidade"
-      onClose={aoFechar}
-      onCancel={(evento) => {
-        evento.preventDefault();
-        aoFechar();
-      }}
-      onMouseDown={(evento) => {
-        if (evento.target === evento.currentTarget) {
-          aoFechar();
-        }
-      }}
-    >
-      <div className="conteudo-dialogo-privacidade">
-        <header>
-          <div>
-            <p className="rotulo">Seus dados, sua segurança</p>
-            <h2 id="titulo-aviso-privacidade">Segurança e privacidade</h2>
-          </div>
-          <button
-            type="button"
-            className="fechar-aviso-privacidade"
-            aria-label="Fechar aviso de privacidade"
-            onClick={aoFechar}
-          >
-            ×
-          </button>
-        </header>
-
-        <p id="introducao-aviso-privacidade" className="introducao-aviso-privacidade">
-          Veja como a {nomeIgreja} utiliza e protege as informações deste formulário.
-        </p>
-
-        <div className="texto-aviso-privacidade">
-          {texto.split(/\n\s*\n/).map((paragrafo) => (
-            <p key={paragrafo}>{paragrafo}</p>
-          ))}
-        </div>
-
-        <button type="button" className="entendi-aviso-privacidade" onClick={aoFechar}>
-          Entendi e quero voltar ao formulário
-        </button>
-      </div>
-    </dialog>
-  );
-}
 
 function OpcaoMarcavel({
   icone,
@@ -405,48 +370,6 @@ function IconeCoracao() {
   );
 }
 
-type CampoTextoProps = {
-  id: string;
-  label: string;
-  valor: string;
-  erro?: string;
-  tipo?: "text" | "tel";
-  autoComplete?: string;
-  placeholder?: string;
-  aoAlterar: (valor: string) => void;
-};
-
-function CampoTexto({
-  id,
-  label,
-  valor,
-  erro,
-  tipo = "text",
-  autoComplete,
-  placeholder,
-  aoAlterar,
-}: CampoTextoProps) {
-  const erroId = `${id}-erro`;
-  return (
-    <div className="campo">
-      <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        name={id}
-        type={tipo}
-        inputMode={tipo === "tel" ? "tel" : undefined}
-        value={valor}
-        autoComplete={autoComplete}
-        placeholder={placeholder}
-        aria-invalid={Boolean(erro)}
-        aria-describedby={erro ? erroId : undefined}
-        onChange={(evento) => aoAlterar(evento.target.value)}
-      />
-      <ErroCampo id={erroId} mensagem={erro} />
-    </div>
-  );
-}
-
 function ErroCampo({ id, mensagem }: { id?: string; mensagem?: string }) {
   return mensagem ? <p id={id} className="erro-campo">{mensagem}</p> : null;
 }
@@ -466,6 +389,24 @@ function MensagemDePagina({
         <LogoIgreja />
         <h1>{titulo}</h1>
         <p>{texto}</p>
+      </section>
+    </main>
+  );
+}
+
+/*
+ * Espera pela rota interna. Vinda do cache, ela chega em poucos milissegundos:
+ * mostrar a mensagem de imediato faria piscar um layout inteiro a cada
+ * navegação. A classe `aguardando-rota` só a revela se a espera passar de
+ * 400 ms, que é quando o usuário realmente precisa saber que algo está vindo.
+ */
+function CarregandoRota() {
+  return (
+    <main className="pagina-mensagem aguardando-rota">
+      <section className="mensagem">
+        <LogoIgreja />
+        <h1>Carregando…</h1>
+        <p>Estamos abrindo esta página.</p>
       </section>
     </main>
   );

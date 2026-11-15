@@ -34,6 +34,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<AvisoPrivacidadeOpcoes>(
     builder.Configuration.GetSection(AvisoPrivacidadeOpcoes.Secao));
+builder.Services.Configure<AvisoPrivacidadeMembrosOpcoes>(
+    builder.Configuration.GetSection(AvisoPrivacidadeMembrosOpcoes.Secao));
 builder.Services.Configure<DadosIniciaisOpcoes>(
     builder.Configuration.GetSection(DadosIniciaisOpcoes.Secao));
 builder.Services.Configure<IgrejaInicialOpcoes>(
@@ -144,7 +146,7 @@ builder.Services.AddRateLimiter(opcoes =>
 
 builder.Services.AddSingleton<IRelogio, RelogioSistema>();
 builder.Services.AddScoped<UsuarioAtual>();
-builder.Services.AddSingleton<GeradorConviteVisitantesPdf>();
+builder.Services.AddSingleton<GeradorConvitesPdf>();
 
 var app = builder.Build();
 
@@ -188,6 +190,7 @@ app.MapearPublico();
 app.MapearIgrejas();
 app.MapearUsuarios();
 app.MapearAtendimentos();
+app.MapearMembros();
 app.MapFallbackToFile("index.html", opcoesArquivosEstaticos);
 
 await DadosIniciais.PrepararAsync(app);

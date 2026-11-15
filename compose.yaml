@@ -40,6 +40,8 @@ services:
       DadosIniciais__Administrador__Senha: ${ADMIN_SENHA:-}
       AvisoPrivacidade__Versao: ${AVISO_PRIVACIDADE_VERSAO:-}
       AvisoPrivacidade__Texto: ${AVISO_PRIVACIDADE_TEXTO:-}
+      AvisoPrivacidadeMembros__Versao: ${AVISO_PRIVACIDADE_MEMBROS_VERSAO:-}
+      AvisoPrivacidadeMembros__Texto: ${AVISO_PRIVACIDADE_MEMBROS_TEXTO:-}
     ports:
       # A aplicação não publica a porta na internet. Em produção, o proxy
       # Caddy utiliza a rede interna do Compose e expõe somente 80/443.

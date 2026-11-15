@@ -1,3 +1,41 @@
+/*
+ * Inter variável, hospedada no próprio projeto (decisão D1, 14/11/2026).
+ * Antes a família era declarada mas nunca entregue: quem tinha a fonte
+ * instalada via Inter, quem não tinha via Segoe UI, e os onze pesos usados no
+ * CSS colapsavam em duas larguras renderizadas.
+ *
+ * Os arquivos ficam em `src/fontes/` e não em `public/`, para que o Vite os
+ * publique sob `/assets/` — o único caminho, além de `/logo-igreja.png`, que o
+ * Caddy libera no domínio público dos formulários (ver deploy/Caddyfile).
+ *
+ * `unicode-range` divide os subconjuntos: o `latin` (48 kB) cobre o português;
+ * o `latin-ext` (85 kB) só é baixado quando a página traz algum caractere
+ * daquela faixa, como em sobrenomes de origem polonesa ou alemã.
+ *
+ * SIL Open Font License 1.1 — ver src/fontes/LICENSE-Inter.txt.
+ */
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fontes/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("./fontes/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #172033;
@@ -19,10 +57,157 @@
   --verde: #227a50;
   --vermelho: #a4262c;
   --sombra-cartao: 0 22px 60px rgba(9, 22, 63, 0.13);
+  /* Indicador de foco: opaco para atender ao contraste 3:1 da WCAG 2.2 (1.4.11). */
+  --foco: var(--azul-600);
+
+  /* Cores recorrentes que não tinham nome. */
+  /* Sinal de atenção no menu. Mede 4,3:1 sobre o branco da faixa. */
+  --sinal: #d9480f;
+  --borda-campo: #cbd2df;
+  --borda-campo-hover: #9aa8c3;
+  --texto-rotulo: #26314a;
+
+  /* Escala de espaçamento. Usar estes valores em vez de pixels avulsos. */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 24px;
+  --esp-6: 32px;
+
+  /* Escala de raio. */
+  --raio-sm: 9px;
+  --raio-md: 11px;
+  --raio-lg: 16px;
+  --raio-xl: 20px;
+
+  /* Escala tipográfica. */
+  --txt-xs: 0.76rem;
+  --txt-sm: 0.84rem;
+  --txt-md: 0.9rem;
+  --txt-lg: 1rem;
+  --txt-xl: 1.25rem;
+}
+
+/* Cadastro e gestão de membros (V2) */
+.pagina-formulario-membros .estrutura-formulario { width: min(100%, 720px); }
+.pagina-formulario-membros .cabecalho-formulario h1 { max-width: 620px; }
+.formulario-membro { display: grid; gap: 24px; }
+.campos-membro { display: grid; gap: 22px; }
+.grade-campos-membro { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+/* `.campo-membro` foi removido: era deriva de copiar-e-colar do `.campo`. */
+.grupo-campos-membro { min-width: 0; margin: 0; padding: 20px; border: 1px solid var(--borda); border-radius: 16px; }
+.grupo-campos-membro legend { padding: 0 7px; color: var(--azul-900); font-weight: 800; }
+.grupo-campos-membro legend small { color: var(--texto-suave); font-weight: 500; }
+.opcao-membro-menor { display: flex; align-items: center; gap: 10px; font-weight: 720; }
+.opcao-membro-menor input { width: 20px; height: 20px; accent-color: var(--azul-700); }
+.aviso-membro { display: grid; gap: 12px; padding: 20px; background: var(--azul-100); border-radius: 14px; }
+.aviso-membro label { display: flex; gap: 10px; align-items: flex-start; line-height: 1.45; font-size: .9rem; }
+.aviso-membro input { flex: 0 0 auto; width: 19px; height: 19px; margin-top: 2px; accent-color: var(--azul-700); }
+.aviso-membro .abrir-aviso-privacidade { justify-self: start; }
+.formulario-membro > button,
+.acoes-cartao-membro > button:not(.botao-secundario), .filtros-membros button,
+.aviso-duplicidade button {
+  min-height: 44px; padding: 10px 17px; color: var(--branco); background: var(--azul-900);
+  border: 1px solid var(--azul-900); border-radius: 10px; font-weight: 760; cursor: pointer;
+}
+@media (hover: hover) {
+  .formulario-membro > button:hover,
+  .acoes-cartao-membro > button:not(.botao-secundario):hover { background: var(--azul-700); }
+}
+.formulario-membro > button:disabled { opacity: .55; cursor: not-allowed; }
+.aviso-membro-dialogo { max-width: 600px; white-space: pre-line; }
+.confirmacao-membro { padding: 48px 0; text-align: center; }
+.confirmacao-membro > span { display: inline-grid; place-items: center; width: 60px; height: 60px;
+  color: var(--branco); background: var(--verde); border-radius: 50%; font-size: 2rem; }
+.confirmacao-membro h1 { color: var(--azul-900); }
+
+.gestao-membros { padding: 28px 0 44px; }
+.acoes-cartao-membro { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+/*
+ * Links que se apresentam como botão não levam sublinhado. A regra antiga
+ * mirava `.acoes-gestao-membros`, que deixou de existir na padronização, e o
+ * sublinhado do "Ver QR de membros" voltou.
+ */
+.acoes-painel .botao-secundario,
+.acoes-cartao-membro .botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--azul-900);
+  background: var(--branco);
+  border-color: #cdd5e3;
+  text-decoration: none;
+}
+.abas-membros { display: flex; gap: 3px; border-bottom: 1px solid #d9e0ec; }
+.abas-membros button { padding: 13px 17px; color: var(--texto-suave); background: transparent; border: 0; border-bottom: 3px solid transparent; font-weight: 780; cursor: pointer; }
+.abas-membros button.ativo { color: var(--azul-900); border-bottom-color: var(--dourado); }
+.abas-membros span { margin-left: 5px; padding: 2px 7px; color: var(--branco); background: var(--azul-700); border-radius: 99px; font-size: .72rem; }
+.filtros-membros { display: flex; gap: 10px; margin: 18px 0; }
+.filtros-membros input, .filtros-membros select { min-height: 44px; padding: 10px 13px; border: 1px solid #cdd5e3; border-radius: 10px; }
+.filtros-membros input { flex: 1; min-width: 0; }
+.lista-membros { margin-top: 18px; overflow: hidden; background: var(--branco); border: 1px solid var(--borda); border-radius: 16px; }
+.linha-membro { width: 100%; display: grid; grid-template-columns: 46px minmax(0,1fr) auto 16px; align-items: center; gap: 13px;
+  padding: 14px 18px; text-align: left; background: var(--branco); border: 0; border-bottom: 1px solid var(--borda); cursor: pointer; }
+@media (hover: hover) {
+  .linha-membro:hover { background: #f8faff; }
+}
+.avatar-membro { display: grid; place-items: center; width: 44px; height: 44px; color: var(--azul-900); background: var(--azul-100); border-radius: 12px; font-weight: 820; }
+.nome-linha-membro { min-width: 0; }
+.nome-linha-membro strong, .nome-linha-membro small { display: block; overflow-wrap: anywhere; }
+.nome-linha-membro small { margin-top: 3px; color: var(--texto-suave); }
+.selo-membro { padding: 5px 9px; border-radius: 100px; font-size: .7rem; font-weight: 820; }
+.selo-membro.ativo { color: #156440; background: #e2f5e9; }
+.selo-membro.inativo { color: #7a3c40; background: #fae9e9; }
+.selo-membro.pendente { color: #79520b; background: var(--dourado-claro); }
+.paginacao-membros { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 18px; color: var(--texto-suave); font-size: .82rem; }
+.paginacao-membros button { padding: 8px 12px; color: var(--azul-900); background: var(--branco); border: 1px solid var(--borda); border-radius: 8px; cursor: pointer; }
+.paginacao-membros button:disabled { opacity: .4; cursor: default; }
+.vazio-membros { padding: 26px; color: var(--texto-suave); }
+.cartao-gestao-membro { margin-top: 20px; padding: clamp(19px, 4vw, 30px); background: var(--branco); border: 1px solid var(--borda); border-radius: 17px; box-shadow: var(--sombra-cartao); }
+.topo-cartao-membro { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 24px; }
+.topo-cartao-membro h2 { margin: 5px 0 0; color: var(--azul-950); overflow-wrap: anywhere; }
+.cartao-gestao-membro .campos-membro { margin-bottom: 24px; }
+.acoes-cartao-membro { margin-top: 24px; }
+.resumo-dados-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.resumo-dados-membro div { padding: 13px; background: #f7f9fd; border-radius: 10px; }
+.resumo-dados-membro dt { color: var(--texto-suave); font-size: .75rem; font-weight: 760; }
+.resumo-dados-membro dd { margin: 5px 0 0; overflow-wrap: anywhere; }
+.historico-membro { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--borda); }
+.historico-membro h3 { color: var(--azul-950); }
+.historico-membro p { padding-left: 13px; border-left: 3px solid var(--dourado); font-size: .83rem; }
+.historico-membro small { display: block; margin-top: 4px; color: var(--texto-suave); }
+.aviso-duplicidade { display: grid; justify-items: start; gap: 9px; margin-top: 20px; padding: 18px; background: var(--dourado-claro); border: 1px solid #efdfa8; border-radius: 12px; }
+.aviso-duplicidade div { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.recusa-membro { display: grid; justify-items: start; gap: 8px; margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--borda); }
+.recusa-membro textarea { width: min(100%, 540px); min-height: 70px; padding: 10px; border: 1px solid #cdd5e3; border-radius: 10px; resize: vertical; }
+.recusa-membro button { min-height: 40px; }
+
+@media (max-width: 720px) {
+  .grade-campos-membro, .resumo-dados-membro { grid-template-columns: 1fr; }
+  .filtros-membros { flex-wrap: wrap; }
+  .filtros-membros input { flex-basis: 100%; }
+  .linha-membro { grid-template-columns: 38px minmax(0,1fr) auto; gap: 9px; padding: 12px; }
+  .linha-membro > span:last-child { display: none; }
+  .avatar-membro { width: 38px; height: 38px; }
+  .selo-membro { padding: 4px 6px; font-size: .62rem; }
+  .nome-linha-membro strong { font-size: .88rem; }
+  .nome-linha-membro small { font-size: .72rem; }
+  .paginacao-membros { flex-wrap: wrap; justify-content: center; }
+  .pagina-formulario-membros .selo-boas-vindas { display: none; }
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  /*
+   * Reserva o espaço da barra de rolagem mesmo quando ela não aparece. Sem
+   * isto o conteúdo centralizado desloca alguns pixels ao trocar para uma
+   * aba mais alta, que é quando a barra surge.
+   */
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -50,7 +235,7 @@ a:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 input:focus-visible {
-  outline: 3px solid rgba(46, 95, 202, 0.3);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -211,54 +396,84 @@ h1 {
   gap: 20px;
 }
 
+/*
+ * Especificação única de campo do sistema (ver CampoFormulario.tsx). Antes
+ * havia três: `.campo`, `.campo-membro` e `.campo-administrativo`, com
+ * espaçamento, raio e tamanho de rótulo diferentes para o mesmo controle.
+ * A densidade reduzida do modal administrativo sobrevive como `.denso`,
+ * agora uma variação declarada e não um acidente.
+ */
 .campo {
   display: grid;
+  align-content: start;
   gap: 8px;
+  min-width: 0;
 }
 
 .campo label,
 fieldset legend,
 .login label {
-  color: #26314a;
+  color: var(--texto-rotulo);
   font-size: 0.9rem;
   font-weight: 750;
 }
 
+.campo label em {
+  color: var(--vermelho);
+  font-style: normal;
+}
+
 .campo input,
+.campo select,
+.campo textarea,
 .login input,
 .acoes-topo select,
 .bloco-detalhe input,
 .bloco-detalhe select,
 .bloco-detalhe textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 50px;
   padding: 12px 14px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 11px;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.campo input:hover,
-.login input:hover,
-.bloco-detalhe input:hover,
-.bloco-detalhe select:hover,
-.bloco-detalhe textarea:hover {
-  border-color: #9aa8c3;
+.campo textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+@media (hover: hover) {
+  .campo input:hover,
+  .campo select:hover,
+  .campo textarea:hover,
+  .login input:hover,
+  .bloco-detalhe input:hover,
+  .bloco-detalhe select:hover,
+  .bloco-detalhe textarea:hover {
+    border-color: var(--borda-campo-hover);
+  }
 }
 
 .campo input:focus,
+.campo select:focus,
+.campo textarea:focus,
 .login input:focus,
 .bloco-detalhe input:focus,
 .bloco-detalhe select:focus,
 .bloco-detalhe textarea:focus {
   border-color: var(--azul-600);
   box-shadow: 0 0 0 4px rgba(46, 95, 202, 0.1);
-  outline: 0;
 }
 
-.campo input[aria-invalid="true"] {
+.campo input[aria-invalid="true"],
+.campo select[aria-invalid="true"],
+.campo textarea[aria-invalid="true"] {
   border-color: var(--vermelho);
 }
 
@@ -312,14 +527,16 @@ fieldset {
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
-.opcao-marcavel:hover {
-  transform: translateY(-2px);
-  border-color: #a9b9dc;
-  box-shadow: 0 9px 22px rgba(16, 34, 88, 0.08);
+@media (hover: hover) {
+  .opcao-marcavel:hover {
+    transform: translateY(-2px);
+    border-color: #a9b9dc;
+    box-shadow: 0 9px 22px rgba(16, 34, 88, 0.08);
+  }
 }
 
 .opcao-marcavel:has(input:focus-visible) {
-  outline: 3px solid rgba(46, 95, 202, 0.28);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -380,7 +597,8 @@ fieldset {
   color: transparent;
   background: var(--branco);
   border: 1.5px solid #b8c0cf;
-  border-radius: 999px;
+  /* Quadrado arredondado: a opção é de múltipla escolha, não exclusiva. */
+  border-radius: 7px;
   font-size: 0.76rem;
   font-weight: 900;
 }
@@ -413,7 +631,8 @@ fieldset {
 }
 
 .abrir-aviso-privacidade {
-  min-height: 40px;
+  /* 44px: alvo de toque mínimo. Era 40px, o último abaixo do limite. */
+  min-height: 44px;
   padding: 8px 11px;
   display: inline-flex;
   flex: none;
@@ -428,10 +647,12 @@ fieldset {
   cursor: pointer;
 }
 
-.abrir-aviso-privacidade:hover {
-  color: var(--azul-950);
-  border-color: #9eafd0;
-  background: #f9fbff;
+@media (hover: hover) {
+  .abrir-aviso-privacidade:hover {
+    color: var(--azul-950);
+    border-color: #9eafd0;
+    background: #f9fbff;
+  }
 }
 
 .confirmacao-privacidade {
@@ -439,7 +660,7 @@ fieldset {
   padding: 12px;
   display: grid;
   grid-template-columns: 24px 1fr;
-  align-items: center;
+  align-items: start;
   gap: 10px;
   color: #39445a;
   background: var(--branco);
@@ -451,7 +672,7 @@ fieldset {
 }
 
 .confirmacao-privacidade:has(input:focus-visible) {
-  outline: 3px solid rgba(46, 95, 202, 0.28);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -531,9 +752,11 @@ fieldset {
   cursor: pointer;
 }
 
-.fechar-aviso-privacidade:hover {
-  color: var(--azul-950);
-  background: #e8ecf4;
+@media (hover: hover) {
+  .fechar-aviso-privacidade:hover {
+    color: var(--azul-950);
+    background: #e8ecf4;
+  }
 }
 
 .introducao-aviso-privacidade {
@@ -567,8 +790,10 @@ fieldset {
   box-shadow: 0 9px 20px rgba(35, 71, 155, 0.2);
 }
 
-.entendi-aviso-privacidade:hover {
-  box-shadow: 0 12px 24px rgba(35, 71, 155, 0.28);
+@media (hover: hover) {
+  .entendi-aviso-privacidade:hover {
+    box-shadow: 0 12px 24px rgba(35, 71, 155, 0.28);
+  }
 }
 
 .erro-campo {
@@ -584,6 +809,44 @@ fieldset {
   background: #fff1f1;
   border-left: 4px solid var(--vermelho);
   border-radius: 9px;
+}
+
+/*
+ * `.botao-principal` é a ação primária de uma tela — criar membro, igreja ou
+ * usuário. Usa o mesmo degradê do botão de envio, para que "criar" se pareça
+ * com "criar" em qualquer lugar do sistema. Antes cada tela tinha o seu:
+ * azul chapado na administração, outro azul chapado na gestão de membros.
+ */
+.botao-principal {
+  min-height: 44px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--branco);
+  background: linear-gradient(135deg, var(--azul-900), var(--azul-600));
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(35, 71, 155, 0.22);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+@media (hover: hover) {
+  .botao-principal:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 13px 26px rgba(35, 71, 155, 0.28);
+  }
+}
+
+.botao-principal:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
 }
 
 button[type="submit"] {
@@ -604,9 +867,11 @@ button[type="submit"] {
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
-button[type="submit"]:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 13px 27px rgba(35, 71, 155, 0.28);
+@media (hover: hover) {
+  button[type="submit"]:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 13px 27px rgba(35, 71, 155, 0.28);
+  }
 }
 
 button[type="submit"]:disabled {
@@ -642,8 +907,8 @@ button[type="submit"]:disabled {
 .endereco-rodape-publico {
   margin-top: 5px;
   display: block;
-  color: #8490a2;
-  font-size: 0.7rem;
+  color: var(--texto-suave);
+  font-size: 0.76rem;
 }
 
 .icone-seguranca {
@@ -758,7 +1023,7 @@ button[type="submit"]:disabled {
 
 .rodape-login {
   padding: 18px;
-  color: #667085;
+  color: var(--texto-suave);
   font-size: 0.76rem;
   text-align: center;
 }
@@ -767,24 +1032,91 @@ button[type="submit"]:disabled {
 
 .pagina-painel {
   min-height: 100vh;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 95% 0, rgba(46, 95, 202, 0.08), transparent 28%),
     var(--fundo);
 }
 
+/*
+ * Miolo comum ao cabeçalho, ao menu, ao conteúdo e ao rodapé. É ele que
+ * garante que os quatro comecem e terminem na mesma margem, enquanto as
+ * faixas de fundo vão de ponta a ponta da tela.
+ */
+.faixa-painel {
+  width: 100%;
+  padding-inline: var(--esp-5);
+}
+
+.conteudo-painel {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: var(--esp-5) var(--esp-5) var(--esp-6);
+}
+
+/*
+ * O painel usa a tela inteira, por decisão do responsável: o kanban rende
+ * mais com espaço, e num monitor largo um teto de 1280 px deixava as colunas
+ * espremidas com faixas vazias dos dois lados.
+ *
+ * O problema original — o conteúdo saltar de largura ao trocar de aba —
+ * continua resolvido, porque agora todas as seções usam a mesma medida: a
+ * largura cheia. O teto que a gestão de membros tinha sozinha foi removido.
+ */
+
+/*
+ * Faixa fina encostada no topo, com o filete dourado embaixo. Antes era um
+ * cartão flutuante de ~90 px, com raio e sombra de 30 px, que competia com o
+ * conteúdo e comia altura útil da tela.
+ */
 .topo-painel {
-  margin-bottom: 22px;
-  padding: 13px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
   color: var(--branco);
   background: linear-gradient(125deg, var(--azul-950), var(--azul-900));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 17px;
-  box-shadow: 0 12px 30px rgba(9, 22, 63, 0.16);
+  border-bottom: 3px solid var(--dourado);
+}
+
+/*
+ * Grade de três colunas: identidade, ações e conta. Em grade, e não em flex,
+ * porque no celular a conta sobe para a linha da identidade sem precisar
+ * aparecer duas vezes no HTML.
+ */
+.topo-painel > .faixa-painel {
+  min-height: 62px;
+  padding-block: var(--esp-2);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--esp-4);
+}
+
+.conta-painel {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.avatar-sessao {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--branco);
+  background: var(--azul-700);
+  border-radius: 999px;
+  font-size: var(--txt-xs);
+  font-weight: 700;
+}
+
+.nome-sessao {
+  max-width: 190px;
+  overflow: hidden;
+  color: #dbe3f7;
+  font-size: var(--txt-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .identidade-painel,
@@ -792,9 +1124,43 @@ button[type="submit"]:disabled {
   gap: 12px;
 }
 
+.botao-sair {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.icone-sair {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.identidade-painel {
+  gap: 11px;
+  min-width: 0;
+}
+
 .identidade-painel .logo-igreja {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
+}
+
+.identidade-painel strong {
+  font-size: var(--txt-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.identidade-painel small {
+  color: #a8b7dd;
+  font-size: var(--txt-xs);
 }
 
 .identidade-painel strong,
@@ -821,19 +1187,27 @@ button[type="submit"]:disabled {
   grid-template-columns: 34px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 10px;
-  color: var(--texto);
+  /*
+   * Translúcido dentro da faixa, e não um bloco branco opaco com sombra por
+   * cima dela. A borda está a 55% de branco porque é o que mede 3:1 contra o
+   * azul da faixa, como a WCAG 1.4.11 pede para o contorno de um controle —
+   * a 30% ficaria em 2,6:1 e falharia.
+   */
+  color: var(--branco);
   text-align: left;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.74);
-  border-radius: 12px;
-  box-shadow: 0 7px 18px rgba(3, 11, 38, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--raio-md);
+  box-shadow: none;
   cursor: pointer;
 }
 
-.gatilho-seletor-igreja:hover,
-.seletor-igreja.aberto .gatilho-seletor-igreja {
-  border-color: #aebfea;
-  box-shadow: 0 8px 22px rgba(3, 11, 38, 0.27);
+@media (hover: hover) {
+  .gatilho-seletor-igreja:hover,
+  .seletor-igreja.aberto .gatilho-seletor-igreja {
+    background: rgba(255, 255, 255, 0.17);
+    border-color: rgba(255, 255, 255, 0.82);
+  }
 }
 
 .gatilho-seletor-igreja:disabled {
@@ -846,8 +1220,8 @@ button[type="submit"]:disabled {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--azul-700);
-  background: #edf2ff;
+  color: var(--branco);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 9px;
   font-size: 1.15rem;
   font-weight: 850;
@@ -864,19 +1238,19 @@ button[type="submit"]:disabled {
 
 .texto-seletor-igreja strong {
   overflow-wrap: anywhere;
-  color: var(--azul-950);
+  color: var(--branco);
   font-size: 0.86rem;
   line-height: 1.2;
 }
 
 .texto-seletor-igreja small {
   margin-top: 3px;
-  color: var(--texto-suave);
+  color: rgba(255, 255, 255, 0.74);
   font-size: 0.7rem;
 }
 
 .seta-seletor-igreja {
-  color: #6d7a96;
+  color: rgba(255, 255, 255, 0.78);
   font-size: 1.2rem;
   transition: transform 160ms ease;
 }
@@ -940,9 +1314,11 @@ button[type="submit"]:disabled {
   cursor: pointer;
 }
 
-.opcao-seletor-igreja:hover,
-.opcao-seletor-igreja:focus-visible {
-  background: #f1f5ff;
+@media (hover: hover) {
+  .opcao-seletor-igreja:hover,
+  .opcao-seletor-igreja:focus-visible {
+    background: #f1f5ff;
+  }
 }
 
 .opcao-seletor-igreja.selecionada {
@@ -1004,8 +1380,10 @@ button[type="submit"]:disabled {
   cursor: pointer;
 }
 
-.botao-secundario:hover {
-  background: rgba(255, 255, 255, 0.16);
+@media (hover: hover) {
+  .botao-secundario:hover {
+    background: rgba(255, 255, 255, 0.16);
+  }
 }
 
 .link-topo {
@@ -1020,35 +1398,99 @@ button[type="submit"]:disabled {
   margin-inline: auto;
 }
 
+/*
+ * Abas com sublinhado dourado, no lugar das pílulas brancas com sombra:
+ * mais leve de olhar, e o estado aberto fica mais óbvio.
+ */
 .navegacao-interna {
-  margin: -8px 0 22px;
+  background: var(--branco);
+  border-bottom: 1px solid var(--borda);
+}
+
+.navegacao-interna > .faixa-painel {
   display: flex;
-  gap: 7px;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navegacao-interna > .faixa-painel::-webkit-scrollbar {
+  display: none;
+}
+
+.navegacao-interna button,
+.abas-membros button {
+  /*
+   * `user-select: none` evita que um toque um pouco longo selecione o texto
+   * da aba, o que o Safari pinta com um retângulo claro — outro jeito de o
+   * botão parecer "ainda selecionado".
+   */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/*
+ * O Safari desenha o anel dele em botões que ficaram com `:focus` depois de
+ * um toque. Aqui o anel só aparece em `:focus-visible`, que é o estado que
+ * importa para quem navega por teclado.
+ */
+.navegacao-interna button:focus:not(:focus-visible),
+.abas-membros button:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .navegacao-interna button {
-  min-height: 40px;
-  padding: 8px 15px;
+  min-height: 48px;
+  padding: var(--esp-3) var(--esp-3) 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #556078;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-weight: 720;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--txt-md);
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.navegacao-interna button:hover {
-  color: var(--azul-900);
-  background: #e8edf8;
+@media (hover: hover) {
+  .navegacao-interna button:hover {
+    color: var(--azul-900);
+  }
 }
 
 .navegacao-interna button.ativo {
-  color: var(--azul-900);
-  background: var(--branco);
-  border-color: var(--borda);
-  box-shadow: 0 5px 15px rgba(9, 22, 63, 0.06);
+  color: var(--azul-950);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--dourado);
 }
 
+/* Ícone e rótulo curto existem só para a barra inferior do celular. */
+.icone-secao,
+.rotulo-secao-curto {
+  display: none;
+}
+
+.icone-secao {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+}
+
+/*
+ * Cabeçalho padrão de todas as seções do painel: Atendimentos, Membros,
+ * Igrejas e Usuários. Antes cada uma tinha o seu — `.apresentacao-painel`,
+ * `.cabecalho-gestao-membros` e `.cabecalho-administracao` —, com cartão numa
+ * e texto solto nas outras.
+ *
+ * Estrutura: à esquerda rótulo, título e descrição; à direita `.lado-painel`
+ * com as ações em cima e os indicadores embaixo. As duas da direita são
+ * opcionais: Atendimentos não tem ações, por exemplo.
+ */
 .apresentacao-painel {
   margin-bottom: 18px;
   padding: 22px 24px;
@@ -1059,6 +1501,24 @@ button[type="submit"]:disabled {
   background: var(--branco);
   border: 1px solid var(--borda);
   border-radius: 16px;
+}
+
+.apresentacao-painel > div:first-child {
+  min-width: 0;
+}
+
+.lado-painel {
+  display: grid;
+  gap: 12px;
+  justify-items: end;
+}
+
+.acoes-painel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .rotulo-painel {
@@ -1123,7 +1583,7 @@ button[type="submit"]:disabled {
 }
 
 .barra-pesquisa > label {
-  color: #26314a;
+  color: var(--texto-rotulo);
   font-size: 0.82rem;
   font-weight: 780;
 }
@@ -1140,14 +1600,13 @@ button[type="submit"]:disabled {
   padding: 10px 13px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 10px;
 }
 
 .barra-pesquisa input:focus {
   border-color: var(--azul-600);
   box-shadow: 0 0 0 4px rgba(46, 95, 202, 0.1);
-  outline: 0;
 }
 
 .barra-pesquisa button,
@@ -1168,11 +1627,20 @@ button[type="submit"]:disabled {
   color: var(--texto-suave);
 }
 
+/*
+ * As cinco etapas acomodam quantas couberem por linha, em vez de exigirem
+ * 1.333 px fixos. Antes o kanban rolava na horizontal em qualquer tablet —
+ * a 768 px sobravam 728 px visíveis e duas colunas ficavam fora da tela.
+ * Com `auto-fit`, numa tela larga continuam as cinco lado a lado; a 1024 px
+ * ficam quatro e a quinta desce; a 768 px, três. Nada sai de vista.
+ *
+ * O arraste segue por código de etapa, não por posição, então a quebra de
+ * linha não afeta quais movimentos são permitidos.
+ */
 .kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(255px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(208px, 1fr));
   gap: 14px;
-  overflow-x: auto;
   padding: 1px 1px 18px;
 }
 
@@ -1247,10 +1715,12 @@ button[type="submit"]:disabled {
   transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
 }
 
-.cartao-atendimento:hover {
-  transform: translateY(-2px);
-  border-color: var(--cor-etapa);
-  box-shadow: 0 8px 18px rgba(9, 22, 63, 0.1);
+@media (hover: hover) {
+  .cartao-atendimento:hover {
+    transform: translateY(-2px);
+    border-color: var(--cor-etapa);
+    box-shadow: 0 8px 18px rgba(9, 22, 63, 0.1);
+  }
 }
 
 .conteudo-cartao {
@@ -1268,11 +1738,12 @@ button[type="submit"]:disabled {
 
 .conteudo-cartao:focus-visible,
 .alca-arraste:focus-visible {
-  outline: 3px solid rgba(46, 95, 202, 0.35);
+  outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
 
-.conteudo-cartao:disabled {
+.conteudo-cartao:disabled,
+.conteudo-cartao[aria-busy="true"] {
   cursor: wait;
   opacity: 0.7;
 }
@@ -1305,9 +1776,11 @@ button[type="submit"]:disabled {
   touch-action: none;
 }
 
-.alca-arraste:hover {
-  color: var(--azul-900);
-  background: #e6ecf7;
+@media (hover: hover) {
+  .alca-arraste:hover {
+    color: var(--azul-900);
+    background: #e6ecf7;
+  }
 }
 
 .alca-arraste:active {
@@ -1361,12 +1834,82 @@ button[type="submit"]:disabled {
   font-size: 0.8rem;
 }
 
+/*
+ * Esqueleto exibido enquanto a lista carrega, no lugar de "Nenhum atendimento".
+ * Decorativo: é `aria-hidden`, e quem usa leitor de tela recebe o aviso da
+ * região `.estado-lista`.
+ */
+.cartao-esqueleto {
+  height: 92px;
+  margin: 0;
+  border-radius: 14px;
+  background: linear-gradient(100deg, #eef1f7 30%, #f7f9fc 50%, #eef1f7 70%);
+  background-size: 300% 100%;
+  animation: brilho-esqueleto 1.4s ease-in-out infinite;
+}
+
+@keyframes brilho-esqueleto {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+.estado-lista {
+  margin: 0 4px 10px;
+  min-height: 1.2em;
+  color: var(--texto-suave);
+  font-size: 0.84rem;
+}
+
+.estado-lista:empty {
+  margin-bottom: 0;
+}
+
+/*
+ * Espera pela rota interna carregada sob demanda. Fica invisível nos primeiros
+ * 400 ms — o caso comum, em que o arquivo vem do cache — e só então aparece.
+ * Sem isto, cada navegação interna pisca um layout inteiro por ~16 ms.
+ */
+.aguardando-rota {
+  animation: revelar-espera 0s 400ms both;
+}
+
+@keyframes revelar-espera {
+  from { visibility: hidden; }
+  to { visibility: visible; }
+}
+
+/* Rodapé de uma linha, encostado na base, com faixa branca de ponta a ponta. */
 .rodape-painel {
-  padding: 18px 4px 4px;
+  background: var(--branco);
+  border-top: 1px solid var(--borda);
+}
+
+.rodape-painel > .faixa-painel {
+  padding-block: 14px;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  color: #7a8496;
-  font-size: 0.73rem;
+  gap: var(--esp-2);
+  color: #7a86a0;
+  font-size: var(--txt-xs);
+}
+
+.selo-ambiente {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.selo-ambiente svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Detalhe lateral */
@@ -1379,6 +1922,33 @@ button[type="submit"]:disabled {
   justify-content: flex-end;
   background: rgba(9, 15, 35, 0.62);
   backdrop-filter: blur(3px);
+}
+
+/*
+ * As sobreposições são elementos <dialog> nativos (ver Dialogo.tsx). O <dialog>
+ * tem largura, altura, margem, borda e preenchimento próprios do navegador que
+ * precisam ser zerados para que ele ocupe a tela como a antiga <div> ocupava.
+ * O escurecimento fica no próprio elemento, não no ::backdrop, para preservar
+ * o blur já existente.
+ */
+dialog.sobreposicao {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  overflow: hidden;
+}
+
+dialog.sobreposicao:not([open]) {
+  display: none;
+}
+
+dialog.sobreposicao::backdrop {
+  background: transparent;
 }
 
 .sobreposicao-dialogo {
@@ -1420,7 +1990,7 @@ button[type="submit"]:disabled {
   padding: 11px 13px;
   color: var(--texto);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
   border-radius: 11px;
 }
 
@@ -1589,39 +2159,17 @@ button[type="submit"]:disabled {
 
 /* Administração */
 
+/*
+ * Sem cartão externo: o cabeçalho e os cartões da lista são peças soltas
+ * sobre o fundo da página, como no painel de atendimentos. Antes Igrejas e
+ * Usuários vinham embrulhados num cartão branco maior, o que criava um nível
+ * de moldura que as outras telas não têm.
+ */
 .secao-administracao {
   min-height: 520px;
-  padding: 26px;
-  background: var(--branco);
-  border: 1px solid var(--borda);
-  border-radius: 17px;
+  padding: 0 0 44px;
 }
 
-.cabecalho-administracao {
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.cabecalho-administracao h1,
-.cabecalho-administracao p {
-  margin: 0;
-}
-
-.cabecalho-administracao h1 {
-  color: var(--azul-950);
-  font-size: clamp(1.5rem, 3vw, 2rem);
-}
-
-.cabecalho-administracao > div > p:last-child {
-  margin-top: 7px;
-  color: var(--texto-suave);
-  font-size: 0.88rem;
-}
-
-.cabecalho-administracao > button,
 .formulario-administrativo footer button:last-child,
 .formulario-senha footer button:last-child {
   min-height: 43px;
@@ -1634,9 +2182,10 @@ button[type="submit"]:disabled {
   cursor: pointer;
 }
 
-.cabecalho-administracao > button:hover,
-.formulario-administrativo footer button:last-child:hover {
-  background: var(--azul-700);
+@media (hover: hover) {
+  .formulario-administrativo footer button:last-child:hover {
+    background: var(--azul-700);
+  }
 }
 
 .mensagem-sucesso-inline {
@@ -1737,9 +2286,11 @@ button[type="submit"]:disabled {
   font-weight: 720;
 }
 
-.secao-administracao .botao-secundario:hover,
-.formulario-administrativo .botao-secundario:hover {
-  background: var(--azul-100);
+@media (hover: hover) {
+  .secao-administracao .botao-secundario:hover,
+  .formulario-administrativo .botao-secundario:hover {
+    background: var(--azul-100);
+  }
 }
 
 .botao-perigo {
@@ -1821,6 +2372,12 @@ button[type="submit"]:disabled {
   grid-template-columns: 160px minmax(0, 1fr) 210px;
 }
 
+/*
+ * Densidade reduzida: formulários longos dentro de um modal. `.campo.denso` é
+ * o que o componente gera; `.campo-administrativo` fica como apelido para os
+ * poucos controles ainda escritos à mão, para que ambos sigam a mesma régua.
+ */
+.campo.denso,
 .campo-administrativo,
 .filtro-administrativo {
   margin-bottom: 14px;
@@ -1831,15 +2388,20 @@ button[type="submit"]:disabled {
   font-weight: 720;
 }
 
+.campo.denso label {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.campo.denso input,
+.campo.denso select,
+.campo.denso textarea,
 .campo-administrativo input,
 .campo-administrativo select,
 .filtro-administrativo select {
-  width: 100%;
   min-height: 44px;
   padding: 10px 12px;
-  color: var(--texto);
-  background: var(--branco);
-  border: 1px solid #ccd4e2;
   border-radius: 9px;
 }
 
@@ -1973,10 +2535,26 @@ button[type="submit"]:disabled {
 }
 
 @media (min-width: 721px) and (max-width: 1024px) {
-  .topo-painel {
-    align-items: stretch;
-    flex-direction: column;
+  /*
+   * Esta regra ficou para trás quando o cabeçalho foi refeito: a grade saiu
+   * de `.topo-painel` para `.faixa-painel`, mas as áreas continuaram aqui
+   * apontando para o pai, que não é mais grade. O efeito era que
+   * `.identidade-painel` e `.acoes-topo` caíam na mesma célula e ficavam uma
+   * por cima da outra entre 721 e 1024 px. Não se via porque o seletor de
+   * igrejas era um bloco branco opaco, que cobria a identidade; ao torná-lo
+   * translúcido, a sobreposição apareceu.
+   */
+  .topo-painel > .faixa-painel {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "identidade conta"
+      "acoes acoes";
+    align-items: center;
   }
+
+  .identidade-painel { grid-area: identidade; }
+  .acoes-topo { grid-area: acoes; }
+  .conta-painel { grid-area: conta; }
 
   .acoes-topo {
     width: 100%;
@@ -2032,20 +2610,92 @@ button[type="submit"]:disabled {
     border-radius: 17px;
   }
 
-  .pagina-painel {
-    padding: 10px;
-  }
+  /* O recuo agora vive em `.conteudo-painel`; as faixas vão de ponta a ponta. */
 
-  .topo-painel,
   .acoes-topo,
-  .apresentacao-painel,
-  .cabecalho-administracao {
+  .apresentacao-painel {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .identidade-painel {
-    align-items: center;
+  /* A conta sobe para a linha da identidade e o sair fica só com o ícone. */
+  .topo-painel > .faixa-painel {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "identidade conta"
+      "acoes acoes";
+    gap: var(--esp-3);
+  }
+
+  .identidade-painel { grid-area: identidade; align-items: center; }
+  .acoes-topo { grid-area: acoes; }
+  .conta-painel { grid-area: conta; }
+
+  /* O nome já aparece na saudação do painel; aqui ele só roubaria largura. */
+  .nome-sessao,
+  .avatar-sessao {
+    display: none;
+  }
+
+  .botao-sair {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 9px;
+    justify-content: center;
+  }
+
+  .texto-sair {
+    display: none;
+  }
+
+  /*
+   * O menu desce para a base, ao alcance do polegar. `env(safe-area-inset-bottom)`
+   * mantém a barra acima do indicador do iPhone.
+   */
+  .navegacao-interna {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    border-top: 1px solid var(--borda);
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -6px 18px rgba(9, 22, 63, 0.07);
+  }
+
+  .navegacao-interna > .faixa-painel {
+    padding-inline: var(--esp-1);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0;
+    overflow: visible;
+  }
+
+  .navegacao-interna button {
+    min-height: 56px;
+    padding: 7px 2px 8px;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    font-size: var(--txt-xs);
+  }
+
+  .navegacao-interna button.ativo {
+    color: var(--azul-900);
+    box-shadow: none;
+  }
+
+  .icone-secao { display: block; }
+  .rotulo-secao-curto { display: block; }
+  .rotulo-secao { display: none; }
+
+  /* Espaço para o conteúdo não terminar atrás da barra fixa. */
+  .conteudo-painel {
+    padding: var(--esp-4) var(--esp-4) var(--esp-5);
+  }
+
+  .rodape-painel > .faixa-painel {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
   .seletor-igreja {
@@ -2131,10 +2781,6 @@ button[type="submit"]:disabled {
     padding: 18px;
   }
 
-  .cabecalho-administracao > button {
-    width: 100%;
-  }
-
   .linha-formulario,
   .linha-endereco,
   .linha-localidade {
@@ -2212,6 +2858,10 @@ button[type="submit"]:disabled {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+
+  .cartao-esqueleto {
+    animation: none;
+  }
 }
 
 /* Convite A4 com QR Code */
@@ -2246,7 +2896,7 @@ button[type="submit"]:disabled {
 .acoes-cartaz a {
   color: var(--azul-900);
   background: var(--branco);
-  border: 1px solid #cbd2df;
+  border: 1px solid var(--borda-campo);
 }
 
 .acoes-cartaz button {
@@ -2836,5 +3486,324 @@ button[type="submit"]:disabled {
   .endereco-rodape-cartaz {
     display: block;
     font-size: 2.8mm;
+  }
+}
+
+
+.filtros-membros button[type="submit"] {
+  width: auto;
+  min-height: 44px;
+  flex: 0 0 auto;
+  padding: 10px 17px;
+}
+
+/* Ajustes V2: mesma linguagem visual do acolhimento, sem afetar visitantes. */
+.pagina-formulario-membros .identidade-publica { flex: 1; }
+.pagina-formulario-membros .identidade-publica strong { white-space: normal; overflow-wrap: anywhere; }
+.pagina-formulario-membros .cartao-formulario { min-width: 0; }
+.formulario-membro .campos-membro, .formulario-membro fieldset,
+.formulario-membro .grade-campos-membro { min-width: 0; max-width: 100%; }
+.grupo-campos-membro legend em { color: var(--vermelho); font-style: normal; }
+.opcoes-membro { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.opcao-membro { position: relative; display: flex; align-items: center; gap: 10px; min-height: 52px;
+  min-width: 0; padding: 12px; color: var(--texto); background: var(--branco); border: 1px solid var(--borda-campo);
+  border-radius: 12px; cursor: pointer; font-size: .94rem; line-height: 1.35; overflow-wrap: anywhere; }
+.opcao-membro.selecionada { color: var(--azul-900); border-color: var(--azul-600); background: var(--azul-100); font-weight: 750; }
+.opcao-membro:focus-within { outline: 3px solid var(--foco); outline-offset: 2px; }
+.marcador-opcao-membro { display: grid; place-items: center; flex: 0 0 20px; height: 20px;
+  border: 1px solid #abb6ca; border-radius: 50%; color: transparent; }
+.selecionada .marcador-opcao-membro { color: var(--branco); background: var(--azul-600); border-color: var(--azul-600); }
+.opcoes-batismo { grid-column: 1 / -1; grid-template-columns: 1fr; }
+.formulario-membro > button { display: flex; justify-content: center; gap: 16px; width: 100%; min-height: 54px; }
+.formulario-membro .aviso-privacidade { min-width: 0; }
+.topo-cartao-membro > div { min-width: 0; }
+.gestao-membros .botao-secundario { color: var(--azul-900); background: var(--branco);
+  border-color: #cdd5e3; font-weight: 720; }
+@media (hover: hover) {
+  .gestao-membros .botao-secundario:hover { background: var(--azul-100); }
+}
+.voltar-lista-membros { flex-shrink: 0; min-height: 44px; }
+.convite-membros .texto-cartaz h1 { font-size: 8.6mm; }
+@media (max-width: 720px) {
+  .pagina-formulario-membros .topo-publico { align-items: flex-start; }
+  .grupo-campos-membro { padding: 15px; }
+  .grade-campos-membro { grid-template-columns: minmax(0,1fr); }
+  .formulario-membro .confirmacao-privacidade { padding: 16px; }
+}
+@media (max-width: 420px) {
+  .opcoes-membro { grid-template-columns: minmax(0,1fr); }
+  .pagina-formulario-membros .cartao-formulario { padding: 22px 18px; }
+}
+@media (max-width: 900px) {
+  .convite-membros .texto-cartaz h1 { font-size: clamp(1.6rem,4vw,2.8rem); }
+}
+
+/*
+ * Aniversariantes (V4).
+ *
+ * A tela reusa o que o cadastro de membros já tem: `.apresentacao-painel` com
+ * `.resumo-painel`, as abas `.abas-membros`, o cartão `.lista-membros`, o
+ * avatar `.avatar-membro`, a pílula `.selo-membro`, o anúncio `.estado-lista`
+ * e o vazio `.vazio-membros`. Aqui ficam só as partes que não existiam.
+ *
+ * A linha é própria, e não `.linha-membro`, por um motivo de comportamento:
+ * `.linha-membro` é um botão — a linha inteira é clicável e tem `cursor:
+ * pointer`. Aqui o clique é só no botão de parabenizar, e a linha não leva a
+ * nenhuma outra tela.
+ */
+
+/* Duas variantes da pílula que já existia, em vez de outra pílula. */
+.selo-membro.funcao {
+  color: var(--texto-rotulo);
+  background: #eef1f7;
+}
+
+.selo-membro.atencao {
+  color: #7a4a05;
+  background: var(--dourado-claro);
+}
+
+.recorte-aniversarios {
+  margin: var(--esp-4) 0 calc(var(--esp-2) * -1);
+  color: var(--texto-rotulo);
+  font-size: var(--txt-md);
+  font-weight: 800;
+}
+
+.grupo-aniversarios + .grupo-aniversarios .dia-aniversarios {
+  border-top: 1px solid var(--borda);
+}
+
+.dia-aniversarios {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  color: var(--texto-rotulo);
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--borda);
+  font-size: var(--txt-sm);
+  font-weight: 800;
+}
+
+.selo-dia-hoje {
+  padding: 2px 9px;
+  color: var(--branco);
+  background: var(--verde);
+  border-radius: 99px;
+  font-size: var(--txt-xs);
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.linha-aniversario {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border-bottom: 1px solid var(--borda);
+}
+
+.grupo-aniversarios:last-child .linha-aniversario:last-child {
+  border-bottom: 0;
+}
+
+.dados-aniversario {
+  min-width: 0;
+}
+
+.dados-aniversario strong,
+.dados-aniversario small,
+.idade-aniversario {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.idade-aniversario {
+  margin-top: 2px;
+  color: var(--texto-rotulo);
+  font-size: var(--txt-sm);
+  font-weight: 600;
+}
+
+.dados-aniversario small {
+  margin-top: 3px;
+  color: var(--texto-suave);
+  font-size: var(--txt-sm);
+}
+
+.selos-aniversario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+  margin-top: var(--esp-2);
+}
+
+.icone-whatsapp {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: currentColor;
+}
+
+/*
+ * Sem conversa a abrir. Não é um botão desativado: um botão que não faz nada
+ * só atrapalha quem navega por teclado. É o motivo, escrito.
+ */
+.sem-whatsapp {
+  max-width: 12rem;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--txt-sm);
+  text-align: right;
+}
+
+.passados-aniversarios {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  color: var(--texto-rotulo);
+  background: #f2f5fa;
+  border: 0;
+  border-bottom: 1px solid var(--borda);
+  font-family: inherit;
+  font-size: var(--txt-sm);
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .passados-aniversarios:hover {
+    background: #e8eef7;
+  }
+}
+
+.link-aniversarios {
+  min-height: 44px;
+  padding: 10px 2px;
+  color: var(--azul-700);
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: var(--txt-sm);
+  font-weight: 750;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.aviso-sem-data {
+  margin-top: var(--esp-4);
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  background: var(--dourado-claro);
+  border: 1px solid #e8d4a0;
+  border-radius: var(--raio-md);
+}
+
+.aviso-sem-data p {
+  margin: 0;
+  color: #5c3a05;
+  font-size: var(--txt-sm);
+}
+
+.aviso-sem-data .link-aniversarios {
+  color: #6b3f05;
+}
+
+/*
+ * O sinal de aniversário hoje, no menu.
+ *
+ * Fica em qualquer seção em que o pastor esteja — é o que o chama para cá
+ * quando ele entra. A cor não carrega a informação sozinha: a contagem entra
+ * no `aria-label` do botão, em NavegacaoPainel.tsx.
+ */
+.sinal-hoje {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--sinal);
+  border-radius: 50%;
+}
+
+@media (max-width: 720px) {
+  /*
+   * Rede de segurança: as abas são três, com contador em cada, e o nome do mês
+   * muda de tamanho ao longo do ano. Se um dia não couberem, rolam na
+   * horizontal em vez de empurrar a página inteira. Enquanto couberem, esta
+   * regra não muda nada do que se vê.
+   */
+  .abas-membros {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .abas-membros::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * As três abas pediam 370 px nos 327 que sobram a 375 px de tela. O respiro
+   * lateral cai de 17 px para 9 px, o que devolve 54 px e faz as três
+   * caberem; a altura do alvo não muda.
+   */
+  .abas-membros button {
+    padding-inline: 9px;
+  }
+
+  /*
+   * Na barra inferior o botão é uma grade centralizada, então o ponto sai do
+   * fluxo e encosta no ícone, com anel branco para não se confundir com ele.
+   */
+  .navegacao-interna button {
+    position: relative;
+  }
+
+  .navegacao-interna .sinal-hoje {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: 6px;
+    border: 2px solid var(--branco);
+  }
+
+  .linha-aniversario {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: var(--esp-3);
+    padding: var(--esp-3);
+  }
+
+  .avatar-membro {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* O botão passa para a terceira linha, atravessando as duas colunas. */
+  .linha-aniversario > .botao-principal,
+  .linha-aniversario > .sem-whatsapp {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    text-align: center;
+  }
+
+  .linha-aniversario > .botao-principal {
+    min-height: 48px;
   }
 }

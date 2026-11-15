@@ -18,8 +18,11 @@ public sealed class Igreja
     public string Cep { get; private set; } = string.Empty;
     public string Cidade { get; private set; } = string.Empty;
     public string Estado { get; private set; } = string.Empty;
+    public string? CultoPrincipal { get; private set; }
+    public string? Instagram { get; private set; }
     public bool Ativa { get; private set; }
     public string IdentificadorPublico { get; private set; } = string.Empty;
+    public string IdentificadorPublicoMembros { get; private set; } = string.Empty;
     public DateTimeOffset CriadaEm { get; private set; }
     public DateTimeOffset AtualizadaEm { get; private set; }
 
@@ -32,7 +35,9 @@ public sealed class Igreja
         string cep,
         string cidade,
         string estado,
-        DateTimeOffset agora)
+        DateTimeOffset agora,
+        string? cultoPrincipal = null,
+        string? instagram = null)
     {
         ValidarDados(nome, logradouro, numero, bairro, cep, cidade, estado);
 
@@ -47,8 +52,11 @@ public sealed class Igreja
             Cep = NormalizarCep(cep),
             Cidade = cidade.Trim(),
             Estado = estado.Trim().ToUpperInvariant(),
+            CultoPrincipal = NormalizarComplemento(cultoPrincipal),
+            Instagram = NormalizarInstagram(instagram),
             Ativa = true,
             IdentificadorPublico = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(18)),
+            IdentificadorPublicoMembros = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(18)),
             CriadaEm = agora,
             AtualizadaEm = agora
         };
@@ -63,7 +71,9 @@ public sealed class Igreja
         string cep,
         string cidade,
         string estado,
-        DateTimeOffset agora)
+        DateTimeOffset agora,
+        string? cultoPrincipal = null,
+        string? instagram = null)
     {
         ValidarDados(nome, logradouro, numero, bairro, cep, cidade, estado);
 
@@ -75,6 +85,8 @@ public sealed class Igreja
         Cep = NormalizarCep(cep);
         Cidade = cidade.Trim();
         Estado = estado.Trim().ToUpperInvariant();
+        CultoPrincipal = NormalizarComplemento(cultoPrincipal);
+        Instagram = NormalizarInstagram(instagram);
         AtualizadaEm = agora;
     }
 
@@ -114,4 +126,7 @@ public sealed class Igreja
 
     private static string? NormalizarComplemento(string? complemento) =>
         string.IsNullOrWhiteSpace(complemento) ? null : complemento.Trim();
+
+    private static string? NormalizarInstagram(string? instagram) =>
+        string.IsNullOrWhiteSpace(instagram) ? null : "@" + instagram.Trim().TrimStart('@');
 }

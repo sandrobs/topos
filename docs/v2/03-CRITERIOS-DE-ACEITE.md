@@ -14,7 +14,7 @@ Cada igreja possui um link e QR Code próprios para membros, separados do link e
 
 Uma pessoa consegue abrir e enviar o formulário de membros em celular, tablet e computador. Campos inválidos recebem mensagens claras e o envio válido recebe confirmação. O público não descobre, pela resposta, se o WhatsApp já está cadastrado.
 
-Nome, sobrenome, WhatsApp e reconhecimento do aviso são obrigatórios; os demais dados aprovados são opcionais. O autoenvio desta etapa é destinado a adultos.
+Nome, sobrenome, WhatsApp, função na igreja e reconhecimento do aviso são obrigatórios; os demais dados aprovados são opcionais. O autoenvio desta etapa é destinado a adultos. Função começa em Membro, com as opções Membro, Diácono, Presbítero e Pastor, nesta ordem. A função não concede permissões no sistema.
 
 ### CA-V2-03 — Aprovação explícita
 
@@ -29,6 +29,8 @@ Um Pastor da Igreja B não encontra, abre ou altera solicitação ou membro da I
 Pastor e Administrador conseguem listar, buscar por nome ou WhatsApp, abrir e atualizar membros sob sua responsabilidade. Dados pendentes não são confundidos com membros aprovados.
 
 A lista apresenta páginas de resultados, busca por nome ou WhatsApp, filtro por situação e contadores de pendentes, ativos e inativos utilizáveis em celular, tablet e computador.
+
+O detalhe de membro ou solicitação tem ação visível “Voltar à lista”, preservando pesquisa, filtro, página, aba e igreja selecionada.
 
 ### CA-V2-06 — Inclusão de membros atuais
 
@@ -47,6 +49,29 @@ O formulário apresenta aviso específico de membros e registra sua versão. Apr
 ### CA-V2-09 — Regressão do MVP
 
 Após a entrega da V2, ainda é possível usar o QR Code de visitantes, enviar um cadastro de visitante, acompanhar no Kanban, entrar em contato por WhatsApp e concluir atendimento. As restrições de igreja e perfil continuam válidas.
+
+### CA-V2-11 — Convites independentes da tela
+
+Visitantes e membros têm PDFs gerados no servidor: página inteira A4 e quatro
+convites numa única folha A4, com margens e guias de corte. A foto mostra o altar
+e a cruz sem sombreado adicional. Logo, textos e endereço não se sobrepõem nem
+saem da página. Todos os QR Codes são legíveis e apontam ao formulário permanente
+da igreja correspondente, sem alterar tokens existentes.
+
+O convite de membros destaca “Cadastro de membros”, “Uma família no amor de
+Deus”, “Ainda há lugar”, Lucas 14:22 e a referência discreta Romanos 12:4-5.
+“Voltar ao painel” retorna à gestão de membros da mesma igreja, inclusive quando
+o convite estiver indisponível. A impressão não usa o HTML responsivo da tela.
+
+No PDF de **visitantes com quatro por A4**, aplicar os ajustes aprovados em
+`07-CONVITE-COMPACTO-2026-11-14.md`: apoio próximo ao título e mais escuro,
+aviso pequeno de uso dos dados, chamada “Aponte a câmera do celular” e rodapé
+mais baixo com culto principal e Instagram configurados na própria igreja e
+endereço sem CEP. Campos opcionais vazios são omitidos. Preservar a foto, o
+QR e os demais modelos, inclusive quando a igreja não tiver essas configurações.
+
+Todos os modelos PDF devem recortar a logo em círculo, sem exibir os cantos
+quadrados da imagem. O recorte não pode ocultar os textos ou a foto do convite.
 
 ## Expansão
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   ErroDaApi,
   alterarSituacaoIgreja,
@@ -11,12 +11,16 @@ import {
   obterSenhaSugerida,
   redefinirSenhaUsuario,
   type DadosIgreja,
+  type ErrosValidacao,
   type IgrejaInterna,
   type NovoUsuario,
   type PerfilUsuario,
   type Sessao,
   type UsuarioGestao,
 } from "./api";
+import { CampoFormulario } from "./CampoFormulario";
+import { Dialogo, DialogoConfirmacao } from "./Dialogo";
+import { focarPrimeiroErro } from "./foco";
 import { formatarCep, formatarEndereco } from "./formatadores";
 
 const unidadesFederativas = [
@@ -38,6 +42,8 @@ const igrejaVazia: DadosIgreja = {
   cep: "",
   cidade: "",
   estado: "",
+  cultoPrincipal: "",
+  instagram: "",
 };
 
 export function GestaoIgrejas({
@@ -51,6 +57,14 @@ export function GestaoIgrejas({
   const [igrejaEmEdicao, setIgrejaEmEdicao] = useState<IgrejaInterna | null>(null);
   const [formularioAberto, setFormularioAberto] = useState(false);
   const [salvando, setSalvando] = useState(false);
+  const [erros, setErros] = useState<ErrosValidacao>({});
+  const formularioRef = useRef<HTMLFormElement>(null);
+  const [confirmacao, setConfirmacao] = useState<{ titulo: string; descricao: string; rotulo: string; acao: () => void } | null>(null);
+
+  // Só depois do commit do React os aria-invalid existem no DOM.
+  useEffect(() => {
+    if (Object.keys(erros).length) focarPrimeiroErro(formularioRef.current);
+  }, [erros]);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
@@ -73,6 +87,8 @@ export function GestaoIgrejas({
       cep: formatarCep(igreja.cep),
       cidade: igreja.cidade,
       estado: igreja.estado,
+      cultoPrincipal: igreja.cultoPrincipal ?? "",
+      instagram: igreja.instagram ?? "",
     });
     setErro("");
     setMensagem("");
@@ -83,6 +99,7 @@ export function GestaoIgrejas({
     evento.preventDefault();
     setSalvando(true);
     setErro("");
+    setErros({});
     setMensagem("");
     try {
       if (igrejaEmEdicao) {
@@ -96,15 +113,14 @@ export function GestaoIgrejas({
       setFormularioAberto(false);
     } catch (falha) {
       setErro(obterMensagemErro(falha));
+      if (falha instanceof ErroDaApi) setErros(falha.erros);
     } finally {
       setSalvando(false);
     }
   }
 
   async function alternarSituacao(igreja: IgrejaInterna) {
-    const acao = igreja.ativa ? "desativar" : "ativar";
-    if (!window.confirm(`Deseja ${acao} a igreja ${igreja.nome}?`)) return;
-
+    setConfirmacao(null);
     setErro("");
     setMensagem("");
     try {
@@ -118,13 +134,22 @@ export function GestaoIgrejas({
 
   return (
     <section className="secao-administracao" aria-labelledby="titulo-igrejas">
-      <header className="cabecalho-administracao">
+      <header className="apresentacao-painel">
         <div>
           <p className="rotulo-painel">Administração</p>
           <h1 id="titulo-igrejas">Igrejas</h1>
           <p>Gerencie os dados, o endereço público e a disponibilidade de cada igreja.</p>
         </div>
-        <button type="button" onClick={abrirNovo}>+ Nova igreja</button>
+        <div className="lado-painel">
+          <div className="acoes-painel">
+            <button type="button" className="botao-principal" onClick={abrirNovo}>Nova igreja</button>
+          </div>
+          <div className="resumo-painel" aria-label="Resumo das igrejas">
+            <div><strong>{igrejas.length}</strong><span>Total</span></div>
+            <div><strong>{igrejas.filter((item) => item.ativa).length}</strong><span>Ativas</span></div>
+            <div><strong>{igrejas.filter((item) => !item.ativa).length}</strong><span>Inativas</span></div>
+          </div>
+        </div>
       </header>
 
       {erro && <div className="alerta" role="alert">{erro}</div>}
@@ -138,10 +163,12 @@ export function GestaoIgrejas({
               <small>{igreja.cidade} · {igreja.estado}</small>
             </header>
             <p className="endereco-administrativo">{formatarEndereco(igreja)}</p>
+            {igreja.cultoPrincipal && <p>{igreja.cultoPrincipal}</p>}
+            {igreja.instagram && <p>{igreja.instagram}</p>}
             <div className="acoes-cartao-administrativo">
               <button type="button" className="botao-secundario" onClick={() => abrirEdicao(igreja)}>Editar</button>
               <a className="botao-secundario" href={`/qrcode/${igreja.id}`} target="_blank" rel="noreferrer">Convite e QR</a>
-              <button type="button" className={igreja.ativa ? "botao-perigo" : "botao-secundario"} onClick={() => void alternarSituacao(igreja)}>
+              <button type="button" className={igreja.ativa ? "botao-perigo" : "botao-secundario"} onClick={() => setConfirmacao({ titulo: igreja.ativa ? "Desativar igreja" : "Ativar igreja", descricao: igreja.ativa ? `A igreja ${igreja.nome} deixa de aparecer para novos visitantes e membros. Os dados já registrados são preservados e ela pode ser reativada depois.` : `A igreja ${igreja.nome} volta a receber visitantes e membros pelo QR Code.`, rotulo: igreja.ativa ? "Desativar" : "Ativar", acao: () => void alternarSituacao(igreja) })}>
                 {igreja.ativa ? "Desativar" : "Ativar"}
               </button>
             </div>
@@ -150,25 +177,25 @@ export function GestaoIgrejas({
       </div>
 
       {formularioAberto && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setFormularioAberto(false)}>
-          <form className="formulario-administrativo" onSubmit={salvar}>
+        <Dialogo rotuladoPor="titulo-formulario-igreja" aoFechar={() => setFormularioAberto(false)}>
+          <form ref={formularioRef} className="formulario-administrativo" onSubmit={salvar} noValidate>
             <header>
-              <div><p>Igreja</p><h2>{igrejaEmEdicao ? "Editar cadastro" : "Nova igreja"}</h2></div>
+              <div><p>Igreja</p><h2 id="titulo-formulario-igreja">{igrejaEmEdicao ? "Editar cadastro" : "Nova igreja"}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setFormularioAberto(false)}>×</button>
             </header>
             {erro && <div className="alerta" role="alert">{erro}</div>}
-            <Campo label="Nome da igreja" valor={formulario.nome} aoAlterar={(nome) => setFormulario({ ...formulario, nome })} />
+            <Campo campo="nome" erros={erros} label="Nome da igreja" valor={formulario.nome} aoAlterar={(nome) => setFormulario({ ...formulario, nome })} />
             <div className="linha-formulario linha-endereco">
-              <Campo label="Rua/Avenida" valor={formulario.logradouro} aoAlterar={(logradouro) => setFormulario({ ...formulario, logradouro })} />
-              <Campo label="Número" valor={formulario.numero} aoAlterar={(numero) => setFormulario({ ...formulario, numero })} />
+              <Campo campo="logradouro" erros={erros} label="Rua/Avenida" valor={formulario.logradouro} aoAlterar={(logradouro) => setFormulario({ ...formulario, logradouro })} />
+              <Campo campo="numero" erros={erros} label="Número" valor={formulario.numero} aoAlterar={(numero) => setFormulario({ ...formulario, numero })} />
             </div>
             <div className="linha-formulario">
-              <Campo label="Bairro" valor={formulario.bairro} aoAlterar={(bairro) => setFormulario({ ...formulario, bairro })} />
-              <Campo label="Complemento (opcional)" obrigatorio={false} valor={formulario.complemento ?? ""} aoAlterar={(complemento) => setFormulario({ ...formulario, complemento })} />
+              <Campo campo="bairro" erros={erros} label="Bairro" valor={formulario.bairro} aoAlterar={(bairro) => setFormulario({ ...formulario, bairro })} />
+              <Campo campo="complemento" erros={erros} label="Complemento (opcional)" obrigatorio={false} valor={formulario.complemento ?? ""} aoAlterar={(complemento) => setFormulario({ ...formulario, complemento })} />
             </div>
             <div className="linha-formulario linha-localidade">
-              <Campo label="CEP" valor={formulario.cep} placeholder="00000-000" aoAlterar={(cep) => setFormulario({ ...formulario, cep: formatarCep(cep) })} />
-              <Campo label="Cidade" valor={formulario.cidade} aoAlterar={(cidade) => setFormulario({ ...formulario, cidade })} />
+              <Campo campo="cep" erros={erros} label="CEP" valor={formulario.cep} placeholder="00000-000" aoAlterar={(cep) => setFormulario({ ...formulario, cep: formatarCep(cep) })} />
+              <Campo campo="cidade" erros={erros} label="Cidade" valor={formulario.cidade} aoAlterar={(cidade) => setFormulario({ ...formulario, cidade })} />
               <label className="campo-administrativo">UF
                 <select required value={formulario.estado} onChange={(evento) => setFormulario({ ...formulario, estado: evento.target.value })}>
                   <option value="">Selecione</option>
@@ -176,12 +203,28 @@ export function GestaoIgrejas({
                 </select>
               </label>
             </div>
+            <Campo campo="cultoPrincipal" erros={erros} label="Culto principal (opcional)" obrigatorio={false} valor={formulario.cultoPrincipal ?? ""}
+              tamanhoMaximo={120} placeholder="CULTO DA FAMÍLIA · Domingo, 19h"
+              aoAlterar={(cultoPrincipal) => setFormulario({ ...formulario, cultoPrincipal })} />
+            <Campo campo="instagram" erros={erros} label="Instagram (opcional)" obrigatorio={false} valor={formulario.instagram ?? ""}
+              tamanhoMaximo={100} placeholder="@igrejadecristotm"
+              aoAlterar={(instagram) => setFormulario({ ...formulario, instagram })} />
+            <p>O culto principal e o Instagram aparecem no convite de visitantes com 4 convites por A4.</p>
             <footer>
               <button type="button" className="botao-secundario" onClick={() => setFormularioAberto(false)}>Cancelar</button>
               <button type="submit" disabled={salvando}>{salvando ? "Salvando…" : "Salvar igreja"}</button>
             </footer>
           </form>
-        </div>
+        </Dialogo>
+      )}
+      {confirmacao && (
+        <DialogoConfirmacao
+          titulo={confirmacao.titulo}
+          descricao={confirmacao.descricao}
+          rotuloConfirmar={confirmacao.rotulo}
+          aoConfirmar={confirmacao.acao}
+          aoCancelar={() => setConfirmacao(null)}
+        />
       )}
     </section>
   );
@@ -200,6 +243,14 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
   const [senhaEntregavel, setSenhaEntregavel] = useState("");
   const [usuarioRedefinindo, setUsuarioRedefinindo] = useState<UsuarioGestao | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [erros, setErros] = useState<ErrosValidacao>({});
+  const formularioRef = useRef<HTMLFormElement>(null);
+  const [confirmacao, setConfirmacao] = useState<{ titulo: string; descricao: string; rotulo: string; acao: () => void } | null>(null);
+
+  // Só depois do commit do React os aria-invalid existem no DOM.
+  useEffect(() => {
+    if (Object.keys(erros).length) focarPrimeiroErro(formularioRef.current);
+  }, [erros]);
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
 
@@ -253,6 +304,7 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
     evento.preventDefault();
     setSalvando(true);
     setErro("");
+    setErros({});
     setMensagem("");
     try {
       if (usuarioEmEdicao) {
@@ -268,14 +320,14 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
       setFormularioAberto(false);
     } catch (falha) {
       setErro(obterMensagemErro(falha));
+      if (falha instanceof ErroDaApi) setErros(falha.erros);
     } finally {
       setSalvando(false);
     }
   }
 
   async function alternarSituacao(usuario: UsuarioGestao) {
-    const acao = usuario.ativo ? "desativar" : "ativar";
-    if (!window.confirm(`Deseja ${acao} o usuário ${usuario.nome}?`)) return;
+    setConfirmacao(null);
     setErro("");
     setMensagem("");
     try {
@@ -302,6 +354,7 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
     if (!usuarioRedefinindo || !senhaTemporaria) return;
     setSalvando(true);
     setErro("");
+    setErros({});
     try {
       await redefinirSenhaUsuario(usuarioRedefinindo.id, senhaTemporaria);
       setSenhaEntregavel(senhaTemporaria);
@@ -310,6 +363,7 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
       await carregarUsuarios();
     } catch (falha) {
       setErro(obterMensagemErro(falha));
+      if (falha instanceof ErroDaApi) setErros(falha.erros);
     } finally {
       setSalvando(false);
     }
@@ -326,13 +380,22 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
 
   return (
     <section className="secao-administracao" aria-labelledby="titulo-usuarios">
-      <header className="cabecalho-administracao">
+      <header className="apresentacao-painel">
         <div>
           <p className="rotulo-painel">Administração</p>
           <h1 id="titulo-usuarios">Usuários</h1>
           <p>Gerencie acessos, perfis e senhas temporárias.</p>
         </div>
-        <button type="button" onClick={() => void abrirNovo()}>+ Novo usuário</button>
+        <div className="lado-painel">
+          <div className="acoes-painel">
+            <button type="button" className="botao-principal" onClick={() => void abrirNovo()}>Novo usuário</button>
+          </div>
+          <div className="resumo-painel" aria-label="Resumo dos usuários">
+            <div><strong>{usuarios.length}</strong><span>Total</span></div>
+            <div><strong>{usuarios.filter((item) => item.ativo).length}</strong><span>Ativos</span></div>
+            <div><strong>{usuarios.filter((item) => !item.ativo).length}</strong><span>Inativos</span></div>
+          </div>
+        </div>
       </header>
 
       {sessao.perfil === "ADMINISTRADOR" && (
@@ -372,7 +435,7 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
             <div className="acoes-usuario">
               <button type="button" className="botao-secundario" onClick={() => abrirEdicao(usuario)}>Editar</button>
               <button type="button" className="botao-secundario" onClick={() => void abrirRedefinicao(usuario)}>Nova senha</button>
-              <button type="button" className={usuario.ativo ? "botao-perigo" : "botao-secundario"} onClick={() => void alternarSituacao(usuario)}>{usuario.ativo ? "Desativar" : "Ativar"}</button>
+              <button type="button" className={usuario.ativo ? "botao-perigo" : "botao-secundario"} onClick={() => setConfirmacao({ titulo: usuario.ativo ? "Desativar acesso" : "Reativar acesso", descricao: usuario.ativo ? `${usuario.nome} perde o acesso ao sistema. O histórico de ações é preservado e o acesso pode ser devolvido depois.` : `${usuario.nome} volta a poder entrar no sistema.`, rotulo: usuario.ativo ? "Desativar" : "Reativar", acao: () => void alternarSituacao(usuario) })}>{usuario.ativo ? "Desativar" : "Ativar"}</button>
             </div>
           </article>
         ))}
@@ -380,15 +443,15 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
       </div>
 
       {formularioAberto && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setFormularioAberto(false)}>
-          <form className="formulario-administrativo formulario-usuario" onSubmit={salvar}>
+        <Dialogo rotuladoPor="titulo-formulario-usuario" aoFechar={() => setFormularioAberto(false)}>
+          <form ref={formularioRef} className="formulario-administrativo formulario-usuario" onSubmit={salvar} noValidate>
             <header>
-              <div><p>Usuário</p><h2>{usuarioEmEdicao ? "Editar acesso" : "Novo acesso"}</h2></div>
+              <div><p>Usuário</p><h2 id="titulo-formulario-usuario">{usuarioEmEdicao ? "Editar acesso" : "Novo acesso"}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setFormularioAberto(false)}>×</button>
             </header>
             {erro && <div className="alerta" role="alert">{erro}</div>}
-            <Campo label="Nome completo" valor={nome} aoAlterar={setNome} />
-            <Campo label="E-mail de acesso" tipo="email" valor={email} aoAlterar={setEmail} />
+            <Campo campo="nome" erros={erros} label="Nome completo" valor={nome} aoAlterar={setNome} />
+            <Campo campo="email" erros={erros} label="E-mail de acesso" tipo="email" valor={email} aoAlterar={setEmail} />
             <label className="campo-administrativo">Perfil
               <select value={perfil} onChange={(evento) => setPerfil(evento.target.value as PerfilUsuario)}>
                 {igrejaId ? (
@@ -413,12 +476,12 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
               <button type="submit" disabled={salvando}>{salvando ? "Salvando…" : "Salvar usuário"}</button>
             </footer>
           </form>
-        </div>
+        </Dialogo>
       )}
 
       {usuarioRedefinindo && (
-        <div className="sobreposicao" role="presentation" onMouseDown={(evento) => evento.target === evento.currentTarget && setUsuarioRedefinindo(null)}>
-          <section className="formulario-administrativo formulario-senha" role="dialog" aria-modal="true" aria-labelledby="titulo-redefinir-senha">
+        <Dialogo rotuladoPor="titulo-redefinir-senha" aoFechar={() => setUsuarioRedefinindo(null)}>
+          <section className="formulario-administrativo formulario-senha">
             <header>
               <div><p>Redefinir acesso</p><h2 id="titulo-redefinir-senha">Nova senha para {usuarioRedefinindo.nome}</h2></div>
               <button type="button" className="fechar" aria-label="Fechar" onClick={() => setUsuarioRedefinindo(null)}>×</button>
@@ -436,31 +499,60 @@ export function GestaoUsuarios({ sessao, igrejas }: { sessao: Sessao; igrejas: I
               <button type="button" disabled={salvando || !senhaTemporaria} onClick={() => void confirmarRedefinicao()}>{salvando ? "Redefinindo…" : "Confirmar nova senha"}</button>
             </footer>
           </section>
-        </div>
+        </Dialogo>
+      )}
+      {confirmacao && (
+        <DialogoConfirmacao
+          titulo={confirmacao.titulo}
+          descricao={confirmacao.descricao}
+          rotuloConfirmar={confirmacao.rotulo}
+          aoConfirmar={confirmacao.acao}
+          aoCancelar={() => setConfirmacao(null)}
+        />
       )}
     </section>
   );
 }
 
+/**
+ * Campo da área administrativa. Delega ao componente único do sistema, em
+ * densidade reduzida — são formulários longos dentro de um modal. `campo` é a
+ * chave que o servidor usa para devolver o erro, e também o id do controle.
+ */
 function Campo({
+  campo,
   label,
   valor,
   aoAlterar,
+  erros = {},
   obrigatorio = true,
   tipo = "text",
   placeholder,
+  tamanhoMaximo,
 }: {
+  campo: string;
   label: string;
   valor: string;
   aoAlterar: (valor: string) => void;
+  erros?: ErrosValidacao;
   obrigatorio?: boolean;
   tipo?: "text" | "email";
   placeholder?: string;
+  tamanhoMaximo?: number;
 }) {
   return (
-    <label className="campo-administrativo">{label}
-      <input type={tipo} required={obrigatorio} value={valor} placeholder={placeholder} onChange={(evento) => aoAlterar(evento.target.value)} />
-    </label>
+    <CampoFormulario
+      denso
+      id={campo}
+      rotulo={label}
+      valor={valor}
+      aoAlterar={aoAlterar}
+      erro={erros[campo]?.[0]}
+      obrigatorio={obrigatorio}
+      tipo={tipo}
+      placeholder={placeholder}
+      maxLength={tamanhoMaximo}
+    />
   );
 }
 

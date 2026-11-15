@@ -1,6 +1,6 @@
 # V2 — Cadastro e gestão de membros
 
-**Estado:** planejamento funcional. A direção, os campos principais, o QR Code próprio e a inclusão manual foram aprovados em 25/09/2026. As decisões ainda marcadas como pendentes precisam de validação antes da implementação correspondente.
+**Estado:** núcleo publicado em produção em 14/11/2026, após aprovação expressa do responsável. O aviso específico de adultos aprovado em 03/10/2026 está configurado. A validação pública pós-deploy foi concluída; a conferência autenticada com a senha atual do responsável está pendente. A operação com dados reais de menores continua pendente. Consulte o [registro de publicação](08-PUBLICACAO-2026-11-14.md).
 
 ## Objetivo
 
@@ -13,6 +13,10 @@ Permitir que membros da igreja preencham um formulário próprio, vinculado à s
 3. [Critérios de aceite](03-CRITERIOS-DE-ACEITE.md)
 4. [Decisões pendentes](04-DECISOES-PENDENTES.md)
 5. [Baseline histórica do MVP](../BASELINE-MVP-2026-09-25.md)
+6. [Implementação e validação local](05-IMPLEMENTACAO-LOCAL.md)
+7. [Ajustes e aviso aprovados em 03/10/2026](06-AJUSTES-APROVADOS-2026-10-03.md)
+8. [Ajustes do convite compacto de visitantes em 14/11/2026](07-CONVITE-COMPACTO-2026-11-14.md)
+9. [Publicação em produção em 14/11/2026](08-PUBLICACAO-2026-11-14.md)
 
 ## Regra de precedência
 

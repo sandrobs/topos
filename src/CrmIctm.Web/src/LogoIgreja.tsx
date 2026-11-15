@@ -3,7 +3,7 @@ export function LogoIgreja({ className = "" }: { className?: string }) {
 
   return (
     <span className={classes}>
-      <img src="/logo-igreja.jpg" alt="Logo da Igreja de Cristo" />
+      <img src="/logo-igreja.png" alt="Logo da Igreja de Cristo" width={192} height={192} />
     </span>
   );
 }

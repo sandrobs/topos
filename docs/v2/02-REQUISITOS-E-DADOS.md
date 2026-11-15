@@ -28,6 +28,7 @@ Cada solicitação e cada membro pertence a uma única igreja. O Administrador p
 |---|---|---|
 | Nome e sobrenome, em campos separados | Obrigatórios | Identificação e consulta |
 | WhatsApp com DDD | Obrigatório | Contato e conferência |
+| Função na igreja | Obrigatória; padrão Membro | Seleção única: Membro, Diácono, Presbítero, Pastor; não altera permissões |
 | Reconhecimento do aviso de privacidade de membros | Obrigatório | Registrar ciência do uso dos dados |
 | Data de nascimento | Opcional | Acompanhamento e identificação |
 | E-mail | Opcional | Canal adicional, sem substituir WhatsApp |

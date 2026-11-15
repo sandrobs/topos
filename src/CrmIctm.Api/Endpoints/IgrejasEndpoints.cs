@@ -60,8 +60,11 @@ public static class IgrejasEndpoints
                 x.Cep,
                 x.Cidade,
                 x.Estado,
+                x.CultoPrincipal,
+                x.Instagram,
                 x.Ativa,
                 x.IdentificadorPublico,
+                x.IdentificadorPublicoMembros,
                 x.CriadaEm,
                 x.AtualizadaEm
             })
@@ -104,7 +107,9 @@ public static class IgrejasEndpoints
             requisicao.Cep!,
             requisicao.Cidade!,
             requisicao.Estado!,
-            agora);
+            agora,
+            requisicao.CultoPrincipal,
+            requisicao.Instagram);
 
         banco.Igrejas.Add(igreja);
         banco.RegistrosAuditoriaAdministrativa.Add(RegistroAuditoriaAdministrativa.Criar(
@@ -160,7 +165,9 @@ public static class IgrejasEndpoints
             requisicao.Cep!,
             requisicao.Cidade!,
             requisicao.Estado!,
-            agora);
+            agora,
+            requisicao.CultoPrincipal,
+            requisicao.Instagram);
         banco.RegistrosAuditoriaAdministrativa.Add(RegistroAuditoriaAdministrativa.Criar(
             "IGREJA",
             igreja.Id,
@@ -255,12 +262,13 @@ public static class IgrejasEndpoints
 
     private static async Task<IResult> ObterConvitePdfAsync(
         Guid id,
+        bool? quatroPorFolha,
         HttpRequest requisicao,
         HttpResponse resposta,
         IConfiguration configuracao,
         BancoContexto banco,
         UsuarioAtual usuarioAtual,
-        GeradorConviteVisitantesPdf gerador,
+        GeradorConvitesPdf gerador,
         CancellationToken cancellationToken)
     {
         var usuario = await usuarioAtual.ObterAsync(cancellationToken);
@@ -274,8 +282,8 @@ public static class IgrejasEndpoints
         var igreja = await consulta.SingleOrDefaultAsync(cancellationToken);
         if (igreja is null) return Results.NotFound();
 
-        var pdf = gerador.Gerar(igreja, ObterEnderecoFormulario(igreja, requisicao, configuracao));
-        resposta.Headers.ContentDisposition = $"inline; filename=convite-visitantes-{igreja.Id:N}.pdf";
+        var pdf = gerador.Gerar(igreja, ObterEnderecoFormulario(igreja, requisicao, configuracao), quatroPorFolha: quatroPorFolha == true);
+        resposta.Headers.ContentDisposition = $"inline; filename=convite-visitantes-{(quatroPorFolha == true ? "4-por-a4-" : "")}{igreja.Id:N}.pdf";
         resposta.Headers.CacheControl = "no-store, no-cache, must-revalidate";
         resposta.Headers.Pragma = "no-cache";
         resposta.Headers.XContentTypeOptions = "nosniff";
@@ -304,6 +312,17 @@ public static class IgrejasEndpoints
         }
 
         var cep = new string((requisicao.Cep ?? string.Empty).Where(char.IsDigit).ToArray());
+        if (requisicao.CultoPrincipal?.Trim().Length > 120)
+        {
+            erros["cultoPrincipal"] = ["O culto principal deve ter no máximo 120 caracteres."];
+        }
+        var instagram = requisicao.Instagram?.Trim().TrimStart('@');
+        if (!string.IsNullOrWhiteSpace(requisicao.Instagram) &&
+            (string.IsNullOrWhiteSpace(instagram) || instagram.Length > 99 ||
+             instagram.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '.' && c != '_')))
+        {
+            erros["instagram"] = ["Informe somente o nome de usuário do Instagram, com até 99 caracteres, sem espaços ou endereço de site."];
+        }
         if (cep.Length != 8)
         {
             erros["cep"] = ["Informe um CEP válido com oito dígitos."];
