@@ -61,6 +61,8 @@
   --foco: var(--azul-600);
 
   /* Cores recorrentes que não tinham nome. */
+  /* Sinal de atenção no menu. Mede 4,3:1 sobre o branco da faixa. */
+  --sinal: #d9480f;
   --borda-campo: #cbd2df;
   --borda-campo-hover: #9aa8c3;
   --texto-rotulo: #26314a;
@@ -1185,20 +1187,26 @@ button[type="submit"]:disabled {
   grid-template-columns: 34px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 10px;
-  color: var(--texto);
+  /*
+   * Translúcido dentro da faixa, e não um bloco branco opaco com sombra por
+   * cima dela. A borda está a 55% de branco porque é o que mede 3:1 contra o
+   * azul da faixa, como a WCAG 1.4.11 pede para o contorno de um controle —
+   * a 30% ficaria em 2,6:1 e falharia.
+   */
+  color: var(--branco);
   text-align: left;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.74);
-  border-radius: 12px;
-  box-shadow: 0 7px 18px rgba(3, 11, 38, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--raio-md);
+  box-shadow: none;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .gatilho-seletor-igreja:hover,
   .seletor-igreja.aberto .gatilho-seletor-igreja {
-    border-color: #aebfea;
-    box-shadow: 0 8px 22px rgba(3, 11, 38, 0.27);
+    background: rgba(255, 255, 255, 0.17);
+    border-color: rgba(255, 255, 255, 0.82);
   }
 }
 
@@ -1212,8 +1220,8 @@ button[type="submit"]:disabled {
   height: 34px;
   display: grid;
   place-items: center;
-  color: var(--azul-700);
-  background: #edf2ff;
+  color: var(--branco);
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 9px;
   font-size: 1.15rem;
   font-weight: 850;
@@ -1230,19 +1238,19 @@ button[type="submit"]:disabled {
 
 .texto-seletor-igreja strong {
   overflow-wrap: anywhere;
-  color: var(--azul-950);
+  color: var(--branco);
   font-size: 0.86rem;
   line-height: 1.2;
 }
 
 .texto-seletor-igreja small {
   margin-top: 3px;
-  color: var(--texto-suave);
+  color: rgba(255, 255, 255, 0.74);
   font-size: 0.7rem;
 }
 
 .seta-seletor-igreja {
-  color: #6d7a96;
+  color: rgba(255, 255, 255, 0.78);
   font-size: 1.2rem;
   transition: transform 160ms ease;
 }
@@ -2527,17 +2535,26 @@ dialog.sobreposicao::backdrop {
 }
 
 @media (min-width: 721px) and (max-width: 1024px) {
-  .topo-painel {
+  /*
+   * Esta regra ficou para trás quando o cabeçalho foi refeito: a grade saiu
+   * de `.topo-painel` para `.faixa-painel`, mas as áreas continuaram aqui
+   * apontando para o pai, que não é mais grade. O efeito era que
+   * `.identidade-painel` e `.acoes-topo` caíam na mesma célula e ficavam uma
+   * por cima da outra entre 721 e 1024 px. Não se via porque o seletor de
+   * igrejas era um bloco branco opaco, que cobria a identidade; ao torná-lo
+   * translúcido, a sobreposição apareceu.
+   */
+  .topo-painel > .faixa-painel {
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "identidade sair"
+      "identidade conta"
       "acoes acoes";
     align-items: center;
   }
 
   .identidade-painel { grid-area: identidade; }
   .acoes-topo { grid-area: acoes; }
-  .botao-sair { grid-area: sair; }
+  .conta-painel { grid-area: conta; }
 
   .acoes-topo {
     width: 100%;
@@ -3519,4 +3536,274 @@ dialog.sobreposicao::backdrop {
 }
 @media (max-width: 900px) {
   .convite-membros .texto-cartaz h1 { font-size: clamp(1.6rem,4vw,2.8rem); }
+}
+
+/*
+ * Aniversariantes (V4).
+ *
+ * A tela reusa o que o cadastro de membros já tem: `.apresentacao-painel` com
+ * `.resumo-painel`, as abas `.abas-membros`, o cartão `.lista-membros`, o
+ * avatar `.avatar-membro`, a pílula `.selo-membro`, o anúncio `.estado-lista`
+ * e o vazio `.vazio-membros`. Aqui ficam só as partes que não existiam.
+ *
+ * A linha é própria, e não `.linha-membro`, por um motivo de comportamento:
+ * `.linha-membro` é um botão — a linha inteira é clicável e tem `cursor:
+ * pointer`. Aqui o clique é só no botão de parabenizar, e a linha não leva a
+ * nenhuma outra tela.
+ */
+
+/* Duas variantes da pílula que já existia, em vez de outra pílula. */
+.selo-membro.funcao {
+  color: var(--texto-rotulo);
+  background: #eef1f7;
+}
+
+.selo-membro.atencao {
+  color: #7a4a05;
+  background: var(--dourado-claro);
+}
+
+.recorte-aniversarios {
+  margin: var(--esp-4) 0 calc(var(--esp-2) * -1);
+  color: var(--texto-rotulo);
+  font-size: var(--txt-md);
+  font-weight: 800;
+}
+
+.grupo-aniversarios + .grupo-aniversarios .dia-aniversarios {
+  border-top: 1px solid var(--borda);
+}
+
+.dia-aniversarios {
+  margin: 0;
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-2);
+  color: var(--texto-rotulo);
+  background: #f7f9fc;
+  border-bottom: 1px solid var(--borda);
+  font-size: var(--txt-sm);
+  font-weight: 800;
+}
+
+.selo-dia-hoje {
+  padding: 2px 9px;
+  color: var(--branco);
+  background: var(--verde);
+  border-radius: 99px;
+  font-size: var(--txt-xs);
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.linha-aniversario {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border-bottom: 1px solid var(--borda);
+}
+
+.grupo-aniversarios:last-child .linha-aniversario:last-child {
+  border-bottom: 0;
+}
+
+.dados-aniversario {
+  min-width: 0;
+}
+
+.dados-aniversario strong,
+.dados-aniversario small,
+.idade-aniversario {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.idade-aniversario {
+  margin-top: 2px;
+  color: var(--texto-rotulo);
+  font-size: var(--txt-sm);
+  font-weight: 600;
+}
+
+.dados-aniversario small {
+  margin-top: 3px;
+  color: var(--texto-suave);
+  font-size: var(--txt-sm);
+}
+
+.selos-aniversario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-1);
+  margin-top: var(--esp-2);
+}
+
+.icone-whatsapp {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  fill: currentColor;
+}
+
+/*
+ * Sem conversa a abrir. Não é um botão desativado: um botão que não faz nada
+ * só atrapalha quem navega por teclado. É o motivo, escrito.
+ */
+.sem-whatsapp {
+  max-width: 12rem;
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: var(--txt-sm);
+  text-align: right;
+}
+
+.passados-aniversarios {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  color: var(--texto-rotulo);
+  background: #f2f5fa;
+  border: 0;
+  border-bottom: 1px solid var(--borda);
+  font-family: inherit;
+  font-size: var(--txt-sm);
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .passados-aniversarios:hover {
+    background: #e8eef7;
+  }
+}
+
+.link-aniversarios {
+  min-height: 44px;
+  padding: 10px 2px;
+  color: var(--azul-700);
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: var(--txt-sm);
+  font-weight: 750;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.aviso-sem-data {
+  margin-top: var(--esp-4);
+  padding: var(--esp-3) var(--esp-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  background: var(--dourado-claro);
+  border: 1px solid #e8d4a0;
+  border-radius: var(--raio-md);
+}
+
+.aviso-sem-data p {
+  margin: 0;
+  color: #5c3a05;
+  font-size: var(--txt-sm);
+}
+
+.aviso-sem-data .link-aniversarios {
+  color: #6b3f05;
+}
+
+/*
+ * O sinal de aniversário hoje, no menu.
+ *
+ * Fica em qualquer seção em que o pastor esteja — é o que o chama para cá
+ * quando ele entra. A cor não carrega a informação sozinha: a contagem entra
+ * no `aria-label` do botão, em NavegacaoPainel.tsx.
+ */
+.sinal-hoje {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--sinal);
+  border-radius: 50%;
+}
+
+@media (max-width: 720px) {
+  /*
+   * Rede de segurança: as abas são três, com contador em cada, e o nome do mês
+   * muda de tamanho ao longo do ano. Se um dia não couberem, rolam na
+   * horizontal em vez de empurrar a página inteira. Enquanto couberem, esta
+   * regra não muda nada do que se vê.
+   */
+  .abas-membros {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .abas-membros::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * As três abas pediam 370 px nos 327 que sobram a 375 px de tela. O respiro
+   * lateral cai de 17 px para 9 px, o que devolve 54 px e faz as três
+   * caberem; a altura do alvo não muda.
+   */
+  .abas-membros button {
+    padding-inline: 9px;
+  }
+
+  /*
+   * Na barra inferior o botão é uma grade centralizada, então o ponto sai do
+   * fluxo e encosta no ícone, com anel branco para não se confundir com ele.
+   */
+  .navegacao-interna button {
+    position: relative;
+  }
+
+  .navegacao-interna .sinal-hoje {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: 6px;
+    border: 2px solid var(--branco);
+  }
+
+  .linha-aniversario {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: var(--esp-3);
+    padding: var(--esp-3);
+  }
+
+  .avatar-membro {
+    width: 38px;
+    height: 38px;
+  }
+
+  /* O botão passa para a terceira linha, atravessando as duas colunas. */
+  .linha-aniversario > .botao-principal,
+  .linha-aniversario > .sem-whatsapp {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+    text-align: center;
+  }
+
+  .linha-aniversario > .botao-principal {
+    min-height: 48px;
+  }
 }

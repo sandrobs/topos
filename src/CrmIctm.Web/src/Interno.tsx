@@ -17,10 +17,12 @@ import {
   listarIgrejas,
   listarUsuarios,
   obterAtendimento,
+  obterContadoresAniversarios,
   obterSessao,
   sair,
   type AtendimentoDetalhe,
   type AtendimentoResumo,
+  type ContadoresAniversarios,
   type EtapaAtendimento,
   type IgrejaInterna,
   type ResultadoAtendimento,
@@ -29,6 +31,7 @@ import {
   type UsuarioInterno,
 } from "./api";
 import { GestaoIgrejas, GestaoUsuarios } from "./Administracao";
+import { Aniversariantes } from "./Aniversariantes";
 import { GestaoMembros } from "./GestaoMembros";
 import {
   obterIgrejaSelecionadaDaSessao,
@@ -37,9 +40,13 @@ import {
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
 import { Dialogo } from "./Dialogo";
-import { NavegacaoPainel } from "./NavegacaoPainel";
+import { NavegacaoPainel, ehSecaoDoPainel, type SecaoPainel } from "./NavegacaoPainel";
 import { tituloInterno, useTitulo } from "./titulo";
-import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
+import {
+  formatarDataHora as formatarData,
+  formatarTelefoneBrasileiro,
+  iniciais,
+} from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
 
 const etapas: Array<{ codigo: EtapaAtendimento; nome: string }> = [
@@ -209,16 +216,44 @@ export function PainelAtendimentos() {
   const [movendoAtendimentoId, setMovendoAtendimentoId] = useState<string | null>(null);
   const [conclusaoPendente, setConclusaoPendente] = useState<AtendimentoResumo | null>(null);
   const [resultadoConclusao, setResultadoConclusao] = useState<ResultadoAtendimento | "">("");
-  const [secao, setSecao] = useState<"ATENDIMENTOS" | "MEMBROS" | "IGREJAS" | "USUARIOS">(
-    () => new URLSearchParams(window.location.search).get("secao") === "MEMBROS" ? "MEMBROS" : "ATENDIMENTOS");
+  const [contadoresAniversarios, setContadoresAniversarios] =
+    useState<ContadoresAniversarios | null>(null);
+  const [secao, setSecao] = useState<SecaoPainel>(() => {
+    const pedida = new URLSearchParams(window.location.search).get("secao");
+    return ehSecaoDoPainel(pedida) ? pedida : "ATENDIMENTOS";
+  });
 
   useEffect(() => {
     const endereco = new URL(window.location.href);
-    if (secao === "MEMBROS") endereco.searchParams.set("secao", "MEMBROS");
-    else endereco.searchParams.delete("secao");
+    if (secao === "ATENDIMENTOS") endereco.searchParams.delete("secao");
+    else endereco.searchParams.set("secao", secao);
     window.history.replaceState(window.history.state, "", endereco);
   }, [secao]);
   const igrejaIdAtual = useRef("");
+
+  /*
+   * Os contadores de aniversário ficam aqui, e não na tela de Aniversariantes,
+   * porque o ponto do menu tem de aparecer em qualquer seção — é o que chama o
+   * pastor para lá quando ele entra. Uma chamada por igreja selecionada.
+   *
+   * O perfil Equipe não passa por este endpoint (responde 403), então nem
+   * tentamos: a seção também não aparece no menu para ele.
+   */
+  const perfilVeAniversarios =
+    sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR";
+
+  useEffect(() => {
+    if (!igrejaId || !perfilVeAniversarios) {
+      setContadoresAniversarios(null);
+      return;
+    }
+
+    let ativo = true;
+    obterContadoresAniversarios(igrejaId)
+      .then((contadores) => { if (ativo) setContadoresAniversarios(contadores); })
+      .catch(() => { if (ativo) setContadoresAniversarios(null); });
+    return () => { ativo = false; };
+  }, [igrejaId, perfilVeAniversarios]);
 
   const carregarAtendimentos = useCallback(async (idIgreja: string, termo = "") => {
     if (!idIgreja) return;
@@ -434,7 +469,8 @@ export function PainelAtendimentos() {
    * Depois disso o kanban renderizava a lista vazia e cada coluna anunciava
    * "Nenhum atendimento" durante toda a requisição — um estado vazio falso.
    */
-  const nomesDeSecao = { ATENDIMENTOS: "Atendimentos", MEMBROS: "Membros", IGREJAS: "Igrejas", USUARIOS: "Usuários" } as const;
+  const nomesDeSecao = { ATENDIMENTOS: "Atendimentos", ANIVERSARIANTES: "Aniversariantes",
+    MEMBROS: "Membros", IGREJAS: "Igrejas", USUARIOS: "Usuários" } as const;
   useTitulo(tituloInterno(nomesDeSecao[secao]));
 
   const listaCarregando = carregando || pesquisando;
@@ -467,7 +503,8 @@ export function PainelAtendimentos() {
           </div>
 
           <div className="acoes-topo">
-            {(secao === "ATENDIMENTOS" || secao === "MEMBROS") && sessao?.perfil === "ADMINISTRADOR" && (
+            {(secao === "ATENDIMENTOS" || secao === "MEMBROS" || secao === "ANIVERSARIANTES")
+              && sessao?.perfil === "ADMINISTRADOR" && (
               <SeletorIgreja
                 igrejas={igrejas}
                 igrejaId={igrejaId}
@@ -509,6 +546,7 @@ export function PainelAtendimentos() {
       <NavegacaoPainel
         secao={secao}
         perfil={sessao?.perfil}
+        aniversariosHoje={contadoresAniversarios?.hoje ?? 0}
         aoTrocar={(nova) => { setSecao(nova); if (nova !== "ATENDIMENTOS") setDetalhe(null); }}
       />
 
@@ -626,6 +664,17 @@ export function PainelAtendimentos() {
         <GestaoIgrejas igrejas={igrejas} aoAtualizar={atualizarIgrejas} />
       )}
 
+      {secao === "ANIVERSARIANTES" && sessao && perfilVeAniversarios &&
+        igrejas.find((item) => item.id === igrejaId) && (
+        <Aniversariantes
+          key={igrejaId}
+          igreja={igrejas.find((item) => item.id === igrejaId)!}
+          nomeUsuario={sessao.nome}
+          contadores={contadoresAniversarios}
+          aoIrParaMembros={() => setSecao("MEMBROS")}
+        />
+      )}
+
       {secao === "MEMBROS" && sessao && (sessao.perfil === "ADMINISTRADOR" || sessao.perfil === "PASTOR") &&
         igrejas.find((item) => item.id === igrejaId) && (
         <GestaoMembros key={igrejaId} igreja={igrejas.find((item) => item.id === igrejaId)!} />
@@ -654,14 +703,6 @@ export function PainelAtendimentos() {
 }
 
 /** Iniciais para o avatar do cabeçalho: primeira letra do nome e do sobrenome. */
-function iniciais(nome: string | undefined) {
-  if (!nome) return "";
-  const partes = nome.trim().split(/\s+/);
-  const primeira = partes[0]?.[0] ?? "";
-  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? "") : "";
-  return (primeira + ultima).toLocaleUpperCase("pt-BR");
-}
-
 function SeletorIgreja({
   igrejas,
   igrejaId,

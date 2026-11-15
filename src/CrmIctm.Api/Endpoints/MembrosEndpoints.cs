@@ -23,6 +23,8 @@ public static class MembrosEndpoints
         var interno = endpoints.MapGroup("/api/membros")
             .WithTags("Membros").RequireAuthorization();
         interno.MapGet("/resumo", ObterResumoAsync);
+        interno.MapGet("/aniversariantes", ListarAniversariantesAsync);
+        interno.MapGet("/aniversariantes/contadores", ObterContadoresAniversariosAsync);
         interno.MapGet("", ListarAsync);
         interno.MapGet("/solicitacoes", ListarSolicitacoesAsync);
         interno.MapGet("/solicitacoes/{id:guid}", ObterSolicitacaoAsync);
@@ -103,6 +105,107 @@ public static class MembrosEndpoints
         var pendentes = await banco.SolicitacoesMembros.CountAsync(
             x => x.IgrejaId == id && x.Estado == "PENDENTE", cancelamento);
         return Results.Ok(new { ativos, inativos, pendentes });
+    }
+
+    /*
+     * Aniversariantes (V4). Somente leitura, sem migração: a data de
+     * nascimento e o WhatsApp normalizado já existem no cadastro de membros.
+     * A permissão é a mesma — IgrejaAutorizadaAsync nega o perfil Equipe e
+     * impede Pastor de ler igreja que não é a dele.
+     */
+    private static async Task<IResult> ListarAniversariantesAsync(
+        Guid? igrejaId, string? periodo, BancoContexto banco, UsuarioAtual usuarioAtual,
+        IRelogio relogio, CancellationToken cancelamento)
+    {
+        var (id, erro) = await IgrejaAutorizadaAsync(igrejaId, banco, usuarioAtual, cancelamento);
+        if (erro is not null) return erro;
+        if (!Aniversariantes.TentarLerPeriodo(periodo, out var periodoLido))
+            return Results.BadRequest();
+
+        var hoje = Aniversariantes.Hoje(relogio.Agora);
+        var datas = Aniversariantes.DatasDoPeriodo(periodoLido, hoje);
+        var datasPorChave = Aniversariantes.DatasPorChave(datas);
+        var chaves = datasPorChave.Keys.ToList();
+
+        var encontrados = await banco.Membros.AsNoTracking()
+            .Where(x => x.IgrejaId == id && x.Situacao == "ATIVO" && x.Dados.DataNascimento != null)
+            .Where(x => chaves.Contains(
+                (x.Dados.DataNascimento!.Value.Month * 100) + x.Dados.DataNascimento!.Value.Day))
+            .Select(x => new
+            {
+                x.Id, x.Dados.Nome, x.Dados.Sobrenome, x.Dados.Funcao, x.Dados.EhMenor,
+                Nascimento = x.Dados.DataNascimento!.Value,
+                x.Dados.Whatsapp, x.Dados.NomeResponsavelLegal,
+                x.Dados.WhatsappResponsavelLegal, x.Dados.VinculoResponsavelLegal
+            })
+            .ToListAsync(cancelamento);
+
+        var itens = encontrados
+            .Select(x =>
+            {
+                var ocorrencia = datasPorChave[Aniversariantes.Chave(x.Nascimento)];
+                var (destino, whatsapp) = Aniversariantes.Destino(
+                    x.EhMenor, x.Whatsapp, x.WhatsappResponsavelLegal);
+                var paraResponsavel = destino == DestinoAniversario.Responsavel;
+                return new
+                {
+                    x.Id, x.Nome, x.Sobrenome, x.Funcao, x.EhMenor,
+                    dataNascimento = x.Nascimento,
+                    dataOcorrencia = ocorrencia,
+                    idadeQueCompleta = Aniversariantes.IdadeQueCompleta(x.Nascimento, ocorrencia),
+                    destino = destino.ParaCodigo(),
+                    whatsappDestino = whatsapp,
+                    nomeResponsavel = paraResponsavel ? x.NomeResponsavelLegal : null,
+                    vinculoResponsavel = paraResponsavel ? x.VinculoResponsavelLegal : null
+                };
+            })
+            .OrderBy(x => x.dataOcorrencia).ThenBy(x => x.Nome)
+            .ThenBy(x => x.Sobrenome).ThenBy(x => x.Id)
+            .ToList();
+
+        return Results.Ok(new
+        {
+            itens,
+            hoje,
+            inicio = datas[0],
+            fim = datas[^1],
+            periodo = periodoLido.ToString().ToUpperInvariant()
+        });
+    }
+
+    private static async Task<IResult> ObterContadoresAniversariosAsync(
+        Guid? igrejaId, BancoContexto banco, UsuarioAtual usuarioAtual,
+        IRelogio relogio, CancellationToken cancelamento)
+    {
+        var (id, erro) = await IgrejaAutorizadaAsync(igrejaId, banco, usuarioAtual, cancelamento);
+        if (erro is not null) return erro;
+
+        var hoje = Aniversariantes.Hoje(relogio.Agora);
+        var ativos = banco.Membros.AsNoTracking()
+            .Where(x => x.IgrejaId == id && x.Situacao == "ATIVO");
+
+        async Task<int> ContarAsync(PeriodoAniversario periodo)
+        {
+            var chaves = Aniversariantes
+                .DatasPorChave(Aniversariantes.DatasDoPeriodo(periodo, hoje)).Keys.ToList();
+            return await ativos.CountAsync(
+                x => x.Dados.DataNascimento != null && chaves.Contains(
+                    (x.Dados.DataNascimento!.Value.Month * 100) + x.Dados.DataNascimento!.Value.Day),
+                cancelamento);
+        }
+
+        return Results.Ok(new
+        {
+            hoje = await ContarAsync(PeriodoAniversario.Hoje),
+            semana = await ContarAsync(PeriodoAniversario.Semana),
+            mes = await ContarAsync(PeriodoAniversario.Mes),
+            // Quem está sem a data nunca aparece na tela. O número existe para
+            // que a ausência apareça em algum lugar, em vez de a lista só ficar
+            // mais curta sem explicação.
+            semDataNascimento = await ativos.CountAsync(
+                x => x.Dados.DataNascimento == null, cancelamento),
+            dataDeHoje = hoje
+        });
     }
 
     private static async Task<IResult> ListarAsync(

@@ -85,3 +85,82 @@ const rotulosAcaoHistorico: Record<string, string> = {
 export function rotuloAcaoHistorico(valor: string) {
   return rotulosAcaoHistorico[valor] ?? capitalizar(valor.replaceAll("_", " "));
 }
+
+/** "Sandro Bueno" vira "SB". Usado nos avatares do painel. */
+export function iniciais(nome: string | undefined) {
+  if (!nome) return "";
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? "") : "";
+  return (primeira + ultima).toLocaleUpperCase("pt-BR");
+}
+
+const rotulosFuncaoMembro: Record<string, string> = {
+  MEMBRO: "Membro",
+  DIACONO: "Diácono",
+  PRESBITERO: "Presbítero",
+  PASTOR: "Pastor",
+};
+
+export function rotuloFuncaoMembro(valor: string) {
+  return rotulosFuncaoMembro[valor] ?? capitalizar(valor);
+}
+
+/*
+ * Datas sem hora, por extenso.
+ *
+ * Mesmo motivo de `formatarDataIso`: `new Date("2026-11-15")` é lido como UTC e
+ * mostra o dia anterior em fuso negativo. Aqui a data é montada com
+ * `Date.UTC` a partir dos números e lida de volta em UTC, então nenhum fuso
+ * entra na conta.
+ */
+function dataUtc(valor: string) {
+  const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(valor);
+  if (!partes) return null;
+  return new Date(Date.UTC(Number(partes[1]), Number(partes[2]) - 1, Number(partes[3])));
+}
+
+function formatar(data: Date, opcoes: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat("pt-BR", { ...opcoes, timeZone: "UTC" }).format(data);
+}
+
+/** "Domingo, 15 de novembro" */
+export function formatarDiaExtenso(valor: string) {
+  const data = dataUtc(valor);
+  if (!data) return valor;
+  return capitalizar(formatar(data, { weekday: "long", day: "numeric", month: "long" }));
+}
+
+/** "Novembro de 2026" */
+export function formatarMesExtenso(valor: string) {
+  const data = dataUtc(valor);
+  if (!data) return valor;
+  return capitalizar(formatar(data, { month: "long", year: "numeric" }));
+}
+
+/** Só o nome do mês, para o rótulo da aba: "Novembro" */
+export function nomeDoMes(valor: string) {
+  const data = dataUtc(valor);
+  if (!data) return valor;
+  return capitalizar(formatar(data, { month: "long" }));
+}
+
+/**
+ * "15 a 21 de novembro" quando o intervalo fica no mesmo mês, e
+ * "29 de novembro a 5 de dezembro" quando atravessa — o que acontece em uma
+ * semana de cada quatro.
+ */
+export function formatarIntervaloDeDias(inicio: string, fim: string) {
+  const de = dataUtc(inicio);
+  const ate = dataUtc(fim);
+  if (!de || !ate) return `${formatarDataIso(inicio)} a ${formatarDataIso(fim)}`;
+
+  const diaDe = formatar(de, { day: "numeric" });
+  const diaAte = formatar(ate, { day: "numeric" });
+  const mesDe = formatar(de, { month: "long" });
+  const mesAte = formatar(ate, { month: "long" });
+
+  return mesDe === mesAte
+    ? `${diaDe} a ${diaAte} de ${mesAte}`
+    : `${diaDe} de ${mesDe} a ${diaAte} de ${mesAte}`;
+}

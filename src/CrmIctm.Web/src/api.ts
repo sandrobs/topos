@@ -516,3 +516,55 @@ export function recusarSolicitacaoMembro(igrejaId: string, id: string,
   return mutacao(`/api/membros/solicitacoes/${id}/recusar?igrejaId=${encodeURIComponent(igrejaId)}`,
     "POST", { motivo });
 }
+
+export type PeriodoAniversario = "HOJE" | "SEMANA" | "MES";
+
+/**
+ * `dataOcorrencia` é o dia em que o aniversário cai dentro do período, e não
+ * o dia do nascimento: em ano comum, quem nasceu em 29 de fevereiro aparece
+ * com 28. É por essa data que a lista é agrupada e ordenada.
+ *
+ * `destino` diz a quem a conversa será aberta. Quem decide é o servidor, para
+ * a regra de menores não se espalhar pela tela.
+ */
+export type Aniversariante = {
+  id: string;
+  nome: string;
+  sobrenome: string;
+  funcao: DadosMembro["funcao"];
+  ehMenor: boolean;
+  dataNascimento: string;
+  dataOcorrencia: string;
+  idadeQueCompleta: number;
+  destino: "NENHUM" | "MEMBRO" | "RESPONSAVEL";
+  whatsappDestino: string | null;
+  nomeResponsavel: string | null;
+  vinculoResponsavel: string | null;
+};
+
+export type ListaAniversariantes = {
+  itens: Aniversariante[];
+  hoje: string;
+  inicio: string;
+  fim: string;
+  periodo: PeriodoAniversario;
+};
+
+export type ContadoresAniversarios = {
+  hoje: number;
+  semana: number;
+  mes: number;
+  semDataNascimento: number;
+  dataDeHoje: string;
+};
+
+export function listarAniversariantes(igrejaId: string,
+  periodo: PeriodoAniversario): Promise<ListaAniversariantes> {
+  const parametros = new URLSearchParams({ igrejaId, periodo });
+  return requisicao(`/api/membros/aniversariantes?${parametros}`);
+}
+
+export function obterContadoresAniversarios(igrejaId: string): Promise<ContadoresAniversarios> {
+  return requisicao(
+    `/api/membros/aniversariantes/contadores?igrejaId=${encodeURIComponent(igrejaId)}`);
+}

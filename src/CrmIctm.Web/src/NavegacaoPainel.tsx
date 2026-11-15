@@ -2,7 +2,12 @@ import type { ReactNode } from "react";
 import { soltarFocoDePonteiro } from "./foco";
 import type { PerfilUsuario } from "./api";
 
-export type SecaoPainel = "ATENDIMENTOS" | "MEMBROS" | "IGREJAS" | "USUARIOS";
+export type SecaoPainel =
+  | "ATENDIMENTOS"
+  | "ANIVERSARIANTES"
+  | "MEMBROS"
+  | "IGREJAS"
+  | "USUARIOS";
 
 /*
  * Os ícones só aparecem na barra inferior do celular. São SVG em linha, como
@@ -22,6 +27,13 @@ const traco = {
 const icones: Record<SecaoPainel, ReactNode> = {
   ATENDIMENTOS: (
     <svg className="icone-secao" {...traco}><path d="M3 12h4l2 6 4-14 2 8h6" /></svg>
+  ),
+  ANIVERSARIANTES: (
+    <svg className="icone-secao" {...traco}>
+      <path d="M4 20v-7h16v7z" /><path d="M3 20h18" />
+      <path d="M8 13V9" /><path d="M12 13V9" /><path d="M16 13V9" />
+      <path d="M11 6.6c0-1 1-1.4 1-2.4 0 1 1 1.4 1 2.4" />
+    </svg>
   ),
   MEMBROS: (
     <svg className="icone-secao" {...traco}>
@@ -47,9 +59,12 @@ const icones: Record<SecaoPainel, ReactNode> = {
  * `curto` é o rótulo da barra inferior do celular, onde cada posição tem
  * pouco mais de 70 px. `perfis` vazio significa "todos os perfis".
  *
- * Acrescentar uma seção é acrescentar uma linha aqui. Quando passarem de
- * cinco, as de uso diário ficam e as demais vão para um "Mais" — enquanto são
- * quatro, o botão só ocuparia espaço sem servir para nada.
+ * Acrescentar uma seção é acrescentar uma linha aqui.
+ *
+ * São cinco, o limite combinado para a barra do celular: a 390 px cada posição
+ * fica com 78 px, que ainda cabe o ícone e o rótulo curto. **A sexta seção
+ * obriga a construir o "Mais"** — as de uso diário ficam na barra e as de
+ * consulta ocasional vão para lá, agrupadas por assunto.
  */
 const secoes: Array<{
   id: SecaoPainel;
@@ -58,16 +73,25 @@ const secoes: Array<{
   perfis: PerfilUsuario[];
 }> = [
   { id: "ATENDIMENTOS", rotulo: "Atendimentos", curto: "Atend.", perfis: [] },
+  { id: "ANIVERSARIANTES", rotulo: "Aniversariantes", curto: "Aniver.",
+    perfis: ["ADMINISTRADOR", "PASTOR"] },
   { id: "MEMBROS", rotulo: "Membros", curto: "Membros", perfis: ["ADMINISTRADOR", "PASTOR"] },
   { id: "IGREJAS", rotulo: "Igrejas", curto: "Igrejas", perfis: ["ADMINISTRADOR"] },
   { id: "USUARIOS", rotulo: "Usuários", curto: "Usuários", perfis: ["ADMINISTRADOR", "PASTOR"] },
 ];
 
+/** Vale para ler a seção pedida no endereço sem repetir a lista aqui e lá. */
+export function ehSecaoDoPainel(valor: string | null): valor is SecaoPainel {
+  return secoes.some((item) => item.id === valor);
+}
+
 export function NavegacaoPainel({
-  secao, perfil, aoTrocar,
+  secao, perfil, aniversariosHoje, aoTrocar,
 }: {
   secao: SecaoPainel;
   perfil: PerfilUsuario | undefined;
+  /** Quantos fazem aniversário hoje. Acima de zero, o menu recebe o sinal. */
+  aniversariosHoje: number;
   aoTrocar: (secao: SecaoPainel) => void;
 }) {
   const visiveis = secoes.filter(
@@ -77,22 +101,30 @@ export function NavegacaoPainel({
   return (
     <nav className="navegacao-interna" aria-label="Seções do sistema">
       <div className="faixa-painel">
-        {visiveis.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={secao === item.id ? "ativo" : ""}
-            /* O rótulo curto é abreviado na barra do celular; o nome falado
-               continua inteiro. */
-            aria-label={item.rotulo}
-            aria-current={secao === item.id ? "page" : undefined}
-            onClick={(evento) => { aoTrocar(item.id); soltarFocoDePonteiro(evento); }}
-          >
-            {icones[item.id]}
-            <span className="rotulo-secao">{item.rotulo}</span>
-            <span className="rotulo-secao-curto">{item.curto}</span>
-          </button>
-        ))}
+        {visiveis.map((item) => {
+          const sinalizar = item.id === "ANIVERSARIANTES" && aniversariosHoje > 0;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={secao === item.id ? "ativo" : ""}
+              /*
+               * O rótulo curto é abreviado na barra do celular; o nome falado
+               * continua inteiro. E o ponto de aniversário entra aqui também,
+               * como número: a cor não pode ser o único jeito de saber que há
+               * alguém para celebrar hoje.
+               */
+              aria-label={sinalizar ? `${item.rotulo}, ${aniversariosHoje} hoje` : item.rotulo}
+              aria-current={secao === item.id ? "page" : undefined}
+              onClick={(evento) => { aoTrocar(item.id); soltarFocoDePonteiro(evento); }}
+            >
+              {sinalizar && <span className="sinal-hoje" aria-hidden="true" />}
+              {icones[item.id]}
+              <span className="rotulo-secao">{item.rotulo}</span>
+              <span className="rotulo-secao-curto">{item.curto}</span>
+            </button>
+          );
+        })}
       </div>
     </nav>
   );
