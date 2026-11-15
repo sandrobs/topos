@@ -1,7 +1,9 @@
 # V3 — Revisão de interface, acessibilidade e desempenho visual
 
-**Estado:** em implementação local na branch `feature/ui-lote1`. **Lotes 1, 2 e
-3 concluídos** e verificados em 14/11/2026. Nada publicado em produção.
+**Estado:** lotes 1 a 5 implementados na branch `feature/ui-lote1`, conforme o
+histórico em `03-IMPLEMENTACAO.md`, integrados à `main` e publicados em
+15/11/2026 junto com a V4. Ver o
+[registro de publicação](../v4/05-PUBLICACAO-2026-11-15.md).
 
 ## Próximos passos
 

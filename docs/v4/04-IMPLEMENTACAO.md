@@ -1,7 +1,8 @@
 # V4 — Implementação
 
 Branch `feature/v4-aniversariantes`, cortada de `feature/ui-lote1` (V3), que por
-sua vez está sobre `feature/v2-membros`. Nada publicado em produção.
+sua vez está sobre `feature/v2-membros`. Integrada à `main` e publicada em
+15/11/2026. Ver [registro da publicação](05-PUBLICACAO-2026-11-15.md).
 
 **Nenhuma migração nova.** `dotnet ef migrations list` traz exatamente as mesmas
 migrações de antes, como manda o critério 36.

@@ -3,8 +3,10 @@
 **Estado:** escopo e protótipo aprovados pelo responsável pelo produto em
 15/11/2026, e **implementados no mesmo dia** na branch
 `feature/v4-aniversariantes`. 97 testes passando, nenhuma migração nova,
-verificado na instância de teste. Nada publicado em produção, e nada conferido
-em aparelho real. Ver [04-IMPLEMENTACAO.md](04-IMPLEMENTACAO.md).
+verificado na instância de teste. Publicado em produção em 15/11/2026, após
+autorização do responsável. Conferência em aparelho real pendente. Ver
+[04-IMPLEMENTACAO.md](04-IMPLEMENTACAO.md) e
+[05-PUBLICACAO-2026-11-15.md](05-PUBLICACAO-2026-11-15.md).
 
 ## Objetivo
 
