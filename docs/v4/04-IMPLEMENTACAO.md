@@ -137,3 +137,18 @@ DELETE FROM crm.membros WHERE "Dados_Sobrenome" = 'Teste V4';
 - **Desempenho com muitos membros.** A igreja de teste tem 20 registros. O
   escopo diz para medir antes de concluir que há problema; não houve o que
   medir.
+
+## Preparação para publicação — 15/11/2026
+
+O responsável autorizou o deploy após o merge na `main`. Foi corrigida a
+retenção da lista anterior ao trocar o período: a consulta agora limpa a lista
+antes de carregar, inclusive quando a nova resposta falha. O teste de navegador
+`tests/CrmIctm.Web.Tests/aniversariantes.cjs` cobre a falha de consulta e confere
+a API e o layout em 375, 834 e 1440 px.
+
+Imagem `crm-ictm:v4-producao-20261115`, compilada com sucesso. Os 97 testes da
+API passaram. A regressão de navegador de formulários, diálogo, membros,
+convites e PDFs passou em desktop, celular, celular estreito e tablet.
+Nenhuma migração foi acrescentada. As pendências de procedimento interno para
+contato com menores e de conferência em aparelho real continuam registradas
+em `02-DECISOES.md` e neste documento.

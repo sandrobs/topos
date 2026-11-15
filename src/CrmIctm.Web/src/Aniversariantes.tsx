@@ -192,6 +192,7 @@ export function Aniversariantes({ igreja, nomeUsuario, contadores, aoIrParaMembr
   useEffect(() => {
     let ativo = true;
     setCarregando(true);
+    setLista(null);
     setErro("");
     listarAniversariantes(igreja.id, periodo)
       .then((resposta) => { if (ativo) setLista(resposta); })
