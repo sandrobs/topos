@@ -764,3 +764,65 @@ em `rgb(46, 95, 202)` no lugar.
 cor do retângulo: azul indica anel de foco; cinza ou claro indica seleção de
 texto; e a cor de fundo do botão ativo indicaria que o estado de React é que
 está errado, não o CSS.
+
+---
+
+## Novo cabeçalho, menu e rodapé — 15/11/2026
+
+Implementação da proposta visual aprovada. O escopo foi exatamente esse:
+**cabeçalho, menu de acessos e rodapé**. Kanban, cartões, formulários e todo o
+resto do conteúdo não foram tocados, e nenhuma funcionalidade saiu.
+
+### Cabeçalho
+
+Deixou de ser um cartão flutuante de ~90 px, com raio de 17 px e sombra de
+30 px, e virou uma **faixa encostada no topo** com filete dourado de 3 px.
+
+A marcação ganhou um miolo, `.faixa-painel`, compartilhado por cabeçalho,
+menu, conteúdo e rodapé: o fundo de cada faixa vai de ponta a ponta da tela
+enquanto o conteúdo das quatro começa na mesma margem.
+
+O nome do usuário saiu de baixo da marca e foi para a direita, com avatar de
+iniciais, ao lado do sair. A marca passou a ser "Tópos / Gestão de Igrejas"
+em duas linhas.
+
+### Menu de acessos
+
+As pílulas brancas com sombra viraram **abas com sublinhado dourado**.
+
+Novo [`NavegacaoPainel.tsx`](../../src/CrmIctm.Web/src/NavegacaoPainel.tsx):
+as seções passam a ser uma lista de dados, com rótulo, rótulo curto, ícone e
+perfis que a enxergam. Acrescentar uma seção é acrescentar uma linha — era
+esta a preocupação do responsável, que terá mais funcionalidades em breve.
+
+**No celular a barra desce para a base**, ao alcance do polegar, com ícone e
+rótulo curto. Medido a 375 px: alvos de 92×56 px, barra fixa colada na base,
+`env(safe-area-inset-bottom)` para não ficar sob o indicador do iPhone, e o
+conteúdo com recuo suficiente — o texto do rodapé termina em 721 px, a barra
+começa em 755 px.
+
+O rótulo curto ("Atend.") é só visual: cada botão leva `aria-label` com o nome
+inteiro, então o leitor de tela nunca ouve a abreviação.
+
+**O botão "Mais" não foi construído.** Enquanto são quatro seções ele só
+ocuparia espaço. A regra de corte combinada fica registrada em
+`NavegacaoPainel.tsx`: até cinco posições na barra; da sexta em diante, as de
+uso diário ficam e as demais vão para "Mais", agrupadas por assunto.
+
+### Rodapé
+
+Uma linha, em faixa branca com borda superior, com a marca à esquerda e o selo
+de ambiente protegido à direita, agora com cadeado.
+
+### Tokens
+
+As três áreas passaram a usar as escalas que estavam no `:root` sem uso desde
+o Lote 3: `--esp-*` para espaçamento, `--txt-*` para tamanho de texto. É a
+primeira parte do sistema a consumir os tokens de verdade, e deixa o item 3.1
+menos distante de fechar.
+
+### Validação
+
+Build Docker completo e **59 testes aprovados**. Conferido na aplicação a
+1440 px e a 375 px: nenhuma rolagem horizontal, kanban idêntico ao anterior,
+sair em 44×44, e os quatro nomes acessíveis corretos.

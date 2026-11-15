@@ -37,7 +37,7 @@ import {
   salvarIgrejaSelecionada,
 } from "./contextoIgreja";
 import { Dialogo } from "./Dialogo";
-import { soltarFocoDePonteiro } from "./foco";
+import { NavegacaoPainel } from "./NavegacaoPainel";
 import { tituloInterno, useTitulo } from "./titulo";
 import { formatarDataHora as formatarData, formatarTelefoneBrasileiro } from "./formatadores";
 import { LogoIgreja } from "./LogoIgreja";
@@ -454,76 +454,65 @@ export function PainelAtendimentos() {
 
   return (
     <main className="pagina-painel">
+      {/*
+        * Cabeçalho em faixa de largura cheia, não mais um cartão flutuante.
+        * `.faixa-painel` é o miolo que alinha cabeçalho, menu, conteúdo e
+        * rodapé na mesma margem.
+        */}
       <header className="topo-painel">
-        <div className="identidade-painel">
-          <LogoIgreja />
-          <div><strong>Tópos - Gestão de Igrejas</strong><small>Olá, {sessao?.nome}</small></div>
-        </div>
-        <div className="acoes-topo">
-          {(secao === "ATENDIMENTOS" || secao === "MEMBROS") && sessao?.perfil === "ADMINISTRADOR" && (
-            <SeletorIgreja
-              igrejas={igrejas}
-              igrejaId={igrejaId}
-              desabilitado={carregando}
-              aoSelecionar={selecionarIgreja}
-            />
-          )}
-          {secao === "ATENDIMENTOS" && igrejaId && (
-            <a
-              className="botao-secundario link-topo"
-              href={`/qrcode/${igrejaId}`}
-              target="_blank"
-              rel="noreferrer"
+        <div className="faixa-painel">
+          <div className="identidade-painel">
+            <LogoIgreja />
+            <div><strong>Tópos</strong><small>Gestão de Igrejas</small></div>
+          </div>
+
+          <div className="acoes-topo">
+            {(secao === "ATENDIMENTOS" || secao === "MEMBROS") && sessao?.perfil === "ADMINISTRADOR" && (
+              <SeletorIgreja
+                igrejas={igrejas}
+                igrejaId={igrejaId}
+                desabilitado={carregando}
+                aoSelecionar={selecionarIgreja}
+              />
+            )}
+            {secao === "ATENDIMENTOS" && igrejaId && (
+              <a
+                className="botao-secundario link-topo"
+                href={`/qrcode/${igrejaId}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Ver convite e QR Code
+              </a>
+            )}
+          </div>
+
+          <div className="conta-painel">
+            <span className="avatar-sessao" aria-hidden="true">{iniciais(sessao?.nome)}</span>
+            <span className="nome-sessao">{sessao?.nome}</span>
+            <button
+              className="botao-secundario botao-sair"
+              aria-label="Sair"
+              onClick={() => void sair().then(() => window.location.replace(`/entrar?atualizacao=${Date.now()}`))}
             >
-              Ver convite e QR Code
-            </a>
-          )}
+              <svg className="icone-sair" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
+                <path d="M10 16l-4-4 4-4" />
+                <path d="M6 12h10" />
+              </svg>
+              <span className="texto-sair">Sair</span>
+            </button>
+          </div>
         </div>
-        {/*
-          * Fora de `.acoes-topo` de propósito: no celular este botão sobe
-          * para a linha do nome do sistema, virando só o ícone. Em largura
-          * cheia ele ficava grande demais e perto demais do polegar, para uma
-          * ação que derruba a sessão.
-          */}
-        <button
-          className="botao-secundario botao-sair"
-          aria-label="Sair"
-          onClick={() => void sair().then(() => window.location.replace(`/entrar?atualizacao=${Date.now()}`))}
-        >
-          <svg className="icone-sair" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4" />
-            <path d="M10 16l-4-4 4-4" />
-            <path d="M6 12h10" />
-          </svg>
-          <span className="texto-sair">Sair</span>
-        </button>
       </header>
 
-      {/*
-        * A seção ativa era indicada só pela classe CSS `ativo`. `aria-current`
-        * faz o leitor de tela anunciar qual delas está aberta.
-        */}
-      <nav className="navegacao-interna" aria-label="Seções do sistema">
-        <button type="button" className={secao === "ATENDIMENTOS" ? "ativo" : ""}
-          aria-current={secao === "ATENDIMENTOS" ? "page" : undefined}
-          onClick={(evento) => { setSecao("ATENDIMENTOS"); soltarFocoDePonteiro(evento); }}>Atendimentos</button>
-        {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
-          <button type="button" className={secao === "MEMBROS" ? "ativo" : ""}
-            aria-current={secao === "MEMBROS" ? "page" : undefined}
-            onClick={(evento) => { setSecao("MEMBROS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Membros</button>
-        )}
-        {sessao?.perfil === "ADMINISTRADOR" && (
-          <button type="button" className={secao === "IGREJAS" ? "ativo" : ""}
-            aria-current={secao === "IGREJAS" ? "page" : undefined}
-            onClick={(evento) => { setSecao("IGREJAS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Igrejas</button>
-        )}
-        {(sessao?.perfil === "ADMINISTRADOR" || sessao?.perfil === "PASTOR") && (
-          <button type="button" className={secao === "USUARIOS" ? "ativo" : ""}
-            aria-current={secao === "USUARIOS" ? "page" : undefined}
-            onClick={(evento) => { setSecao("USUARIOS"); setDetalhe(null); soltarFocoDePonteiro(evento); }}>Usuários</button>
-        )}
-      </nav>
+      <NavegacaoPainel
+        secao={secao}
+        perfil={sessao?.perfil}
+        aoTrocar={(nova) => { setSecao(nova); if (nova !== "ATENDIMENTOS") setDetalhe(null); }}
+      />
 
+      <div className="conteudo-painel">
       {erro && <div className="alerta alerta-painel" role="alert">{erro}</div>}
 
       {secao === "ATENDIMENTOS" && <>
@@ -646,12 +635,31 @@ export function PainelAtendimentos() {
         <GestaoUsuarios sessao={sessao} igrejas={igrejas} />
       )}
 
+      </div>
+
       <footer className="rodape-painel">
-        <span>IEC · Tópos - Gestão de Igrejas</span>
-        <span>Ambiente interno e protegido</span>
+        <div className="faixa-painel">
+          <span>IEC · Tópos — Gestão de Igrejas</span>
+          <span className="selo-ambiente">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <rect x="4" y="10" width="16" height="10" rx="2" />
+              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            Ambiente interno e protegido
+          </span>
+        </div>
       </footer>
     </main>
   );
+}
+
+/** Iniciais para o avatar do cabeçalho: primeira letra do nome e do sobrenome. */
+function iniciais(nome: string | undefined) {
+  if (!nome) return "";
+  const partes = nome.trim().split(/\s+/);
+  const primeira = partes[0]?.[0] ?? "";
+  const ultima = partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? "") : "";
+  return (primeira + ultima).toLocaleUpperCase("pt-BR");
 }
 
 function SeletorIgreja({

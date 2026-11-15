@@ -1030,10 +1030,27 @@ button[type="submit"]:disabled {
 
 .pagina-painel {
   min-height: 100vh;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
   background:
     radial-gradient(circle at 95% 0, rgba(46, 95, 202, 0.08), transparent 28%),
     var(--fundo);
+}
+
+/*
+ * Miolo comum ao cabeçalho, ao menu, ao conteúdo e ao rodapé. É ele que
+ * garante que os quatro comecem e terminem na mesma margem, enquanto as
+ * faixas de fundo vão de ponta a ponta da tela.
+ */
+.faixa-painel {
+  width: 100%;
+  padding-inline: var(--esp-5);
+}
+
+.conteudo-painel {
+  flex: 1 1 auto;
+  width: 100%;
+  padding: var(--esp-5) var(--esp-5) var(--esp-6);
 }
 
 /*
@@ -1047,22 +1064,57 @@ button[type="submit"]:disabled {
  */
 
 /*
- * Grade de três faixas: identidade, ações e sair. Em grade, e não em flex,
- * porque no celular o botão de sair sobe para a linha da identidade sem
- * precisar aparecer duas vezes no HTML.
+ * Faixa fina encostada no topo, com o filete dourado embaixo. Antes era um
+ * cartão flutuante de ~90 px, com raio e sombra de 30 px, que competia com o
+ * conteúdo e comia altura útil da tela.
  */
 .topo-painel {
-  margin-bottom: 22px;
-  padding: 13px 16px;
+  color: var(--branco);
+  background: linear-gradient(125deg, var(--azul-950), var(--azul-900));
+  border-bottom: 3px solid var(--dourado);
+}
+
+/*
+ * Grade de três colunas: identidade, ações e conta. Em grade, e não em flex,
+ * porque no celular a conta sobe para a linha da identidade sem precisar
+ * aparecer duas vezes no HTML.
+ */
+.topo-painel > .faixa-painel {
+  min-height: 62px;
+  padding-block: var(--esp-2);
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 18px;
+  gap: var(--esp-4);
+}
+
+.conta-painel {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+}
+
+.avatar-sessao {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
   color: var(--branco);
-  background: linear-gradient(125deg, var(--azul-950), var(--azul-900));
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 17px;
-  box-shadow: 0 12px 30px rgba(9, 22, 63, 0.16);
+  background: var(--azul-700);
+  border-radius: 999px;
+  font-size: var(--txt-xs);
+  font-weight: 700;
+}
+
+.nome-sessao {
+  max-width: 190px;
+  overflow: hidden;
+  color: #dbe3f7;
+  font-size: var(--txt-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .identidade-painel,
@@ -1088,9 +1140,25 @@ button[type="submit"]:disabled {
   stroke-linejoin: round;
 }
 
+.identidade-painel {
+  gap: 11px;
+  min-width: 0;
+}
+
 .identidade-painel .logo-igreja {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
+}
+
+.identidade-painel strong {
+  font-size: var(--txt-md);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.identidade-painel small {
+  color: #a8b7dd;
+  font-size: var(--txt-xs);
 }
 
 .identidade-painel strong,
@@ -1322,10 +1390,24 @@ button[type="submit"]:disabled {
   margin-inline: auto;
 }
 
+/*
+ * Abas com sublinhado dourado, no lugar das pílulas brancas com sombra:
+ * mais leve de olhar, e o estado aberto fica mais óbvio.
+ */
 .navegacao-interna {
-  margin: -8px 0 22px;
+  background: var(--branco);
+  border-bottom: 1px solid var(--borda);
+}
+
+.navegacao-interna > .faixa-painel {
   display: flex;
-  gap: 7px;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.navegacao-interna > .faixa-painel::-webkit-scrollbar {
+  display: none;
 }
 
 .navegacao-interna button,
@@ -1350,28 +1432,45 @@ button[type="submit"]:disabled {
 }
 
 .navegacao-interna button {
-  min-height: 40px;
-  padding: 8px 15px;
+  min-height: 48px;
+  padding: var(--esp-3) var(--esp-3) 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   color: #556078;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  font-weight: 720;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--txt-md);
+  font-weight: 600;
+  white-space: nowrap;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .navegacao-interna button:hover {
     color: var(--azul-900);
-    background: #e8edf8;
   }
 }
 
 .navegacao-interna button.ativo {
-  color: var(--azul-900);
-  background: var(--branco);
-  border-color: var(--borda);
-  box-shadow: 0 5px 15px rgba(9, 22, 63, 0.06);
+  color: var(--azul-950);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--dourado);
+}
+
+/* Ícone e rótulo curto existem só para a barra inferior do celular. */
+.icone-secao,
+.rotulo-secao-curto {
+  display: none;
+}
+
+.icone-secao {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
 }
 
 /*
@@ -1771,12 +1870,38 @@ button[type="submit"]:disabled {
   to { visibility: visible; }
 }
 
+/* Rodapé de uma linha, encostado na base, com faixa branca de ponta a ponta. */
 .rodape-painel {
-  padding: 18px 4px 4px;
+  background: var(--branco);
+  border-top: 1px solid var(--borda);
+}
+
+.rodape-painel > .faixa-painel {
+  padding-block: 14px;
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  color: #7a8496;
-  font-size: 0.73rem;
+  gap: var(--esp-2);
+  color: #7a86a0;
+  font-size: var(--txt-xs);
+}
+
+.selo-ambiente {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.selo-ambiente svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Detalhe lateral */
@@ -2468,9 +2593,7 @@ dialog.sobreposicao::backdrop {
     border-radius: 17px;
   }
 
-  .pagina-painel {
-    padding: 10px;
-  }
+  /* O recuo agora vive em `.conteudo-painel`; as faixas vão de ponta a ponta. */
 
   .acoes-topo,
   .apresentacao-painel {
@@ -2478,21 +2601,26 @@ dialog.sobreposicao::backdrop {
     flex-direction: column;
   }
 
-  /* O sair sobe para a linha do nome do sistema e fica só com o ícone. */
-  .topo-painel {
+  /* A conta sobe para a linha da identidade e o sair fica só com o ícone. */
+  .topo-painel > .faixa-painel {
     grid-template-columns: 1fr auto;
     grid-template-areas:
-      "identidade sair"
+      "identidade conta"
       "acoes acoes";
-    align-items: center;
-    gap: 12px;
+    gap: var(--esp-3);
   }
 
   .identidade-painel { grid-area: identidade; align-items: center; }
   .acoes-topo { grid-area: acoes; }
+  .conta-painel { grid-area: conta; }
+
+  /* O nome já aparece na saudação do painel; aqui ele só roubaria largura. */
+  .nome-sessao,
+  .avatar-sessao {
+    display: none;
+  }
 
   .botao-sair {
-    grid-area: sair;
     min-width: 44px;
     min-height: 44px;
     padding: 9px;
@@ -2501,6 +2629,56 @@ dialog.sobreposicao::backdrop {
 
   .texto-sair {
     display: none;
+  }
+
+  /*
+   * O menu desce para a base, ao alcance do polegar. `env(safe-area-inset-bottom)`
+   * mantém a barra acima do indicador do iPhone.
+   */
+  .navegacao-interna {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 20;
+    border-top: 1px solid var(--borda);
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -6px 18px rgba(9, 22, 63, 0.07);
+  }
+
+  .navegacao-interna > .faixa-painel {
+    padding-inline: var(--esp-1);
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 0;
+    overflow: visible;
+  }
+
+  .navegacao-interna button {
+    min-height: 56px;
+    padding: 7px 2px 8px;
+    display: grid;
+    justify-items: center;
+    gap: 3px;
+    font-size: var(--txt-xs);
+  }
+
+  .navegacao-interna button.ativo {
+    color: var(--azul-900);
+    box-shadow: none;
+  }
+
+  .icone-secao { display: block; }
+  .rotulo-secao-curto { display: block; }
+  .rotulo-secao { display: none; }
+
+  /* Espaço para o conteúdo não terminar atrás da barra fixa. */
+  .conteudo-painel {
+    padding: var(--esp-4) var(--esp-4) var(--esp-5);
+  }
+
+  .rodape-painel > .faixa-painel {
+    padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   }
 
   .seletor-igreja {
